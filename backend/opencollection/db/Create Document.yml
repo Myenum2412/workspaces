@@ -1,0 +1,32 @@
+info:
+  name: DB Proxy - Create Document
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/db"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "method": "createDocument",
+        "collectionId": "clients",
+        "documentId": "",
+        "data": {
+          "name": "New Client",
+          "email": "client@example.com",
+          "organizationId": "org-id-here"
+        }
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 15000
+  followRedirects: true
+  maxRedirects: 5

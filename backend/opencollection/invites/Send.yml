@@ -1,0 +1,29 @@
+info:
+  name: Send Invite Email
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/invites/send"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "invited@example.com",
+        "inviteToken": "invite-token-here",
+        "organizationName": "Acme Inc",
+        "inviterName": "John Doe",
+        "role": "member"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 15000
+  followRedirects: true
+  maxRedirects: 5

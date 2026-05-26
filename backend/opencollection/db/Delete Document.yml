@@ -1,0 +1,27 @@
+info:
+  name: DB Proxy - Delete Document
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/db"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "method": "deleteDocument",
+        "collectionId": "clients",
+        "documentId": "document-id-here"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 15000
+  followRedirects: true
+  maxRedirects: 5

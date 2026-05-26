@@ -1,0 +1,30 @@
+info:
+  name: DB Proxy - Update Document
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/db"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: "Bearer {{token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "method": "updateDocument",
+        "collectionId": "clients",
+        "documentId": "document-id-here",
+        "data": {
+          "name": "Updated Client Name"
+        }
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 15000
+  followRedirects: true
+  maxRedirects: 5

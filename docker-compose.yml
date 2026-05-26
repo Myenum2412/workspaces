@@ -1,0 +1,33 @@
+services:
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/workspace
+      - JWT_SECRET=change-me-in-production
+      - RESEND_API_KEY=re_UdPPBmpt_NytS7UDENw9LgQvoi64mikcY
+      - EMAIL_FROM=noreply@myenum.in
+      - FRONTEND_URL=http://localhost:3000
+      - PORT=4000
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:4000
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
