@@ -66,6 +66,7 @@ export interface IUserProfile extends Document<string> {
   personalPhone?: string;
   personalEmail?: string;
   emailVerified?: boolean;
+  verifiedAt?: Date;
   resetPasswordOTP?: string;
   resetPasswordExpires?: Date;
 }
@@ -106,6 +107,7 @@ const UserProfileSchema = new Schema<IUserProfile>({
   personalPhone: String,
   personalEmail: String,
   emailVerified: { type: Boolean, default: false },
+  verifiedAt: Date,
   resetPasswordOTP: String,
   resetPasswordExpires: Date,
 }, { timestamps: true });
@@ -302,14 +304,14 @@ export const MasterData = mongoose.models.MasterData ?? mongoose.model<IMasterDa
 
 export interface IUserStatus extends Document<string> {
   userId: string;
-  status: "Online" | "Offline";
+  status: string;
   lastActiveAt: Date;
 }
 
 const UserStatusSchema = new Schema<IUserStatus>({
   _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
   userId: { type: String, required: true, unique: true },
-  status: { type: String, required: true, enum: ["Online", "Offline"], default: "Offline" },
+  status: { type: String, required: true, default: "Offline" },
   lastActiveAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
@@ -317,7 +319,7 @@ export const UserStatus = mongoose.models.UserStatus ?? mongoose.model<IUserStat
 
 export interface IUserStatusHistory extends Document<string> {
   userId: string;
-  status: "Online" | "Offline";
+  status: string;
   loginTimestamp: Date;
   logoutTimestamp?: Date;
   lastActiveTime?: Date;
@@ -326,7 +328,7 @@ export interface IUserStatusHistory extends Document<string> {
 const UserStatusHistorySchema = new Schema<IUserStatusHistory>({
   _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
   userId: { type: String, required: true },
-  status: { type: String, required: true, enum: ["Online", "Offline"] },
+  status: { type: String, required: true },
   loginTimestamp: { type: Date, required: true, default: Date.now },
   logoutTimestamp: { type: Date },
   lastActiveTime: { type: Date }

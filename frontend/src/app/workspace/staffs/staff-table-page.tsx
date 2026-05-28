@@ -18,8 +18,11 @@ import {
   UserIcon,
 } from "lucide-react"
 
+
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +47,7 @@ import { io } from "socket.io-client"
 import { toast } from "sonner"
 import { StaffDetailModal } from "./staff-detail-modal"
 import { AddStaffDialog } from "./add-staff-dialog"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { staffService, type UIStaff as Staff } from "@/lib/services/staff-service"
 import { RefreshCw } from "lucide-react"
 
@@ -76,6 +79,48 @@ export function StaffTablePage() {
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null)
   const [onlineUsers, setOnlineUsers] = React.useState<Set<string>>(new Set())
   
+  const { data: verificationsData = {} } = useQuery({
+    queryKey: ["staff-verifications", data.map((s: Staff) => s.email).join(",")],
+    queryFn: async () => {
+      const emails = data.map((s: Staff) => s.email).filter(Boolean)
+      if (emails.length === 0) return {}
+      const token = localStorage.getItem("auth_token")
+      const res = await fetch(`${API_BASE_URL}/api/auth/verifications`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ emails })
+      })
+      if (!res.ok) return {}
+      const json = await res.json()
+      return json.verifications || {}
+    },
+    enabled: data.length > 0
+  })
+
+  const { data: userStatuses = {} } = useQuery({
+    queryKey: ["staff-statuses", data.map((s: Staff) => s.userId).join(",")],
+    queryFn: async () => {
+      const userIds = data.map((s: Staff) => s.userId).filter(Boolean)
+      if (userIds.length === 0) return {}
+      const token = localStorage.getItem("auth_token")
+      const res = await fetch(`${API_BASE_URL}/api/auth/statuses`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ userIds })
+      })
+      if (!res.ok) return {}
+      const json = await res.json()
+      return json.statuses || {}
+    },
+    enabled: data.length > 0
+  })
+
   React.useEffect(() => {
     let socket: ReturnType<typeof io> | null = null;
     
@@ -89,8 +134,8 @@ export function StaffTablePage() {
         })
         if (!res.ok) return
         
-        const data = await res.json()
-        const userId = data.user?.$id
+        const authData = await res.json()
+        const userId = authData.user?.$id
         
         if (userId) {
           setCurrentUserId(userId)
@@ -110,13 +155,32 @@ export function StaffTablePage() {
               queryClient.invalidateQueries({ queryKey: ["staff-stats"] })
             }
           })
+          
+          socket.on("verification_update", (payload: any) => {
+            queryClient.setQueriesData({ queryKey: ["staff-verifications"] }, (old: any) => {
+              return {
+                ...(old || {}),
+                [payload.email]: {
+                  emailVerified: payload.emailVerified,
+                  verifiedAt: payload.verifiedAt
+                }
+              }
+            })
+          })
 
-          socket.on("presence_update", ({ userId: updateUserId, online }: { userId: string, online: boolean }) => {
+          socket.on("presence_update", ({ userId: updateUserId, online, status }: { userId: string, online: boolean, status?: string }) => {
             setOnlineUsers(prev => {
               const next = new Set(prev)
               if (online) next.add(updateUserId)
               else next.delete(updateUserId)
               return next
+            })
+            
+            queryClient.setQueriesData({ queryKey: ["staff-statuses"] }, (old: any) => {
+              return {
+                ...(old || {}),
+                [updateUserId]: status || (online ? "Online" : "Offline")
+              }
             })
           })
         }
@@ -133,7 +197,7 @@ export function StaffTablePage() {
   }, [queryClient])
 
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [filterStatus, setFilterStatus] = React.useState("All")
+  const [filterStatus, setFilterStatus] = React.useState("Active")
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(5)
   const [isExpanded, setIsExpanded] = React.useState(true)
@@ -145,6 +209,32 @@ export function StaffTablePage() {
     key: string
     direction: "asc" | "desc" | null
   }>({ key: "", direction: null })
+
+  const deactivateMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      return staffService.updateStaff(staffId, { status: "Inactive" })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] })
+      toast.success("Staff member deactivated successfully")
+    },
+    onError: () => {
+      toast.error("Failed to deactivate staff member")
+    }
+  })
+
+  const reactivateMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      return staffService.updateStaff(staffId, { status: "Active" })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] })
+      toast.success("Staff member re-activated successfully")
+    },
+    onError: () => {
+      toast.error("Failed to re-activate staff member")
+    }
+  })
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" | null = "asc"
@@ -247,23 +337,13 @@ export function StaffTablePage() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100">
-                  <FilterIcon className="mr-2 size-4" />
-                  Status: {filterStatus}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48">
-                <DropdownMenuLabel>Filter Status</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {["All", "Active", "Inactive"].map((s) => (
-                  <DropdownMenuItem key={s} onClick={() => { setFilterStatus(s); setPage(1); }}>
-                    {s}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Tabs value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setPage(1); }}>
+              <TabsList className="bg-emerald-100/50">
+                <TabsTrigger value="Active" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Active Staff</TabsTrigger>
+                <TabsTrigger value="Inactive" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Deactivated</TabsTrigger>
+                <TabsTrigger value="All" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">All Staff</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             <Button
               type="button"
@@ -291,65 +371,86 @@ export function StaffTablePage() {
 
       {isExpanded && (
         <div className="p-6">
-          {selectedIds.size > 0 && (
-            <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-900 p-4 text-white ">
-              <span className="text-sm font-medium">{selectedIds.size} staff members selected</span>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-emerald-100 hover:bg-emerald-800">
-                Clear selection
-              </Button>
-            </div>
-          )}
+          {(() => {
+            const isDeactivatedTab = filterStatus === "Inactive";
+            const theme = isDeactivatedTab ? {
+              bgLight: "bg-red-50/70",
+              bgHover: "hover:bg-red-50/70",
+              rowHover: "hover:bg-red-50/30",
+              textDark: "text-red-950",
+              border: "border-red-100",
+              bgSelection: "bg-red-900",
+              textSelectionBtn: "text-red-100 hover:bg-red-800",
+            } : {
+              bgLight: "bg-emerald-50/70",
+              bgHover: "hover:bg-emerald-50/70",
+              rowHover: "hover:bg-emerald-50/30",
+              textDark: "text-emerald-950",
+              border: "border-emerald-100",
+              bgSelection: "bg-emerald-900",
+              textSelectionBtn: "text-emerald-100 hover:bg-emerald-800",
+            };
+            return (
+              <>
+                {selectedIds.size > 0 && (
+                  <div className={cn("mb-4 flex items-center justify-between rounded-xl p-4 text-white", theme.bgSelection)}>
+                    <span className="text-sm font-medium">{selectedIds.size} staff members selected</span>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className={theme.textSelectionBtn}>
+                      Clear selection
+                    </Button>
+                  </div>
+                )}
 
-          <div className="overflow-hidden rounded-xl border bg-background/70">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
-                  <TableHead className="w-[50px] px-4 py-4 text-center">
-                    <Checkbox
-                      checked={paginatedRows.length > 0 && selectedIds.size === paginatedRows.length}
-                      onChange={toggleAll}
-                    />
-                  </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950">Employee</TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("empId")}>
-                    <div className="flex items-center gap-2">ID <SortIcon columnKey="empId" /></div>
-                  </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("designation")}>
-                    <div className="flex items-center gap-2">Designation <SortIcon columnKey="designation" /></div>
-                  </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950">Contact</TableHead>
-                  <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Status</TableHead>
-                  <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Online Status</TableHead>
-                  <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRows.map((staff: Staff) => (
-                  <TableRow
-                    key={staff.id}
-                    className={cn("cursor-pointer transition-colors hover:bg-emerald-50/30", selectedIds.has(staff.id) && "bg-slate-50/50")}
-                    onClick={() => {
-                      setSelectedStaff(staff)
-                      setIsDetailModalOpen(true)
-                    }}
-                  >
-                    <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox checked={selectedIds.has(staff.id)} onChange={() => toggleRow(staff.id)} />
-                    </TableCell>
-                    <TableCell className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-10 border-2 border-emerald-100">
-                          <AvatarImage src={staff.avatar} />
-                          <AvatarFallback className="bg-slate-50 text-slate-700 font-bold">
-                            {staff.firstName[0]}{staff.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-emerald-950">{staff.firstName} {staff.lastName}</span>
-                          <span className="text-xs text-muted-foreground">@{staff.nickname}</span>
-                        </div>
-                      </div>
-                    </TableCell>
+                <div className="overflow-hidden rounded-xl border bg-background/70">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className={cn(theme.bgLight, theme.bgHover)}>
+                        <TableHead className="w-[50px] px-4 py-4 text-center">
+                          <Checkbox
+                            checked={paginatedRows.length > 0 && selectedIds.size === paginatedRows.length}
+                            onChange={toggleAll}
+                          />
+                        </TableHead>
+                        <TableHead className={cn("px-4 py-4 font-semibold", theme.textDark)}>Employee</TableHead>
+                        <TableHead className={cn("px-4 py-4 font-semibold cursor-pointer group", theme.textDark)} onClick={() => handleSort("empId")}>
+                          <div className="flex items-center gap-2">Employee Id <SortIcon columnKey="empId" /></div>
+                        </TableHead>
+                        <TableHead className={cn("px-4 py-4 font-semibold cursor-pointer group", theme.textDark)} onClick={() => handleSort("designation")}>
+                          <div className="flex items-center gap-2">Designation <SortIcon columnKey="designation" /></div>
+                        </TableHead>
+                        <TableHead className={cn("px-4 py-4 font-semibold", theme.textDark)}>Contact</TableHead>
+                        <TableHead className={cn("px-4 py-4 text-center font-semibold", theme.textDark)}>Verification Status</TableHead>
+                        <TableHead className={cn("px-4 py-4 text-center font-semibold", theme.textDark)}>Online Status</TableHead>
+                        <TableHead className={cn("px-4 py-4 text-center font-semibold", theme.textDark)}>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedRows.map((staff: Staff) => (
+                        <TableRow
+                          key={staff.id}
+                          className={cn("cursor-pointer transition-colors", theme.rowHover, selectedIds.has(staff.id) && "bg-slate-50/50")}
+                          onClick={() => {
+                            setSelectedStaff(staff)
+                            setIsDetailModalOpen(true)
+                          }}
+                        >
+                          <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox checked={selectedIds.has(staff.id)} onChange={() => toggleRow(staff.id)} />
+                          </TableCell>
+                          <TableCell className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className={cn("size-10 border-2", theme.border)}>
+                                <AvatarImage src={staff.avatar} />
+                                <AvatarFallback className="bg-slate-50 text-slate-700 font-bold">
+                                  {staff.firstName[0]}{staff.lastName[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <span className={cn("font-bold", theme.textDark)}>{staff.firstName} {staff.lastName}</span>
+                                <span className="text-xs text-muted-foreground">@{staff.nickname}</span>
+                              </div>
+                            </div>
+                          </TableCell>
                     <TableCell className="px-4 py-4 font-medium">{staff.empId}</TableCell>
                     <TableCell className="px-4 py-4 text-sm text-slate-900/80">
                       <div className="flex flex-col">
@@ -370,20 +471,39 @@ export function StaffTablePage() {
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-4 text-center">
-                      <span className={cn("inline-flex min-w-20 items-center justify-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", getStatusClasses(staff.status))}>
-                        {staff.status}
-                      </span>
+                      {(() => {
+                        const vData = (verificationsData as Record<string, any>)[staff.email] || {};
+                        const isVerified = vData.emailVerified;
+                        return isVerified ? (
+                          <Badge 
+                            className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200" 
+                            title={vData.verifiedAt ? `Verified at: ${new Date(vData.verifiedAt).toLocaleString()}` : "Verified"}
+                          >
+                            Verified
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                            Unverified
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="px-4 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className={cn(
-                          "h-2 w-2 rounded-full",
-                          onlineUsers.has(staff.userId) ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
-                        )} />
-                        <span className="text-[11px] font-bold text-slate-600">
-                          {onlineUsers.has(staff.userId) ? "Online" : "Offline"}
-                        </span>
-                      </div>
+                      {(() => {
+                        const currentStatus = userStatuses[staff.userId] || (onlineUsers.has(staff.userId) ? "Online" : "Offline");
+                        let dotClass = "bg-slate-300";
+                        if (currentStatus === "Online") dotClass = "bg-emerald-500 animate-pulse";
+                        else if (currentStatus === "Leave") dotClass = "bg-red-500";
+                        else if (currentStatus !== "Offline") dotClass = "bg-amber-500";
+                        return (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className={cn("h-2 w-2 rounded-full", dotClass)} />
+                            <span className="text-[11px] font-bold text-slate-600 whitespace-nowrap">
+                              {currentStatus}
+                            </span>
+                          </div>
+                        )
+                      })()}
                     </TableCell>
                     <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
@@ -405,9 +525,15 @@ export function StaffTablePage() {
                             // In a real app, this would call an API endpoint like staffService.resendVerification(staff.email)
                             toast.success(`Verification email has been re-sent to ${staff.email}`)
                           }}>Re-send Mail Verification</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => {
-                            //setData(prev => prev.map(s => s.id === staff.id ? { ...s, status: "Inactive" } : s))
-                          }}>Deactivate</DropdownMenuItem>
+                          {staff.status === "Active" ? (
+                            <DropdownMenuItem className="text-destructive" onClick={() => {
+                              deactivateMutation.mutate(staff.id)
+                            }}>Deactivate</DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem className="text-emerald-600 font-bold" onClick={() => {
+                              reactivateMutation.mutate(staff.id)
+                            }}>Re-activate</DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -440,6 +566,9 @@ export function StaffTablePage() {
               </div>
             </div>
           </div>
+          </>
+          )
+        })()}
         </div>
       )}
 

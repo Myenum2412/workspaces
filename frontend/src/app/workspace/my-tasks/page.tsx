@@ -138,7 +138,6 @@ export default function MyTasksPage() {
 
   return (
     <section className="space-y-6">
-      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -214,7 +213,6 @@ export default function MyTasksPage() {
             />
           </div>
         </CardContent>
-      </Card>
 
       <TaskAllocationModal
         open={isDialogOpen}

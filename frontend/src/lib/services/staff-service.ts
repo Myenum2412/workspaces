@@ -53,6 +53,11 @@ export interface UIStaff {
   orgId?: string;
   role?: string;
   joinedAt?: string;
+  workExperience?: any[];
+  educationDetails?: any[];
+  dependentDetails?: any[];
+  socialLinks?: Record<string, string>;
+  exitDate?: string;
 }
 
 // ── Mappers ──────────────────────────────────────────────────
@@ -94,6 +99,11 @@ function profileToStaff(doc: Record<string, any>): UIStaff {
     orgId: doc.organizationId ?? "",
     role: doc.role ?? "",
     joinedAt: doc.joinedAt ?? "",
+    workExperience: doc.workExperience ? (typeof doc.workExperience === 'string' ? JSON.parse(doc.workExperience) : doc.workExperience) : [],
+    educationDetails: doc.educationDetails ? (typeof doc.educationDetails === 'string' ? JSON.parse(doc.educationDetails) : doc.educationDetails) : [],
+    dependentDetails: doc.dependentDetails ? (typeof doc.dependentDetails === 'string' ? JSON.parse(doc.dependentDetails) : doc.dependentDetails) : [],
+    socialLinks: doc.socialLinks ? (typeof doc.socialLinks === 'string' ? JSON.parse(doc.socialLinks) : doc.socialLinks) : {},
+    exitDate: doc.exitDate ?? "",
   };
 }
 
@@ -133,6 +143,11 @@ function staffToProfile(staff: Partial<UIStaff>): Record<string, any> {
     avatarUrl: staff.avatar ?? "",
     nickname: staff.nickname ?? "",
     passwordHash: staff.password ?? "",
+    workExperience: staff.workExperience ? JSON.stringify(staff.workExperience) : undefined,
+    educationDetails: staff.educationDetails ? JSON.stringify(staff.educationDetails) : undefined,
+    dependentDetails: staff.dependentDetails ? JSON.stringify(staff.dependentDetails) : undefined,
+    socialLinks: staff.socialLinks ? JSON.stringify(staff.socialLinks) : undefined,
+    exitDate: staff.exitDate ?? "",
   };
 }
 

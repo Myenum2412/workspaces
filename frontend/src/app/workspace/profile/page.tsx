@@ -36,6 +36,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { databases, Query, COLLECTIONS, DB_ID } from "@/lib/appwrite/client"
 import { API_BASE_URL } from "@/lib/api/config"
 import { fetchJson } from "@/lib/api/fetch-json"
@@ -151,6 +152,17 @@ export default function ProfilePage() {
       }
     },
     enabled: !!orgId,
+  })
+
+  const { data: staffData } = useQuery({
+    queryKey: ["profile-staff", sessionData?.user?.$id],
+    queryFn: async () => {
+      const userId = sessionData?.user?.$id;
+      if (!userId) return null;
+      const { staffService } = await import("@/lib/services/staff-service");
+      return await staffService.getStaffByUserId(userId);
+    },
+    enabled: !!sessionData?.user?.$id,
   })
 
   // ── Merge data ──
@@ -355,6 +367,15 @@ export default function ProfilePage() {
 
   return (
     <section className="space-y-6">
+      <Tabs defaultValue="company" className="w-full space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="company">Company Details</TabsTrigger>
+            <TabsTrigger value="personal">Personal Profile</TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="company" className="space-y-6">
       {/* ── OTP Verification Popup ── */}
       <Dialog open={showOtpDialog} onOpenChange={(open) => { if (!otpSuccess) setShowOtpDialog(open) }}>
         <DialogContent className="sm:max-w-md">
@@ -422,8 +443,6 @@ export default function ProfilePage() {
           )}
         </DialogContent>
       </Dialog>
-
-      <Card className="border bg-white">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-start gap-4">
@@ -708,7 +727,84 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </CardContent>
-      </Card>
+        </TabsContent>
+        <TabsContent value="personal" className="space-y-6">
+          <Card className="border">
+            <CardHeader>
+              <CardTitle>Personal Profile</CardTitle>
+              <CardDescription>Your personal and professional details.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {staffData ? (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={staffData.avatar} />
+                      <AvatarFallback>{staffData.firstName?.[0]}{staffData.lastName?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-bold">{staffData.firstName} {staffData.lastName}</h3>
+                      <p className="text-sm text-muted-foreground">{staffData.designation} • {staffData.department}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Email</p>
+                      <p className="text-sm font-medium">{staffData.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Phone</p>
+                      <p className="text-sm font-medium">{displayValue(staffData.mobile)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Employee ID</p>
+                      <p className="text-sm font-medium">{staffData.empId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Status</p>
+                      <p className="text-sm font-medium">{staffData.status}</p>
+                    </div>
+                  </div>
+                  
+                  {(staffData.workExperience?.length ?? 0) > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-bold mb-2">Work Experience</p>
+                      <div className="space-y-2">
+                        {staffData.workExperience?.map((exp: any, i: number) => (
+                          <div key={i} className="p-3 rounded-lg border bg-muted/20">
+                            <p className="text-sm font-semibold">{exp.company} - {exp.title}</p>
+                            <p className="text-xs text-muted-foreground">{exp.from} to {exp.to}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(staffData.educationDetails?.length ?? 0) > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-bold mb-2">Education Details</p>
+                      <div className="space-y-2">
+                        {staffData.educationDetails?.map((edu: any, i: number) => (
+                          <div key={i} className="p-3 rounded-lg border bg-muted/20">
+                            <p className="text-sm font-semibold">{edu.institute}</p>
+                            <p className="text-xs text-muted-foreground">{edu.degree} - {edu.specialization}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No personal profile record found.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </section>
   )
 }
+

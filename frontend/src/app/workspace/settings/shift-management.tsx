@@ -117,9 +117,7 @@ export function ShiftManagement() {
   }
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this shift?")) {
-      deleteMutation.mutate(id)
-    }
+    deleteMutation.mutate(id)
   }
 
   return (

@@ -27,18 +27,18 @@ export function initSocketServer(httpServer: HTTPServer) {
     socket.on("identify", async (userId: string) => {
       if (userId) {
         onlineUsers.set(socket.id, userId);
-        io?.emit("presence_update", { userId, online: true });
-
         try {
-          await UserStatus.findOneAndUpdate(
+          const existing = await UserStatus.findOneAndUpdate(
             { userId },
-            { status: "Online", lastActiveAt: new Date() },
+            { $setOnInsert: { status: "Online" }, $set: { lastActiveAt: new Date() } },
             { upsert: true, new: true }
           );
+          
+          io?.emit("presence_update", { userId, online: true, status: existing.status });
 
           const history = new UserStatusHistory({
             userId,
-            status: "Online",
+            status: existing.status,
             loginTimestamp: new Date(),
             lastActiveTime: new Date()
           });
@@ -63,9 +63,9 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
     });
 
-    socket.on("manual_status", async ({ userId, status }: { userId: string, status: "Online" | "Offline" }) => {
+    socket.on("manual_status", async ({ userId, status }: { userId: string, status: string }) => {
       if (userId) {
-         io?.emit("presence_update", { userId, online: status === "Online" });
+         io?.emit("presence_update", { userId, online: status === "Online", status });
          try {
            await UserStatus.findOneAndUpdate(
              { userId }, 

@@ -12,6 +12,7 @@ import { authenticate, signToken, AuthRequest } from "../middleware/auth.js";
 import { validateBody } from "../middleware/validate.js";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validators/auth.js";
 import { sendForgotPasswordEmail, sendSignupWelcomeEmail } from "../email/resend.js";
+import { getIO } from "../ws/server.js";
 
 const router = Router();
 
@@ -243,10 +244,73 @@ router.post("/verify", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
     profile.emailVerified = true;
+    profile.verifiedAt = new Date();
     await profile.save();
+    
+    // Emit real-time verification update
+    const io = getIO();
+    if (io) {
+      io.emit("verification_update", {
+        email: profile.email,
+        emailVerified: profile.emailVerified,
+        verifiedAt: profile.verifiedAt
+      });
+    }
+    
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Verification failed" });
+  }
+});
+
+router.post("/verifications", async (req: Request, res: Response) => {
+  try {
+    const { emails } = req.body;
+    if (!emails || !Array.isArray(emails)) {
+      return res.status(400).json({ error: "Invalid emails array" });
+    }
+    await connectDB();
+    const profiles = await UserProfile.find({ email: { $in: emails } }).select("email emailVerified verifiedAt").lean();
+    const verifications = profiles.reduce((acc: any, curr: any) => {
+      acc[curr.email] = {
+        emailVerified: curr.emailVerified,
+        verifiedAt: curr.verifiedAt
+      };
+      return acc;
+    }, {});
+    res.json({ verifications });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to fetch verifications" });
+  }
+});
+
+router.post("/statuses", async (req: Request, res: Response) => {
+  try {
+    const { userIds } = req.body;
+    if (!userIds || !Array.isArray(userIds)) {
+      return res.status(400).json({ error: "Invalid userIds array" });
+    }
+    await connectDB();
+    const { UserStatus } = await import("../models/index.js");
+    const statuses = await UserStatus.find({ userId: { $in: userIds } }).select("userId status lastActiveAt").lean();
+    
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+    const now = new Date().getTime();
+
+    const result = statuses.reduce((acc: any, curr: any) => {
+      let finalStatus = curr.status;
+      if (curr.lastActiveAt) {
+        const timeDiff = now - new Date(curr.lastActiveAt).getTime();
+        if (timeDiff > TWELVE_HOURS) {
+          finalStatus = "Leave";
+        }
+      }
+      acc[curr.userId] = finalStatus;
+      return acc;
+    }, {});
+    res.json({ statuses: result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to fetch statuses" });
   }
 });
 

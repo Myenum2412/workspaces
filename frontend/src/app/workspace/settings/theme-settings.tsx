@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -276,9 +276,7 @@ export function ThemeSettings() {
   }
 
   function resetToDefaults() {
-    if (confirm("Are you sure you want to reset all theme settings to defaults?")) {
-      setSettings(DEFAULT_THEME)
-    }
+    setSettings(DEFAULT_THEME)
   }
 
   function previewTheme() {

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import {
@@ -9,6 +9,7 @@ import {
   CalendarIcon,
   MoreVertical,
   History,
+  UserIcon,
   FileText,
   Building2,
   Clock,
@@ -142,8 +143,8 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div className="flex gap-2 mb-1">
                       {isEditing ? (
                         <>
-                          <Input className="h-8 text-lg font-bold w-32" value={editedStaff.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
-                          <Input className="h-8 text-lg font-bold w-32" value={editedStaff.lastName} onChange={(e) => handleChange("lastName", e.target.value)} />
+                          <Input className="h-8 text-lg font-bold w-32" value={editedStaff.firstName || ""} onChange={(e) => handleChange("firstName", e.target.value)} />
+                          <Input className="h-8 text-lg font-bold w-32" value={editedStaff.lastName || ""} onChange={(e) => handleChange("lastName", e.target.value)} />
                         </>
                       ) : (
                         <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -203,8 +204,8 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div className="flex-1">
                       {isEditing ? (
                         <div className="space-y-1">
-                          <Input className="h-7 text-sm font-bold" value={editedStaff.designation} onChange={(e) => handleChange("designation", e.target.value)} />
-                          <Input className="h-6 text-xs" value={editedStaff.department} onChange={(e) => handleChange("department", e.target.value)} />
+                          <Input className="h-7 text-sm font-bold" value={editedStaff.designation || ""} onChange={(e) => handleChange("designation", e.target.value)} />
+                          <Input className="h-6 text-xs" value={editedStaff.department || ""} onChange={(e) => handleChange("department", e.target.value)} />
                         </div>
                       ) : (
                         <>
@@ -262,7 +263,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div>
                       <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Bio</p>
                       {isEditing ? (
-                        <Textarea className="min-h-[60px] text-xs" value={editedStaff.bio} onChange={(e) => handleChange("bio", e.target.value)} />
+                        <Textarea className="min-h-[60px] text-xs" value={editedStaff.bio || ""} onChange={(e) => handleChange("bio", e.target.value)} />
                       ) : (
                         <p className="text-xs text-slate-600 leading-relaxed italic">{editedStaff.bio}</p>
                       )}
@@ -285,7 +286,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div className="flex-1">
                       <p className="text-[11px] font-bold text-muted-foreground uppercase leading-none mb-1">Present Address</p>
                       {isEditing ? (
-                        <Textarea className="min-h-[40px] text-xs py-1 px-2" value={editedStaff.presentAddress} onChange={(e) => handleChange("presentAddress", e.target.value)} />
+                        <Textarea className="min-h-[40px] text-xs py-1 px-2" value={editedStaff.presentAddress || ""} onChange={(e) => handleChange("presentAddress", e.target.value)} />
                       ) : (
                         <p className="text-xs font-medium text-slate-600 leading-relaxed">
                           {editedStaff.presentAddress}
@@ -299,7 +300,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div className="flex-1">
                       <p className="text-[11px] font-bold text-muted-foreground uppercase leading-none mb-1">Permanent Address</p>
                       {isEditing ? (
-                        <Textarea className="min-h-[40px] text-xs py-1 px-2" value={editedStaff.permanentAddress} onChange={(e) => handleChange("permanentAddress", e.target.value)} />
+                        <Textarea className="min-h-[40px] text-xs py-1 px-2" value={editedStaff.permanentAddress || ""} onChange={(e) => handleChange("permanentAddress", e.target.value)} />
                       ) : (
                         <p className="text-xs font-medium text-slate-600 leading-relaxed">
                           {editedStaff.permanentAddress}
@@ -321,7 +322,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Work Email</p>
                       {isEditing ? (
-                        <Input className="h-6 text-[11px]" value={editedStaff.email} onChange={(e) => handleChange("email", e.target.value)} />
+                        <Input className="h-6 text-[11px]" value={editedStaff.email || ""} onChange={(e) => handleChange("email", e.target.value)} />
                       ) : (
                         <p className="text-[11px] font-bold text-foreground truncate">{editedStaff.email}</p>
                       )}
@@ -334,7 +335,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Work Phone</p>
                       {isEditing ? (
-                        <Input className="h-6 text-[11px]" value={editedStaff.mobile} onChange={(e) => handleChange("mobile", e.target.value)} />
+                        <Input className="h-6 text-[11px]" value={editedStaff.mobile || ""} onChange={(e) => handleChange("mobile", e.target.value)} />
                       ) : (
                         <p className="text-[11px] font-bold text-foreground truncate">{editedStaff.mobile}</p>
                       )}
@@ -393,20 +394,44 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
 
                 <div className="space-y-4">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Remaining Details</span>
-                  {historyFields.map((field) => (
-                    <div key={field} className="flex gap-4 rounded-2xl border bg-white p-4 ">
-                      <div className="h-11 w-11 rounded-2xl bg-white border-2 border-emerald-500  flex items-center justify-center shrink-0 z-10">
-                        <FileText className="h-5 w-5 text-slate-600" />
+                  
+                <div className="space-y-4">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Professional & Personal Details</span>
+                  
+                  {/* Work Experience */}
+                  <div className="rounded-2xl border bg-white p-4">
+                    <p className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><BriefcaseIcon className="h-4 w-4" /> Work Experience</p>
+                    {staff.workExperience?.length > 0 ? staff.workExperience.map((exp: any, i: number) => (
+                      <div key={i} className="mb-2 last:mb-0">
+                        <p className="text-xs font-semibold">{exp.company} - {exp.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{exp.from} to {exp.to}</p>
                       </div>
-                      <div className="flex-1 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-slate-900 leading-none">{field}</p>
-                          <Badge variant="outline" className="text-[10px]">Need to fill</Badge>
-                        </div>
-                        <p className="text-xs text-slate-700 leading-relaxed font-medium">Need to fill</p>
+                    )) : <p className="text-xs text-muted-foreground italic">No work experience added.</p>}
+                  </div>
+
+                  {/* Education Details */}
+                  <div className="rounded-2xl border bg-white p-4">
+                    <p className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><FileText className="h-4 w-4" /> Education Details</p>
+                    {staff.educationDetails?.length > 0 ? staff.educationDetails.map((edu: any, i: number) => (
+                      <div key={i} className="mb-2 last:mb-0">
+                        <p className="text-xs font-semibold">{edu.institute}</p>
+                        <p className="text-[10px] text-muted-foreground">{edu.degree} - {edu.specialization}</p>
                       </div>
-                    </div>
-                  ))}
+                    )) : <p className="text-xs text-muted-foreground italic">No education details added.</p>}
+                  </div>
+
+                  {/* Dependents */}
+                  <div className="rounded-2xl border bg-white p-4">
+                    <p className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><UserIcon className="h-4 w-4" /> Dependents</p>
+                    {staff.dependentDetails?.length > 0 ? staff.dependentDetails.map((dep: any, i: number) => (
+                      <div key={i} className="mb-2 last:mb-0">
+                        <p className="text-xs font-semibold">{dep.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{dep.relationship} • {dep.dob}</p>
+                      </div>
+                    )) : <p className="text-xs text-muted-foreground italic">No dependents added.</p>}
+                  </div>
+                </div>
+
                 </div>
               </div>
             </ScrollArea>
