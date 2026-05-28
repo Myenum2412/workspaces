@@ -44,7 +44,9 @@ const data = {
 export function AppSidebar({ className, ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const [companyName, setCompanyName] = React.useState("Workspace")
-  const [user, setUser] = React.useState({ name: "User", email: "user@example.com", avatar: "" })
+  const [user, setUser] = React.useState({ id: "", name: "User", email: "user@example.com", avatar: "" })
+  const [isWorkspaceActive, setIsWorkspaceActive] = React.useState(true)
+  const [socket, setSocket] = React.useState<any>(null)
 
   React.useEffect(() => {
     async function fetchSession() {
@@ -56,11 +58,14 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
         })
         if (!res.ok) return
         const data = await res.json()
+        const userId = data.user?.$id
         setUser({
+          id: userId || "",
           name: data.user?.name || data.user?.email || "User",
           email: data.user?.email || "user@example.com",
           avatar: "",
         })
+        
         // Fetch org for avatar
         const orgId = data.user?.organizationId || data.organization?.$id
         if (orgId) {
@@ -71,6 +76,34 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
               setUser((prev) => ({ ...prev, avatar: `${API_BASE_URL}${org.logoUrl}` }))
             }
           } catch { /* no org avatar */ }
+        }
+
+        // Initialize Socket
+        if (userId) {
+          const { io } = await import("socket.io-client")
+          const newSocket = io(API_BASE_URL)
+          setSocket(newSocket)
+
+          newSocket.on("connect", () => {
+            newSocket.emit("identify", userId)
+            setIsWorkspaceActive(true)
+          })
+
+          newSocket.on("presence_update", ({ userId: uid, online }: any) => {
+            if (uid === userId) {
+              setIsWorkspaceActive(online)
+            }
+          })
+
+          // Heartbeat
+          const heartbeatInterval = setInterval(() => {
+            newSocket.emit("heartbeat")
+          }, 15000)
+
+          return () => {
+            clearInterval(heartbeatInterval)
+            newSocket.disconnect()
+          }
         }
       } catch {
         // not authenticated, keep defaults
@@ -90,6 +123,13 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
     return () => window.removeEventListener("profile-updated", handleProfileUpdated)
   }, [])
 
+  const handleToggleStatus = (checked: boolean) => {
+    setIsWorkspaceActive(checked)
+    if (socket && user.id) {
+      socket.emit("manual_status", { userId: user.id, status: checked ? "Online" : "Offline" })
+    }
+  }
+
   const isActiveUrl = (url: string) => {
     if (!pathname) return false
     return url.split("/").filter(Boolean).length <= 1
@@ -104,13 +144,29 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:p-0">
               <Link href="/workspace">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10 shrink-0">
                   <Building2 className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold text-slate-900 tracking-tighter text-base">{companyName}</span>
                   <span className="truncate text-[9px] font-semibold uppercase text-slate-400 tracking-[0.25em] mt-0.5">Workspace Portal</span>
                 </div>
+                <label 
+                  className="relative inline-flex items-center gap-2 text-gray-900 scale-75 origin-right cursor-pointer group-data-[collapsible=icon]:hidden shrink-0 ml-auto mr-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input 
+                    type="checkbox" 
+                    className="peer sr-only" 
+                    checked={isWorkspaceActive} 
+                    onChange={(e) => handleToggleStatus(e.target.checked)} 
+                  />
+                  <div className="peer h-5 w-9 rounded-full bg-slate-300 ring-offset-1 transition-colors duration-200 peer-checked:bg-emerald-500"></div>
+                  <span className="dot absolute top-[2px] left-[2px] h-4 w-4 rounded-full bg-white transition-transform duration-200 ease-in-out peer-checked:translate-x-4"></span>
+                  <span className={cn("text-[10px] font-bold uppercase tracking-widest transition-colors", isWorkspaceActive ? "text-emerald-600" : "text-slate-400")}>
+                    {isWorkspaceActive ? "Active" : "Inactive"}
+                  </span>
+                </label>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

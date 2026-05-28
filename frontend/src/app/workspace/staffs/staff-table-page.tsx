@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
-import { account } from "@/lib/appwrite/client"
+import { API_BASE_URL } from "@/lib/api/config"
 import { io } from "socket.io-client"
 import { toast } from "sonner"
 import { StaffDetailModal } from "./staff-detail-modal"
@@ -79,40 +79,58 @@ export function StaffTablePage() {
   React.useEffect(() => {
     let socket: ReturnType<typeof io> | null = null;
     
-    account.get().then(user => {
-      setCurrentUserId(user.$id)
-      
-      socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")
-      
-      socket.on("connect", () => {
-        socket?.emit("identify", user.$id)
-        socket?.emit("get_online_users", (users: string[]) => {
-          setOnlineUsers(new Set(users))
+    async function initSocket() {
+      try {
+        const token = localStorage.getItem("auth_token")
+        if (!token) return
+        
+        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        socket?.emit("subscribe", "user_profiles")
-      })
+        if (!res.ok) return
+        
+        const data = await res.json()
+        const userId = data.user?.$id
+        
+        if (userId) {
+          setCurrentUserId(userId)
+          socket = io(API_BASE_URL)
+          
+          socket.on("connect", () => {
+            socket?.emit("identify", userId)
+            socket?.emit("get_online_users", (users: string[]) => {
+              setOnlineUsers(new Set(users))
+            })
+            socket?.emit("subscribe", "user_profiles")
+          })
 
-      socket.on("change", (data: any) => {
-        if (data && data.collection === "user_profiles") {
-          queryClient.invalidateQueries({ queryKey: ["staff"] })
-          queryClient.invalidateQueries({ queryKey: ["staff-stats"] })
+          socket.on("change", (changeData: any) => {
+            if (changeData && changeData.collection === "user_profiles") {
+              queryClient.invalidateQueries({ queryKey: ["staff"] })
+              queryClient.invalidateQueries({ queryKey: ["staff-stats"] })
+            }
+          })
+
+          socket.on("presence_update", ({ userId: updateUserId, online }: { userId: string, online: boolean }) => {
+            setOnlineUsers(prev => {
+              const next = new Set(prev)
+              if (online) next.add(updateUserId)
+              else next.delete(updateUserId)
+              return next
+            })
+          })
         }
-      })
+      } catch (err) {
+        console.error("Failed to initialize staff socket connection:", err)
+      }
+    }
 
-      socket.on("presence_update", ({ userId, online }: { userId: string, online: boolean }) => {
-        setOnlineUsers(prev => {
-          const next = new Set(prev)
-          if (online) next.add(userId)
-          else next.delete(userId)
-          return next
-        })
-      })
-    }).catch(() => {})
+    initSocket()
 
     return () => {
       if (socket) socket.disconnect()
     }
-  }, [])
+  }, [queryClient])
 
   const [searchQuery, setSearchQuery] = React.useState("")
   const [filterStatus, setFilterStatus] = React.useState("All")
@@ -143,12 +161,12 @@ export function StaffTablePage() {
     let result = data
 
     if (filterStatus !== "All") {
-      result = result.filter((row) => row.status?.toLowerCase() === filterStatus.toLowerCase())
+      result = result.filter((row: Staff) => row.status?.toLowerCase() === filterStatus.toLowerCase())
     }
 
     if (!query) return result
 
-    return result.filter((row) =>
+    return result.filter((row: Staff) =>
       `${row.firstName} ${row.lastName} ${row.empId} ${row.email} ${row.designation}`
         .toLowerCase()
         .includes(query)
@@ -178,7 +196,7 @@ export function StaffTablePage() {
     if (selectedIds.size === paginatedRows.length) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(paginatedRows.map((row) => row.id)))
+      setSelectedIds(new Set(paginatedRows.map((row: Staff) => row.id)))
     }
   }
 

@@ -299,3 +299,37 @@ const MasterDataSchema = new Schema<IMasterData>({
 }, { timestamps: true });
 
 export const MasterData = mongoose.models.MasterData ?? mongoose.model<IMasterData>("MasterData", MasterDataSchema);
+
+export interface IUserStatus extends Document<string> {
+  userId: string;
+  status: "Online" | "Offline";
+  lastActiveAt: Date;
+}
+
+const UserStatusSchema = new Schema<IUserStatus>({
+  _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  userId: { type: String, required: true, unique: true },
+  status: { type: String, required: true, enum: ["Online", "Offline"], default: "Offline" },
+  lastActiveAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+export const UserStatus = mongoose.models.UserStatus ?? mongoose.model<IUserStatus>("UserStatus", UserStatusSchema);
+
+export interface IUserStatusHistory extends Document<string> {
+  userId: string;
+  status: "Online" | "Offline";
+  loginTimestamp: Date;
+  logoutTimestamp?: Date;
+  lastActiveTime?: Date;
+}
+
+const UserStatusHistorySchema = new Schema<IUserStatusHistory>({
+  _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  userId: { type: String, required: true },
+  status: { type: String, required: true, enum: ["Online", "Offline"] },
+  loginTimestamp: { type: Date, required: true, default: Date.now },
+  logoutTimestamp: { type: Date },
+  lastActiveTime: { type: Date }
+}, { timestamps: true });
+
+export const UserStatusHistory = mongoose.models.UserStatusHistory ?? mongoose.model<IUserStatusHistory>("UserStatusHistory", UserStatusHistorySchema);

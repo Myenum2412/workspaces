@@ -1,9 +1,11 @@
 import { Server as HTTPServer } from "http";
 import { Server } from "socket.io";
 import redis from "../redis/connection.js";
+import { UserStatus, UserStatusHistory } from "../models/index.js";
 
 let io: Server | null = null;
 const onlineUsers = new Map<string, string>(); // socketId -> userId
+const sessionHistory = new Map<string, string>(); // socketId -> historyId
 
 export function getIO(): Server | null {
   return io;
@@ -22,10 +24,55 @@ export function initSocketServer(httpServer: HTTPServer) {
   io.on("connection", (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
-    socket.on("identify", (userId: string) => {
+    socket.on("identify", async (userId: string) => {
       if (userId) {
         onlineUsers.set(socket.id, userId);
         io?.emit("presence_update", { userId, online: true });
+
+        try {
+          await UserStatus.findOneAndUpdate(
+            { userId },
+            { status: "Online", lastActiveAt: new Date() },
+            { upsert: true, new: true }
+          );
+
+          const history = new UserStatusHistory({
+            userId,
+            status: "Online",
+            loginTimestamp: new Date(),
+            lastActiveTime: new Date()
+          });
+          await history.save();
+          sessionHistory.set(socket.id, history._id.toString());
+        } catch (error) {
+          console.error("[Socket] DB Error on identify:", error);
+        }
+      }
+    });
+
+    socket.on("heartbeat", async () => {
+      const userId = onlineUsers.get(socket.id);
+      if (userId) {
+        try {
+          await UserStatus.updateOne({ userId }, { lastActiveAt: new Date() });
+          const historyId = sessionHistory.get(socket.id);
+          if (historyId) {
+            await UserStatusHistory.findByIdAndUpdate(historyId, { lastActiveTime: new Date() });
+          }
+        } catch {}
+      }
+    });
+
+    socket.on("manual_status", async ({ userId, status }: { userId: string, status: "Online" | "Offline" }) => {
+      if (userId) {
+         io?.emit("presence_update", { userId, online: status === "Online" });
+         try {
+           await UserStatus.findOneAndUpdate(
+             { userId }, 
+             { status, lastActiveAt: new Date() },
+             { upsert: true, new: true }
+           );
+         } catch {}
       }
     });
 
@@ -44,14 +91,29 @@ export function initSocketServer(httpServer: HTTPServer) {
       socket.leave(channel);
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log(`[Socket] Client disconnected: ${socket.id}`);
       const userId = onlineUsers.get(socket.id);
       if (userId) {
         onlineUsers.delete(socket.id);
+        const historyId = sessionHistory.get(socket.id);
+        sessionHistory.delete(socket.id);
+
         const stillOnline = Array.from(onlineUsers.values()).includes(userId);
         if (!stillOnline) {
           io?.emit("presence_update", { userId, online: false });
+          try {
+            await UserStatus.updateOne({ userId }, { status: "Offline" });
+          } catch {}
+        }
+        
+        if (historyId) {
+          try {
+            await UserStatusHistory.findByIdAndUpdate(historyId, { 
+              logoutTimestamp: new Date(), 
+              status: "Offline" 
+            });
+          } catch {}
         }
       }
     });
