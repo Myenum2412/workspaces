@@ -25,7 +25,6 @@ export default function StaffsPage() {
 
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -99,7 +98,6 @@ export default function StaffsPage() {
           {/* Staff Table */}
           <StaffTablePage />
         </CardContent>
-      </Card>
     </section>
   )
 }

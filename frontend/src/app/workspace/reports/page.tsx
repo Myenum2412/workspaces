@@ -4,7 +4,7 @@ import { FileText, TrendingUp, Calendar, Download } from "lucide-react"
 export default function ReportsPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Reports

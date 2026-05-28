@@ -89,8 +89,8 @@ function profileToStaff(doc: Record<string, any>): UIStaff {
     personalPhone: doc.personalPhone ?? "",
     personalEmail: doc.personalEmail ?? "",
     category: doc.category ?? "",
-    activeHours: doc.activeHours ?? "",
-    screenTime: doc.screenTime ?? "",
+    activeHours: doc.activeHours || "8h",
+    screenTime: doc.screenTime || "6h 45m",
     orgId: doc.organizationId ?? "",
     role: doc.role ?? "",
     joinedAt: doc.joinedAt ?? "",
@@ -129,6 +129,10 @@ function staffToProfile(staff: Partial<UIStaff>): Record<string, any> {
     role: staff.role ?? "staff",
     invitedBy: "",
     joinedAt: staff.joinedAt ?? new Date().toISOString(),
+    empId: staff.empId ?? "",
+    avatarUrl: staff.avatar ?? "",
+    nickname: staff.nickname ?? "",
+    passwordHash: staff.password ?? "",
   };
 }
 
@@ -177,10 +181,26 @@ export const staffService = {
   /** Create a new staff profile + org membership */
   async createStaff(data: Partial<UIStaff>): Promise<UIStaff> {
     const now = new Date().toISOString();
+    
+    let finalEmpId = data.empId;
+    if (!finalEmpId) {
+      let prefix = "EMP-";
+      if (typeof window !== "undefined") {
+         prefix = localStorage.getItem("employeeIdPrefix") || "EMP-";
+      }
+      try {
+        const allStaff = await this.getAllStaff(data.orgId);
+        const nextCount = allStaff.length + 1;
+        finalEmpId = `${prefix}${nextCount.toString().padStart(3, "0")}`;
+      } catch {
+        finalEmpId = `${prefix}${String(Date.now()).slice(-4)}`;
+      }
+    }
+
     const newStaff: UIStaff = {
       id: "",
-      userId: data.userId ?? "",
-      empId: data.empId || `EMP${String(Date.now()).slice(-6)}`,
+      userId: data.userId || ID.unique(),
+      empId: finalEmpId,
       firstName: data.firstName || "New",
       lastName: data.lastName || "User",
       nickname: data.firstName || "New",

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI ?? "mongodb://localhost:27017/workspace";
+const MONGODB_URI = process.env.MONGODB_URI as string;
 
 declare global {
   var mongooseGlobal: { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null } | undefined;

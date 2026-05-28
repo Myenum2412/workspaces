@@ -12,8 +12,8 @@ function getResend(): Resend | null {
   return new Resend(key);
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM ?? "noreply@myenum.in";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const FROM_EMAIL = process.env.EMAIL_FROM as string;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL as string;
 
 interface InviteEmailParams {
   to: string;

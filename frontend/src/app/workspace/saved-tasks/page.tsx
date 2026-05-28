@@ -7,7 +7,7 @@ import { SavedTaskTable } from "@/components/tasks/saved-task-table"
 export default function SavedTasksPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

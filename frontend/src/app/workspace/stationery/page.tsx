@@ -4,7 +4,7 @@ import { Package, ClipboardList, AlertTriangle, TrendingUp } from "lucide-react"
 export default function StationeryPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Stationery Management

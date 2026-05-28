@@ -192,12 +192,12 @@ export interface ITask extends Document<string> {
   task: string;
   assignedTo: string;
   delegatedBy: string;
-  delegatedStatus: string;
-  delegationVerification: string;
+
+
   status: string;
   priority: string;
   dueDate: string;
-  taskVerificationStatus: string;
+
   finalStatus: string;
   organizationId: string;
 }
@@ -208,12 +208,12 @@ const TaskSchema = new Schema<ITask>({
   task: { type: String, required: true },
   assignedTo: String,
   delegatedBy: String,
-  delegatedStatus: String,
-  delegationVerification: String,
+
+
   status: { type: String, required: true },
   priority: String,
   dueDate: String,
-  taskVerificationStatus: String,
+
   finalStatus: String,
   organizationId: { type: String, required: true },
 }, { timestamps: true });

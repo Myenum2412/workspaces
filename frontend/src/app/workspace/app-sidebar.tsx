@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import {
   BarChart3Icon, CheckCircle2Icon, ListChecksIcon, MegaphoneIcon,
-  SettingsIcon, UsersIcon, Building2, Command, SaveIcon, StoreIcon,
+  SettingsIcon, UsersIcon, Building2, SaveIcon, StoreIcon, FolderOpenIcon,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -23,9 +23,9 @@ const data = {
     { title: "Overview", url: "/workspace", icon: <BarChart3Icon /> },
     { title: "Tasks", url: "/workspace/tasks", icon: <ListChecksIcon />, items: [
       { title: "All Tasks", url: "/workspace/tasks", icon: <ListChecksIcon /> },
+      { title: "My Tasks", url: "/workspace/my-tasks", icon: <CheckCircle2Icon /> },
       { title: "Saved Tasks", url: "/workspace/saved-tasks", icon: <SaveIcon /> },
     ]},
-    { title: "My Tasks", url: "/workspace/my-tasks", icon: <CheckCircle2Icon /> },
     { title: "Staff", url: "/workspace/staffs", icon: <UsersIcon />, items: [
       { title: "All Staff", url: "/workspace/staffs", icon: <UsersIcon /> },
     ]},
@@ -35,7 +35,7 @@ const data = {
     { title: "Stores", url: "/workspace/stores", icon: <StoreIcon /> },
   ],
   bottomNav: [
-    { title: "Operations", url: "/workspace/operations", icon: <Command /> },
+    { title: "Office Files", url: "/workspace/office-files", icon: <FolderOpenIcon /> },
     { title: "Announcements", url: "/workspace/announcement", icon: <MegaphoneIcon /> },
     { title: "Settings", url: "/workspace/settings", icon: <SettingsIcon /> },
   ],
@@ -90,10 +90,12 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
     return () => window.removeEventListener("profile-updated", handleProfileUpdated)
   }, [])
 
-  const isActiveUrl = (url: string) =>
-    url.split("/").filter(Boolean).length <= 1
+  const isActiveUrl = (url: string) => {
+    if (!pathname) return false
+    return url.split("/").filter(Boolean).length <= 1
       ? pathname === url
       : pathname === url || pathname.startsWith(`${url}/`)
+  }
 
   return (
     <Sidebar collapsible="icon" className={cn("[&_[data-sidebar=menu-button]]:h-10 [&_[data-sidebar=menu-button]]:gap-3 [&_[data-sidebar=menu-button]_svg]:!size-5", className)} {...props}>

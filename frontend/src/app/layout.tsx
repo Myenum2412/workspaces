@@ -64,7 +64,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-poppins">
         <Providers>
           <TooltipProvider>{children}</TooltipProvider>
-          <Toaster position="top-right" richColors />
+          <Toaster position="bottom-right" richColors />
         </Providers>
       </body>
     </html>

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { PlusIcon, Trash2Icon, CameraIcon } from "lucide-react"
@@ -191,6 +191,7 @@ export type FirstSlideStaffForm = {
   lastName: string
   nickname: string
   email: string
+  password?: string
   department: string
   location: string
   designation: string
@@ -235,6 +236,10 @@ export function BasicInfoSection({
         <Field>
           <FieldLabel>Email address</FieldLabel>
           <Input type="email" value={formData?.email ?? ""} onChange={(e) => onChange?.("email", e.target.value)} placeholder="myenumam@gmail.com" />
+        </Field>
+        <Field>
+          <FieldLabel>Password</FieldLabel>
+          <Input type="text" value={formData?.password ?? ""} onChange={(e) => onChange?.("password", e.target.value)} placeholder="Auto-generate if empty" />
         </Field>
         <Field className="sm:col-span-3">
           <FieldLabel>Upload Files</FieldLabel>

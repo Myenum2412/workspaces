@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { SectionPage } from "../section-page"
 import { MasterDataManagement } from "./master-data-management"
@@ -10,10 +10,22 @@ import { ChangePassword } from "./change-password"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Settings2, Database, Shield, Bell, Users, Mail, Palette, RotateCcw, KeyRound } from "lucide-react"
 import React, { useState } from "react"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
+  const [workspaceId, setWorkspaceId] = useState("")
+  const [heldIds, setHeldIds] = useState<string[]>([])
+
+  React.useEffect(() => {
+    setWorkspaceId(localStorage.getItem("employeeIdPrefix") || "EMP-")
+    try {
+      const stored = localStorage.getItem("heldEmployeeIds")
+      if (stored) setHeldIds(JSON.parse(stored))
+    } catch (e) {}
+  }, [])
   const [hrSettings, setHrSettings] = useState({
     workStartTime: "09:00",
     workEndTime: "17:30",
@@ -39,7 +51,6 @@ export default function SettingsPage() {
 
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Settings
@@ -77,10 +88,95 @@ export default function SettingsPage() {
 
         <TabsContent value="general">
           <div className="grid gap-6">
-            <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
-              <Settings2 className="size-12 text-slate-300 mb-4" />
-              <h3 className="text-lg font-bold text-slate-900">General Workspace Settings</h3>
-              <p className="text-sm text-slate-500 max-w-xs">Workspace branding, timezone, and fundamental configuration options.</p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Employee ID Prefix Settings</CardTitle>
+                <CardDescription>Manage the default prefix format for new employee IDs.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Employee ID Prefix</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="text"
+                      value={workspaceId}
+                      onChange={(e) => setWorkspaceId(e.target.value)}
+                      className="max-w-md w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                      placeholder="e.g. EMP-"
+                    />
+                    <Button 
+                      onClick={() => {
+                        localStorage.setItem("employeeIdPrefix", workspaceId)
+                        toast.success('Employee ID Prefix successfully updated!')
+                      }} 
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      Update ID
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t mt-4 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-medium text-slate-900">Hold Employee ID</h4>
+                      <p className="text-xs text-slate-500">Add the current ID prefix to the hold list.</p>
+                    </div>
+                    <Button 
+                      variant="destructive"
+                      onClick={() => {
+                        if (!workspaceId) return
+                        if (heldIds.includes(workspaceId)) {
+                          toast.error("This ID is already on hold.")
+                          return
+                        }
+                        const newHeld = [...heldIds, workspaceId]
+                        setHeldIds(newHeld)
+                        localStorage.setItem("heldEmployeeIds", JSON.stringify(newHeld))
+                        setWorkspaceId("EMP-")
+                        toast.success('Employee ID Prefix put on hold.')
+                      }}
+                    >
+                      Hold Current ID
+                    </Button>
+                  </div>
+                  
+                  {heldIds.length > 0 && (
+                    <div className="rounded-md border mt-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Held ID Prefix</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {heldIds.map((id) => (
+                            <TableRow key={id}>
+                              <TableCell className="font-medium">{id}</TableCell>
+                              <TableCell className="text-right">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-emerald-600 hover:text-emerald-700"
+                                  onClick={() => {
+                                    const newHeld = heldIds.filter(h => h !== id)
+                                    setHeldIds(newHeld)
+                                    localStorage.setItem("heldEmployeeIds", JSON.stringify(newHeld))
+                                    toast.success("Hold released.")
+                                  }}
+                                >
+                                  Release
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           </div>
         </TabsContent>
@@ -295,7 +391,6 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
         </CardContent>
-      </Card>
     </section>
   )
 }

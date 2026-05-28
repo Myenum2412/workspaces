@@ -13,8 +13,8 @@ http:
     type: json
     data: |-
       {
-        "email": "developer@myenum.in",
-        "password": "Meenu2412"
+        "email": "{{email}}",
+        "password": "{{password}}"
       }
 
 settings:

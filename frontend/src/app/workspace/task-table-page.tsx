@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { useEffect } from "react"
@@ -84,12 +84,14 @@ export function TaskTablePage({
   showPageHeader = true,
   isTeamTask = false,
   assignedTo,
+  categoryFilter = "All",
 }: {
   title?: string
   tableTitle?: string
   showPageHeader?: boolean
   isTeamTask?: boolean
   assignedTo?: string
+  categoryFilter?: string
 }) {
   const { trackEvent, trackInteraction } = useAnalytics("TaskTablePage")
 
@@ -124,6 +126,35 @@ export function TaskTablePage({
     }
   }
 
+  const filteredTasks = React.useMemo(() => {
+    if (categoryFilter === "All") return tasks;
+    
+    return tasks.filter((task: Task) => {
+      switch (categoryFilter) {
+        case "Today task": {
+          const today = new Date().toISOString().split('T')[0];
+          return task.dueDate === today;
+        }
+        case "In Progress Task":
+          return task.status === "In Progress";
+        case "Pending Task":
+          return task.status === "Pending";
+        case "Postponed Task":
+          return task.status === "Hold" || task.status === "Paused" || task.status === "Postponed";
+        case "Repeated Task":
+          return task.status === "Recurring";
+        case "Overdue Task": {
+          const today = new Date().toISOString().split('T')[0];
+          return task.dueDate < today && !["Closed", "Verified"].includes(task.status);
+        }
+        case "Team Task":
+          return isTeamTask === true;
+        default:
+          return true;
+      }
+    });
+  }, [tasks, categoryFilter, isTeamTask]);
+
   const {
     searchQuery,
     setSearchQuery,
@@ -138,17 +169,15 @@ export function TaskTablePage({
     totalPages,
     startIndex,
   } = useDataTable<Task>({
-    data: tasks,
+    data: filteredTasks,
     initialPageSize: 4,
   })
 
-  const [isExpanded, setIsExpanded] = React.useState(true)
+  const [isExpanded, setIsExpanded] = React.useState(!isTeamTask)
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
   const [viewingTask, setViewingTask] = React.useState<AdminTask | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false)
-  const [viewMode, setViewMode] = React.useState<'table' | 'kanban'>(
-    isTeamTask ? 'kanban' : 'table'
-  )
+  const [viewMode, setViewMode] = React.useState<'table' | 'kanban'>('table')
 
   const selectedPageIds = React.useMemo(
     () => paginatedTasks.filter((task) => selectedIds.has(task.taskNo)),
@@ -372,16 +401,7 @@ export function TaskTablePage({
                                 Delegated By
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
-                              <div className="flex items-center justify-center gap-2">
-                                Delegated Status
-                              </div>
-                            </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
-                              <div className="flex items-center justify-center gap-2">
-                                Delegation Verification
-                              </div>
-                            </TableHead>
+
                             <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Status
@@ -445,28 +465,7 @@ export function TaskTablePage({
                               <TableCell className="px-3 py-3 text-center text-sm sm:px-4 sm:py-4">
                                 {task.delegatedBy}
                               </TableCell>
-                              <TableCell className="px-3 py-3 text-center sm:px-4 sm:py-4">
-                                <span
-                                  className={cn(
-                                    "inline-flex min-w-24 items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold tracking-wide uppercase",
-                                    getStatusClasses(task.delegatedStatus)
-                                  )}
-                                >
-                                  {task.delegatedStatus}
-                                </span>
-                              </TableCell>
-                              <TableCell className="px-3 py-3 text-center sm:px-4 sm:py-4">
-                                <span
-                                  className={cn(
-                                    "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
-                                    task.taskVerificationStatus === "Verified" ? "bg-slate-50 text-slate-700" :
-                                    task.taskVerificationStatus === "Pending" ? "bg-slate-50 text-slate-700" :
-                                    "bg-slate-50 text-slate-700"
-                                  )}
-                                >
-                                  {task.taskVerificationStatus}
-                                </span>
-                              </TableCell>
+
                               <TableCell className="px-3 py-3 text-center sm:px-4 sm:py-4">
                                 <span
                                   className={cn(
@@ -547,7 +546,7 @@ export function TaskTablePage({
                   </>
                 ) : (
                   <TaskKanbanView
-                    tasks={tasks.filter(t =>
+                    tasks={filteredTasks.filter((t: Task) =>
                       (filterStatus === 'All' || t.status === filterStatus) &&
                       (t.task.toLowerCase().includes(searchQuery.toLowerCase()) || t.taskNo.toLowerCase().includes(searchQuery.toLowerCase()))
                     )}

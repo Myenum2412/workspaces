@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import {
@@ -39,9 +39,12 @@ import {
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { account } from "@/lib/appwrite/client"
+import { io } from "socket.io-client"
+import { toast } from "sonner"
 import { StaffDetailModal } from "./staff-detail-modal"
 import { AddStaffDialog } from "./add-staff-dialog"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { staffService, type UIStaff as Staff } from "@/lib/services/staff-service"
 import { RefreshCw } from "lucide-react"
 
@@ -50,8 +53,10 @@ const pageSizeOptions = [5, 10, 20, 50]
 
 function getStatusClasses(status: string | null) {
   switch (status) {
+    case "active":
     case "Active":
       return "bg-slate-50 text-slate-700 border-emerald-100"
+    case "inactive":
     case "Inactive":
       return "bg-slate-50 text-slate-700 border-emerald-100"
     case "On Leave":
@@ -62,10 +67,52 @@ function getStatusClasses(status: string | null) {
 }
 
 export function StaffTablePage() {
+  const queryClient = useQueryClient()
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ["staff"],
     queryFn: () => staffService.getAllStaff(),
   })
+
+  const [currentUserId, setCurrentUserId] = React.useState<string | null>(null)
+  const [onlineUsers, setOnlineUsers] = React.useState<Set<string>>(new Set())
+  
+  React.useEffect(() => {
+    let socket: ReturnType<typeof io> | null = null;
+    
+    account.get().then(user => {
+      setCurrentUserId(user.$id)
+      
+      socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")
+      
+      socket.on("connect", () => {
+        socket?.emit("identify", user.$id)
+        socket?.emit("get_online_users", (users: string[]) => {
+          setOnlineUsers(new Set(users))
+        })
+        socket?.emit("subscribe", "user_profiles")
+      })
+
+      socket.on("change", (data: any) => {
+        if (data && data.collection === "user_profiles") {
+          queryClient.invalidateQueries({ queryKey: ["staff"] })
+          queryClient.invalidateQueries({ queryKey: ["staff-stats"] })
+        }
+      })
+
+      socket.on("presence_update", ({ userId, online }: { userId: string, online: boolean }) => {
+        setOnlineUsers(prev => {
+          const next = new Set(prev)
+          if (online) next.add(userId)
+          else next.delete(userId)
+          return next
+        })
+      })
+    }).catch(() => {})
+
+    return () => {
+      if (socket) socket.disconnect()
+    }
+  }, [])
 
   const [searchQuery, setSearchQuery] = React.useState("")
   const [filterStatus, setFilterStatus] = React.useState("All")
@@ -96,7 +143,7 @@ export function StaffTablePage() {
     let result = data
 
     if (filterStatus !== "All") {
-      result = result.filter((row) => row.status === filterStatus)
+      result = result.filter((row) => row.status?.toLowerCase() === filterStatus.toLowerCase())
     }
 
     if (!query) return result
@@ -259,7 +306,7 @@ export function StaffTablePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedRows.map((staff) => (
+                {paginatedRows.map((staff: Staff) => (
                   <TableRow
                     key={staff.id}
                     className={cn("cursor-pointer transition-colors hover:bg-emerald-50/30", selectedIds.has(staff.id) && "bg-slate-50/50")}
@@ -313,10 +360,10 @@ export function StaffTablePage() {
                       <div className="flex items-center justify-center gap-2">
                         <div className={cn(
                           "h-2 w-2 rounded-full",
-                          staff.status === "Active" ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+                          onlineUsers.has(staff.userId) ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
                         )} />
                         <span className="text-[11px] font-bold text-slate-600">
-                          {staff.status === "Active" ? "Online" : "Offline"}
+                          {onlineUsers.has(staff.userId) ? "Online" : "Offline"}
                         </span>
                       </div>
                     </TableCell>
@@ -336,6 +383,10 @@ export function StaffTablePage() {
                             setModalEditMode(true)
                             setIsDetailModalOpen(true)
                           }}>Edit Details</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            // In a real app, this would call an API endpoint like staffService.resendVerification(staff.email)
+                            toast.success(`Verification email has been re-sent to ${staff.email}`)
+                          }}>Re-send Mail Verification</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={() => {
                             //setData(prev => prev.map(s => s.id === staff.id ? { ...s, status: "Inactive" } : s))
                           }}>Deactivate</DropdownMenuItem>

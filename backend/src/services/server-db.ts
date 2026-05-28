@@ -1,5 +1,6 @@
 import { connectDB } from "../config/connection.js";
 import * as models from "../models/index.js";
+import { publishChange } from "../ws/server.js";
 
 const MODEL_MAP: Record<string, string> = {
   organizations: "Organization",
@@ -62,7 +63,9 @@ export async function createDocument(collectionId: string, documentId: string, d
   await connectDB();
   const Model = models[MODEL_MAP[collectionId] as keyof typeof models] as any;
   const doc = await Model.create({ ...data, _id: documentId || undefined });
-  return { ...doc.toObject(), $id: doc._id.toString() };
+  const result = { ...doc.toObject(), $id: doc._id.toString() };
+  publishChange(collectionId, { action: "create", collection: collectionId, document: result });
+  return result;
 }
 
 export async function getDocument(collectionId: string, documentId: string) {
@@ -78,11 +81,14 @@ export async function updateDocument(collectionId: string, documentId: string, d
   const Model = models[MODEL_MAP[collectionId] as keyof typeof models] as any;
   const doc = await Model.findByIdAndUpdate(documentId, { $set: data }, { new: true }).lean();
   if (!doc) throw new Error("Document not found");
-  return { ...doc, $id: (doc as any)._id.toString() };
+  const result = { ...doc, $id: (doc as any)._id.toString() };
+  publishChange(collectionId, { action: "update", collection: collectionId, document: result });
+  return result;
 }
 
 export async function deleteDocument(collectionId: string, documentId: string) {
   await connectDB();
   const Model = models[MODEL_MAP[collectionId] as keyof typeof models] as any;
   await Model.findByIdAndDelete(documentId);
+  publishChange(collectionId, { action: "delete", collection: collectionId, documentId });
 }

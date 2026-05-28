@@ -21,7 +21,6 @@ export default function MyTaskPage() {
 
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             My Tasks Overview
@@ -108,7 +107,6 @@ export default function MyTaskPage() {
             </Suspense>
           </div>
         </CardContent>
-      </Card>
     </section>
   )
 }

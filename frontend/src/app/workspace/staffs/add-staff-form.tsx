@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,15 @@ import {
   FieldSet,
   FieldLegend,
 } from "@/components/ui/field"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { CopyIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -54,6 +63,7 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
     lastName: "",
     nickname: "",
     email: "",
+    password: "",
     department: "",
     location: "",
     designation: "",
@@ -67,6 +77,13 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
     currentExperience: "",
     totalExperience: "",
   })
+
+  React.useEffect(() => {
+    const prefix = localStorage.getItem("employeeIdPrefix")
+    if (prefix) {
+      setFirstSlideData(prev => ({ ...prev, displayId: prefix }))
+    }
+  }, [])
 
   const [workExperience, setWorkExperience] = React.useState<Row[]>([
     { id: "1", company: "", title: "", from: "", to: "", description: "", relevant: false },
@@ -123,6 +140,8 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
     },
   })
 
+  const [successModalOpen, setSuccessModalOpen] = React.useState(false)
+
   const saveFirstSlide = async () => {
     if (savedStaff) return savedStaff
 
@@ -131,9 +150,35 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
       return null
     }
 
+    const finalPassword = firstSlideData.password || Math.random().toString(36).slice(-8) + "A1!"
+    if (!firstSlideData.password) {
+      setFirstSlideData(prev => ({ ...prev, password: finalPassword }))
+    }
+
     trackEvent('save_employee_start')
     try {
-      return await createStaffMutation.mutateAsync()
+      return await staffService.createStaff({
+        displayId: firstSlideData.displayId.trim() || undefined,
+        firstName: firstSlideData.firstName.trim(),
+        lastName: firstSlideData.lastName.trim(),
+        email: firstSlideData.email.trim(),
+        password: finalPassword,
+        department: firstSlideData.department || null,
+        phone: null,
+        roleName: firstSlideData.roleName || firstSlideData.designation || null,
+        branchName: firstSlideData.branchName || firstSlideData.location || null,
+        employmentType: firstSlideData.employmentType || null,
+        status: firstSlideData.status.toLowerCase() === "inactive" ? "inactive" : "active",
+        sourceOfHire: firstSlideData.sourceOfHire || null,
+        currentExperience: firstSlideData.currentExperience || null,
+        totalExperience: firstSlideData.totalExperience || null,
+      }).then(staff => {
+        setSavedStaff(staff)
+        queryClient.invalidateQueries({ queryKey: ["staff"] })
+        queryClient.invalidateQueries({ queryKey: ["staff-stats"] })
+        trackEvent('save_employee_success')
+        return staff
+      })
     } catch (err: any) {
       setFormError(err?.message || "Failed to create employee. Please try again.")
       return null
@@ -160,13 +205,51 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
   const handleSave = async () => {
     const staff = await saveFirstSlide()
     if (staff) {
-      onStaffAdded?.(staff)
+      setSuccessModalOpen(true)
+    }
+  }
+
+  const completeAndClose = () => {
+    setSuccessModalOpen(false)
+    if (savedStaff) {
+      onStaffAdded?.(savedStaff)
       if (onCancel) onCancel()
     }
   }
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-hidden">
+      <Dialog open={successModalOpen} onOpenChange={setSuccessModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Staff Member Created</DialogTitle>
+            <DialogDescription>
+              The account has been successfully created. Please securely share the following login credentials with the user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 my-4 bg-muted/50 p-4 rounded-lg">
+            <div className="grid flex-1 gap-2">
+              <div className="text-sm">
+                <span className="font-semibold">Email:</span> {firstSlideData.email}
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">Password:</span> {firstSlideData.password}
+              </div>
+            </div>
+            <Button size="sm" className="px-3" onClick={() => {
+              navigator.clipboard.writeText(`Email: ${firstSlideData.email}\nPassword: ${firstSlideData.password}`)
+            }}>
+              <span className="sr-only">Copy</span>
+              <CopyIcon className="h-4 w-4" />
+            </Button>
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <Button type="button" variant="default" onClick={completeAndClose}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {formError && (
         <div className="mx-6 mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
           {formError}

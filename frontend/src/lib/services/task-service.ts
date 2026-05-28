@@ -7,12 +7,12 @@ export interface UITask {
   task: string;
   assignedTo: string;
   delegatedBy: string;
-  delegatedStatus: string;
-  delegationVerification: string;
+
+
   status: string;
   priority: string;
   dueDate: string;
-  taskVerificationStatus: string;
+
   finalStatus: string;
 }
 
@@ -33,12 +33,12 @@ function docToTask(doc: TaskDoc): UITask {
     task: doc.task,
     assignedTo: doc.assignedTo,
     delegatedBy: doc.delegatedBy,
-    delegatedStatus: doc.delegatedStatus,
-    delegationVerification: doc.delegationVerification,
+
+
     status: doc.status,
     priority: doc.priority,
     dueDate: doc.dueDate,
-    taskVerificationStatus: doc.taskVerificationStatus,
+
     finalStatus: doc.finalStatus,
   };
 }
@@ -76,12 +76,12 @@ export const taskService = {
       task: taskData.task ?? "Untitled Task",
       assignedTo: taskData.assignedTo ?? "Unassigned",
       delegatedBy: taskData.delegatedBy ?? "Admin",
-      delegatedStatus: taskData.delegatedStatus ?? "Open",
-      delegationVerification: "Verified",
+
+
       status: taskData.status ?? "Open",
       priority: taskData.priority ?? "Medium",
       dueDate: taskData.dueDate ?? new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-"),
-      taskVerificationStatus: "Pending",
+
       finalStatus: taskData.status ?? "Open",
       organizationId: organizationId ?? "",
     });

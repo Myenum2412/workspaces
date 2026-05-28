@@ -1,18 +1,41 @@
 "use client"
 
 import * as React from "react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { TaskTablePage } from "../task-table-page"
 import { TaskAllocationModal } from "@/components/tasks/task-allocation-modal"
+import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { taskService } from "@/lib/services/task-service"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertCircle, CalendarDays, Clock, ClipboardCheck, Layers, RefreshCw, UserPlusIcon, Users } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api/config"
 
-export default function TasksPage() {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [selectedCategory, setSelectedCategory] = React.useState<string>("All")
+export default function MyTasksPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>("All")
+  const [userName, setUserName] = useState<string>("")
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const token = localStorage.getItem("auth_token")
+        if (!token) return
+        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setUserName(data.user?.name || data.user?.email || "User")
+      } catch (error) {
+        console.error("Failed to fetch user:", error)
+      }
+    }
+    fetchUser()
+  }, [])
+
   const { data: stats = {
     todayTask: 0,
     inProgressTask: 0,
@@ -22,18 +45,23 @@ export default function TasksPage() {
     repeatedTask: 0,
     overdueTask: 0,
   } } = useQuery({
-    queryKey: ["task-stats"],
-    queryFn: () => taskService.getTaskStats(),
+    queryKey: ["my-task-stats", userName],
+    queryFn: () => userName ? taskService.getMyTaskStats(userName) : Promise.resolve({
+      todayTask: 0, inProgressTask: 0, teamTask: 0, pendingTask: 0,
+      postponedTask: 0, repeatedTask: 0, overdueTask: 0,
+    }),
+    enabled: !!userName,
   })
 
   const queryClient = useQueryClient()
 
   useEffect(() => {
+    if (!userName) return;
     const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ["task-stats"] })
+      queryClient.invalidateQueries({ queryKey: ["my-task-stats", userName] })
     }, 30000)
     return () => clearInterval(interval)
-  }, [queryClient])
+  }, [queryClient, userName])
 
   const statCards = [
     {
@@ -110,23 +138,31 @@ export default function TasksPage() {
 
   return (
     <section className="space-y-6">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-3xl font-semibold tracking-tight">
-                Tasks
+                My Tasks
               </CardTitle>
               <CardDescription>
-                Manage and monitor all delegated tasks.
+                Manage and monitor your assigned tasks.
               </CardDescription>
             </div>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white "
-            >
-              <UserPlusIcon className="mr-2 size-4" />
-              Allocate Task
-            </Button>
+            <div className="flex items-center gap-6">
+              <ToggleSwitch 
+                checked={showAdvanced} 
+                onChange={setShowAdvanced} 
+                label="Advanced View" 
+              />
+              <Button
+                onClick={() => setIsDialogOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white "
+              >
+                <UserPlusIcon className="mr-2 size-4" />
+                Allocate Task
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -158,14 +194,27 @@ export default function TasksPage() {
 
           {/* Individual Tasks Table */}
           <div className="space-y-4">
-            <TaskTablePage title="" showPageHeader={false} isTeamTask={false} categoryFilter={selectedCategory} />
+            <TaskTablePage 
+              title="" 
+              showPageHeader={false} 
+              isTeamTask={false} 
+              categoryFilter={selectedCategory} 
+              assignedTo={userName || undefined} 
+            />
           </div>
 
           {/* Team Tasks Table */}
           <div className="space-y-4">
-            <TaskTablePage tableTitle="Team Task" showPageHeader={false} isTeamTask={true} categoryFilter={selectedCategory} />
+            <TaskTablePage 
+              tableTitle="Team Task" 
+              showPageHeader={false} 
+              isTeamTask={true} 
+              categoryFilter={selectedCategory} 
+              assignedTo={userName || undefined} 
+            />
           </div>
         </CardContent>
+      </Card>
 
       <TaskAllocationModal
         open={isDialogOpen}

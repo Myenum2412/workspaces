@@ -34,7 +34,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         const firstName = profile.name?.givenName ?? displayName.split(" ")[0] ?? "User";
         const lastName = profile.name?.familyName ?? displayName.split(" ").slice(1).join(" ") ?? "";
         await Organization.create({ _id: orgId, name: `${firstName}'s Organization` });
-        await UserProfile.create({ _id: userId, userId, email, firstName, lastName, organizationId: orgId });
+        await UserProfile.create({ _id: userId, userId, email, firstName, lastName, organizationId: orgId, designation: "workspace" });
         await OrgMember.create({ _id: crypto.randomUUID(), organizationId: orgId, userId, role: "owner", status: "active", joinedAt: new Date().toISOString() });
         user = await UserProfile.findOne({ email }).lean() as any;
       }
@@ -51,7 +51,7 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "/login" }), (req: Request, res: Response) => {
   const user = req.user as any;
   const token = signToken({ userId: user._id.toString(), email: user.email, organizationId: user.organizationId ?? "", role: "owner" });
-  res.redirect(`${process.env.FRONTEND_URL || "http://localhost:3000"}/login?token=${token}`);
+  res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
 });
 
 // ── LinkedIn OAuth routes (placeholder) ───────────────────────
@@ -91,6 +91,7 @@ router.post("/register", validateBody(registerSchema), async (req: Request, res:
       lastName,
       passwordHash,
       organizationId: orgId,
+      designation: "workspace",
     });
 
     await OrgMember.create({
@@ -109,7 +110,7 @@ router.post("/register", validateBody(registerSchema), async (req: Request, res:
       role: "owner",
     });
 
-    const loginUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/login`;
+    const loginUrl = `${process.env.FRONTEND_URL}/login`;
     await sendSignupWelcomeEmail({
       to: email,
       name: `${firstName} ${lastName}`.trim(),
@@ -266,7 +267,7 @@ router.post("/forgot-password", validateBody(forgotPasswordSchema), async (req: 
     await sendForgotPasswordEmail({
       to: email,
       otp,
-      resetUrl: `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password`,
+      resetUrl: `${process.env.FRONTEND_URL}/reset-password`,
     }).catch((err) => {
       console.error("[ForgotPassword] Email failed:", err);
     });

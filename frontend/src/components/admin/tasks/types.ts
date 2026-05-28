@@ -86,7 +86,7 @@ export interface Task {
   has_delegations?: boolean;
   delegated_by_staff_name?: string;
   delegations?: Delegation[];
-  delegationVerificationStatus?: 'Not delegated' | 'Pending' | 'Verified';
+
   delegator?: {
     id: string;
     firstName: string;
@@ -103,7 +103,7 @@ export interface Task {
   // Proofs/Verification
   proofs?: Proof[];
   pending_proofs?: number;
-  taskVerificationStatus?: 'Pending' | 'Verified';
+
 
   // Computed field for display (added during preprocessing)
   assignedName?: string;

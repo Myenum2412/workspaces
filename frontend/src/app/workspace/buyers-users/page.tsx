@@ -135,7 +135,7 @@ export default function BuyersUsersPage() {
 
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

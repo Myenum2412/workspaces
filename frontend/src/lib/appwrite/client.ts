@@ -2,7 +2,7 @@ import { API_BASE_URL } from "../api/config";
 
 const BACKEND_URL = API_BASE_URL;
 
-export const DB_ID = process.env.MONGODB_DB ?? "myworkspace";
+export const DB_ID = process.env.MONGODB_DB as string;
 
 export const ID = {
   unique: () => crypto.randomUUID(),

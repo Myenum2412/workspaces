@@ -4,7 +4,7 @@ import { Megaphone, Bell, Calendar, Users } from "lucide-react"
 export default function AnnouncementPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Announcements

@@ -4,7 +4,7 @@ import { Wrench, AlertTriangle, Calendar, CheckCircle } from "lucide-react"
 export default function AssetsMaintenancePage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Assets Maintenance

@@ -4,7 +4,7 @@ import { Truck, Package, DollarSign, Star } from "lucide-react"
 export default function VendorPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Vendor Management

@@ -159,10 +159,10 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
           ? employees.find(e => e.id === selectedAssignee)?.name || "Unassigned"
           : teams.find(t => t.id === selectedAssignee)?.name || "Unassigned",
         delegatedBy: "Admin",
-        delegatedStatus: "Open",
-        delegationVerification: "Verified",
+
+
         dueDate: dueDate?.toISOString(),
-        taskVerificationStatus: "Pending",
+
         finalStatus: "Open",
       } as Partial<UITask>)
 

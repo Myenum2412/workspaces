@@ -4,12 +4,12 @@ export interface Task {
   task: string;
   assignedTo: string;
   delegatedBy: string;
-  delegatedStatus: string;
-  delegationVerification: string;
+
+
   status: string;
   priority: string;
   dueDate: string;
-  taskVerificationStatus: string;
+
   finalStatus: string;
 }
 

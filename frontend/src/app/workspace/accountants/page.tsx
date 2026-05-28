@@ -4,7 +4,7 @@ import { Users, FileText, Calculator, Briefcase } from "lucide-react"
 export default function AccountantsPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Accountants

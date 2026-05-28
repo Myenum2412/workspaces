@@ -4,7 +4,7 @@ import { Settings, ClipboardList, TrendingUp, Clock } from "lucide-react"
 export default function OperationsPage() {
   return (
     <section className="space-y-6">
-      <Card className=" border bg-white">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight">
             Operations

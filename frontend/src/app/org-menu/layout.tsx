@@ -140,11 +140,12 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
     }
   }, [initialized, loading, session, isAuthPage, router]);
 
-  // Only developer@myenum.in can access org-menu as owner; all others redirected
+  // Only admin email can access org-menu as owner; all others redirected
   useEffect(() => {
     if (session) {
       const email = session.user.email?.toLowerCase();
-      if (email !== "developer@myenum.in") {
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase();
+      if (!adminEmail || email !== adminEmail) {
         router.replace("/workspace");
       }
     }
