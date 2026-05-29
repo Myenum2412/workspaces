@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { SearchIcon, ChevronDownIcon } from "lucide-react"
+import { SearchIcon, ChevronDownIcon, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -12,7 +12,7 @@ export default function StoresPage() {
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
       {/* Header Section */}
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Explore apps for Stores</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 text-center">Explore apps for Stores</h1>
         
         <div className="relative">
           <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -20,8 +20,18 @@ export default function StoresPage() {
             placeholder="Search for apps"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 py-6 text-base bg-white shadow-sm border-slate-300"
+            className="pl-10 pr-10 py-6 text-base bg-white shadow-sm border-slate-300"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-3 h-5 w-5 text-muted-foreground flex items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Filters */}
