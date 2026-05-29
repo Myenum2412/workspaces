@@ -184,6 +184,23 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           </SidebarGroup>
         )}
 
+        {/* Browse apps promo when WhatsApp not installed */}
+        {!waInstance && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Apps</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Browse Apps" isActive={isActiveUrl("/workspace/stores")}>
+                  <Link href="/workspace/stores">
+                    <StoreIcon />
+                    <span>Browse Apps</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
+
         <SidebarGroup className="mt-auto">
           <SidebarGroupLabel>Administration</SidebarGroupLabel>
           <SidebarMenu>
