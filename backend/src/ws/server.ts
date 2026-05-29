@@ -2,6 +2,11 @@ import { Server as HTTPServer } from "http";
 import { Server } from "socket.io";
 import redis from "../redis/connection.js";
 import { UserStatus, UserStatusHistory } from "../models/index.js";
+import { authenticate } from "../middleware/auth.js";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+const SUPER_ADMIN_EMAIL = "zoo@myenum.in";
 
 let io: Server | null = null;
 const onlineUsers = new Map<string, string>(); // socketId -> userId
@@ -21,8 +26,27 @@ export function initSocketServer(httpServer: HTTPServer) {
     },
   });
 
+  // ── Socket.io auth middleware ──────────────────────────
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(" ")[1];
+    if (!token) return next(new Error("No token"));
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      (socket as any).user = decoded;
+      next();
+    } catch {
+      next(new Error("Invalid token"));
+    }
+  });
+
   io.on("connection", (socket) => {
-    console.log(`[Socket] Client connected: ${socket.id}`);
+    const user = (socket as any).user;
+    console.log(`[Socket] Client connected: ${socket.id} (user: ${user?.userId})`);
+
+    // Join org room for WhatsApp events
+    if (user?.organizationId) {
+      socket.join(`org:${user.organizationId}`);
+    }
 
     socket.on("identify", async (userId: string) => {
       if (userId) {
@@ -81,6 +105,17 @@ export function initSocketServer(httpServer: HTTPServer) {
         const users = Array.from(new Set(onlineUsers.values()));
         callback(users);
       }
+    });
+
+    // WhatsApp room subscription
+    socket.on("whatsapp:subscribe", (organizationId: string) => {
+      if (user?.organizationId === organizationId || user?.email === SUPER_ADMIN_EMAIL) {
+        socket.join(`org:${organizationId}`);
+      }
+    });
+
+    socket.on("whatsapp:unsubscribe", (organizationId: string) => {
+      socket.leave(`org:${organizationId}`);
     });
 
     socket.on("subscribe", (channel: string) => {
