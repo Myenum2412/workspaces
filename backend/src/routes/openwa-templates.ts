@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaTemplates } from "../services/openwa-templates.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 // CRUD
 router.post("/", async (req: any, res) => {
@@ -15,7 +17,11 @@ router.post("/", async (req: any, res) => {
 
 router.get("/", async (req: any, res) => {
   try {
-    const templates = await openwaTemplates.findAll(req.user!.organizationId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const category = req.query.category as string | undefined;
+    const search = req.query.search as string | undefined;
+    const templates = await openwaTemplates.findAll(req.user!.organizationId, { page, limit, category, search });
     res.json(templates);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });

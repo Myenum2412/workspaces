@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaMessages } from "../services/openwa-messages.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 // ── Message History ─────────────────────────────────────────
 router.get("/sessions/:sessionId/messages", async (req: any, res) => {

@@ -56,6 +56,50 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// ── Export contacts ──────────────────────────────────────────
+router.get("/export", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    await connectDB();
+    const { search, isBlocked } = req.query;
+    const filter: any = { organizationId: authReq.user!.organizationId };
+    if (isBlocked !== undefined) filter.isBlocked = isBlocked === "true";
+    if (search) {
+      const s = search as string;
+      filter.$or = [
+        { name: { $regex: s, $options: "i" } },
+        { phone: { $regex: s, $options: "i" } },
+      ];
+    }
+
+    const contacts = await Contact.find(filter).sort({ updatedAt: -1 }).lean();
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", `attachment; filename="contacts-${Date.now()}.json"`);
+    res.json({ total: contacts.length, contacts, exportedAt: new Date().toISOString() });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to export contacts" });
+  }
+});
+
+// ── Bulk update contacts ─────────────────────────────────────
+router.patch("/bulk", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const { ids, updates } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0 || !updates) {
+      return res.status(400).json({ error: "ids array and updates object required" });
+    }
+    await connectDB();
+    const result = await Contact.updateMany(
+      { _id: { $in: ids }, organizationId: authReq.user!.organizationId },
+      { $set: { ...updates, updatedAt: new Date().toISOString() } }
+    );
+    res.json({ success: true, modified: result.modifiedCount });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ── Bulk import contacts ────────────────────────────────────
 router.post("/import", async (req: Request, res: Response) => {
   try {
@@ -131,12 +175,29 @@ router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     await connectDB();
-    const result = await Contact.deleteOne({
-      _id: req.params.id,
-      organizationId: authReq.user!.organizationId,
-    });
-    if (result.deletedCount === 0) return res.status(404).json({ error: "Contact not found" });
+    const result = await Contact.findOneAndUpdate(
+      { _id: req.params.id, organizationId: authReq.user!.organizationId },
+      { $set: { deletedAt: new Date().toISOString() } },
+      { new: true }
+    ).lean();
+    if (!result) return res.status(404).json({ error: "Contact not found" });
     res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/:id/restore", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    await connectDB();
+    const restored = await Contact.findOneAndUpdate(
+      { _id: req.params.id, organizationId: authReq.user!.organizationId, deletedAt: { $ne: null } },
+      { $unset: { deletedAt: 1 } },
+      { new: true }
+    ).lean();
+    if (!restored) return res.status(404).json({ error: "Contact not found or not deleted" });
+    res.json({ success: true, contact: restored });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

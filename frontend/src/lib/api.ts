@@ -24,7 +24,10 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 export const authApi = {
   async logout() {
     try {
-      if (typeof window !== "undefined") localStorage.removeItem("auth_token");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        document.cookie = "auth_token=; path=/; max-age=0; SameSite=Strict";
+      }
     } catch { /* noop */ }
   },
 };

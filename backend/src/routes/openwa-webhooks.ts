@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaWebhooks } from "../services/openwa-webhooks.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.post("/sessions/:sessionId/webhooks", async (req: any, res) => {
   try {

@@ -64,9 +64,27 @@ router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     await connectDB();
-    const result = await Campaign.deleteOne({ _id: req.params.id, organizationId: authReq.user!.organizationId });
-    if (result.deletedCount === 0) return res.status(404).json({ error: "Campaign not found" });
+    const result = await Campaign.findOneAndUpdate(
+      { _id: req.params.id, organizationId: authReq.user!.organizationId },
+      { $set: { deletedAt: new Date().toISOString() } },
+      { new: true }
+    ).lean();
+    if (!result) return res.status(404).json({ error: "Campaign not found" });
     res.json({ success: true });
+  } catch (error: any) { res.status(500).json({ error: error.message }); }
+});
+
+router.post("/:id/restore", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    await connectDB();
+    const restored = await Campaign.findOneAndUpdate(
+      { _id: req.params.id, organizationId: authReq.user!.organizationId, deletedAt: { $ne: null } },
+      { $unset: { deletedAt: 1 } },
+      { new: true }
+    ).lean();
+    if (!restored) return res.status(404).json({ error: "Campaign not found or not deleted" });
+    res.json({ success: true, campaign: restored });
   } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
 
@@ -125,6 +143,36 @@ router.post("/:id/resume", async (req: Request, res: Response) => {
     ).lean();
     if (!campaign) return res.status(404).json({ error: "Campaign not found or not paused" });
     res.json(campaign);
+  } catch (error: any) { res.status(500).json({ error: error.message }); }
+});
+
+// ── Export campaigns ────────────────────────────────────────
+router.get("/export", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    await connectDB();
+    const { status } = req.query;
+    const filter: any = { organizationId: authReq.user!.organizationId };
+    if (status) filter.status = status;
+    const campaigns = await Campaign.find(filter).sort({ createdAt: -1 }).lean();
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", `attachment; filename="campaigns-${Date.now()}.json"`);
+    res.json({ total: campaigns.length, campaigns, exportedAt: new Date().toISOString() });
+  } catch (error: any) { res.status(500).json({ error: error.message }); }
+});
+
+// ── Bulk update campaign status ─────────────────────────────
+router.patch("/bulk/status", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const { ids, status } = req.body;
+    if (!Array.isArray(ids) || !status) return res.status(400).json({ error: "ids and status required" });
+    await connectDB();
+    const result = await Campaign.updateMany(
+      { _id: { $in: ids }, organizationId: authReq.user!.organizationId },
+      { $set: { status, updatedAt: new Date().toISOString() } }
+    );
+    res.json({ success: true, modified: result.modifiedCount });
   } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
 

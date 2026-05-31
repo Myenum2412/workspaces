@@ -3,6 +3,7 @@
 
 import mongoose, { Schema, Document } from "mongoose";
 import crypto from "crypto";
+import { softDeletePlugin } from "../middleware/soft-delete.js";
 
 // ── Session (WhatsApp Session) ──────────────────────────────
 
@@ -44,6 +45,7 @@ const SessionSchema = new Schema<ISession>({
 
 SessionSchema.index({ organizationId: 1, name: 1 }, { unique: true });
 SessionSchema.index({ organizationId: 1, status: 1 });
+SessionSchema.plugin(softDeletePlugin);
 
 export const Session = mongoose.models.Session ?? mongoose.model<ISession>("Session", SessionSchema);
 
@@ -84,6 +86,7 @@ const MessageSchema = new Schema<IMessage>({
 
 MessageSchema.index({ sessionId: 1, chatId: 1, createdAt: -1 });
 MessageSchema.index({ sessionId: 1, createdAt: -1 });
+MessageSchema.plugin(softDeletePlugin);
 
 export const Message = mongoose.models.Message ?? mongoose.model<IMessage>("Message", MessageSchema);
 
@@ -119,6 +122,7 @@ const WebhookSchema = new Schema<IWebhook>({
 }, { timestamps: true });
 
 WebhookSchema.index({ sessionId: 1, active: 1 });
+WebhookSchema.plugin(softDeletePlugin);
 
 export const Webhook = mongoose.models.Webhook ?? mongoose.model<IWebhook>("Webhook", WebhookSchema);
 
@@ -155,6 +159,7 @@ const ContactSchema = new Schema<IContact>({
 
 ContactSchema.index({ sessionId: 1, waContactId: 1 }, { unique: true });
 ContactSchema.index({ organizationId: 1, phone: 1 });
+ContactSchema.plugin(softDeletePlugin);
 
 export const Contact = mongoose.models.Contact ?? mongoose.model<IContact>("Contact", ContactSchema);
 
@@ -188,6 +193,7 @@ const GroupSchema = new Schema<IGroup>({
 }, { timestamps: true });
 
 GroupSchema.index({ sessionId: 1, groupId: 1 }, { unique: true });
+GroupSchema.plugin(softDeletePlugin);
 
 export const Group = mongoose.models.Group ?? mongoose.model<IGroup>("Group", GroupSchema);
 
@@ -228,6 +234,7 @@ const ApiKeySchema = new Schema<IApiKey>({
 
 // keyHash unique index auto-created by `unique: true` in schema field
 ApiKeySchema.index({ organizationId: 1, isActive: 1 });
+ApiKeySchema.plugin(softDeletePlugin);
 
 export const ApiKey = mongoose.models.ApiKey ?? mongoose.model<IApiKey>("ApiKey", ApiKeySchema);
 
@@ -278,6 +285,7 @@ AuditLogSchema.index({ organizationId: 1, createdAt: -1 });
 AuditLogSchema.index({ organizationId: 1, action: 1 });
 // TTL: auto-delete after 90 days
 AuditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
+// Note: AuditLog intentionally does NOT use soft-delete — append-only log
 
 export const AuditLog = mongoose.models.AuditLog ?? mongoose.model<IAuditLog>("AuditLog", AuditLogSchema);
 
@@ -356,6 +364,7 @@ const BatchJobSchema = new Schema<IBatchJob>({
 
 BatchJobSchema.index({ organizationId: 1, status: 1 });
 BatchJobSchema.index({ organizationId: 1, createdAt: -1 });
+BatchJobSchema.plugin(softDeletePlugin);
 
 export const BatchJob = mongoose.models.BatchJob ?? mongoose.model<IBatchJob>("BatchJob", BatchJobSchema);
 
@@ -407,6 +416,7 @@ const MessageTemplateSchema = new Schema<IMessageTemplate>({
 
 MessageTemplateSchema.index({ organizationId: 1, category: 1 });
 MessageTemplateSchema.index({ organizationId: 1, name: 1 });
+MessageTemplateSchema.plugin(softDeletePlugin);
 
 export const MessageTemplate = mongoose.models.MessageTemplate ?? mongoose.model<IMessageTemplate>("MessageTemplate", MessageTemplateSchema);
 
@@ -472,6 +482,7 @@ const CampaignSchema = new Schema<ICampaign>({
 
 CampaignSchema.index({ organizationId: 1, status: 1 });
 CampaignSchema.index({ organizationId: 1, createdAt: -1 });
+CampaignSchema.plugin(softDeletePlugin);
 
 export const Campaign = mongoose.models.Campaign ?? mongoose.model<ICampaign>("Campaign", CampaignSchema);
 
@@ -535,6 +546,7 @@ const AutomationRuleSchema = new Schema<IAutomationRule>({
 }, { timestamps: true });
 
 AutomationRuleSchema.index({ organizationId: 1, sessionId: 1, isActive: 1 });
+AutomationRuleSchema.plugin(softDeletePlugin);
 
 export const AutomationRule = mongoose.models.AutomationRule ?? mongoose.model<IAutomationRule>("AutomationRule", AutomationRuleSchema);
 
@@ -558,6 +570,7 @@ const LabelSchema = new Schema<ILabel>({
 }, { timestamps: true });
 
 LabelSchema.index({ organizationId: 1, name: 1 }, { unique: true });
+LabelSchema.plugin(softDeletePlugin);
 
 export const Label = mongoose.models.Label ?? mongoose.model<ILabel>("Label", LabelSchema);
 

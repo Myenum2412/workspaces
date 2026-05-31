@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaSessions } from "../services/openwa-session.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.post("/", async (req: any, res) => {
   try {
@@ -18,8 +20,11 @@ router.post("/", async (req: any, res) => {
 
 router.get("/", async (req: any, res) => {
   try {
-    const sessions = await openwaSessions.getSessions(req.user!.organizationId);
-    res.json(sessions);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const status = req.query.status as string | undefined;
+    const result = await openwaSessions.getSessions(req.user!.organizationId, { page, limit, status });
+    res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -46,8 +51,17 @@ router.get("/:id", async (req: any, res) => {
 
 router.delete("/:id", async (req: any, res) => {
   try {
-    await openwaSessions.deleteSession(req.params.id, req.user!.organizationId);
+    await openwaSessions.softDeleteSession(req.params.id, req.user!.organizationId);
     res.status(204).send();
+  } catch (err: any) {
+    res.status(err.message === "Session not found" ? 404 : 400).json({ error: err.message });
+  }
+});
+
+router.post("/:id/restore", async (req: any, res) => {
+  try {
+    const session = await openwaSessions.restoreSession(req.params.id, req.user!.organizationId);
+    res.json(session);
   } catch (err: any) {
     res.status(err.message === "Session not found" ? 404 : 400).json({ error: err.message });
   }

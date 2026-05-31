@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaAutomation } from "../services/openwa-automation.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.post("/rules", async (req: any, res) => {
   try {

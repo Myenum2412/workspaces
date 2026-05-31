@@ -16,6 +16,7 @@ function setToken(token: string) {
 function clearToken() {
   if (typeof window !== "undefined") {
     localStorage.removeItem("auth_token");
+    document.cookie = "auth_token=; path=/; max-age=0; SameSite=Strict";
   }
 }
 

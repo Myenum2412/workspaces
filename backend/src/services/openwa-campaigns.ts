@@ -8,10 +8,21 @@ class OpenWACampaignService {
     return Campaign.create({ _id: crypto.randomUUID(), organizationId, status: "draft", ...dto });
   }
 
-  async findAll(organizationId: string, sessionId?: string) {
+  async findAll(organizationId: string, sessionId?: string, opts?: { page?: number; limit?: number; status?: string }) {
     await connectDB();
     const filter: any = { organizationId };
     if (sessionId) filter.sessionId = sessionId;
+    if (opts?.status) filter.status = opts.status;
+
+    if (opts?.page && opts?.limit) {
+      const skip = (opts.page - 1) * opts.limit;
+      const [campaigns, total] = await Promise.all([
+        Campaign.find(filter).sort({ createdAt: -1 }).skip(skip).limit(opts.limit).lean(),
+        Campaign.countDocuments(filter),
+      ]);
+      return { campaigns, total, page: opts.page, limit: opts.limit, pages: Math.ceil(total / opts.limit) };
+    }
+
     return Campaign.find(filter).sort({ createdAt: -1 }).lean();
   }
 
@@ -36,6 +47,27 @@ class OpenWACampaignService {
     const c = await Campaign.findOne({ _id: id, organizationId });
     if (!c) throw new Error("Campaign not found");
     await c.deleteOne();
+  }
+
+  async softDelete(organizationId: string, id: string) {
+    await connectDB();
+    const c = await Campaign.findOneAndUpdate(
+      { _id: id, organizationId },
+      { $set: { deletedAt: new Date().toISOString() } },
+      { new: true }
+    );
+    if (!c) throw new Error("Campaign not found");
+  }
+
+  async restore(organizationId: string, id: string) {
+    await connectDB();
+    const c = await Campaign.findOneAndUpdate(
+      { _id: id, organizationId, deletedAt: { $ne: null } },
+      { $unset: { deletedAt: 1 }, $set: { updatedAt: new Date().toISOString() } },
+      { new: true }
+    ).lean();
+    if (!c) throw new Error("Campaign not found");
+    return c;
   }
 
   async startCampaign(organizationId: string, id: string) {

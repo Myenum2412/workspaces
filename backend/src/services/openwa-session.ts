@@ -114,9 +114,21 @@ class OpenWASessionService {
     return session;
   }
 
-  async getSessions(organizationId: string) {
+  async getSessions(organizationId: string, opts?: { page?: number; limit?: number; status?: string }) {
     await connectDB();
-    return Session.find({ organizationId }).sort({ createdAt: -1 }).lean();
+    const filter: any = { organizationId };
+    if (opts?.status) filter.status = opts.status;
+
+    if (opts?.page && opts?.limit) {
+      const skip = (opts.page - 1) * opts.limit;
+      const [sessions, total] = await Promise.all([
+        Session.find(filter).sort({ createdAt: -1 }).skip(skip).limit(opts.limit).lean(),
+        Session.countDocuments(filter),
+      ]);
+      return { sessions, total, page: opts.page, limit: opts.limit, pages: Math.ceil(total / opts.limit) };
+    }
+
+    return Session.find(filter).sort({ createdAt: -1 }).lean();
   }
 
   async getSession(sessionId: string, organizationId: string): Promise<any> {
@@ -138,6 +150,40 @@ class OpenWASessionService {
 
     await Session.deleteOne({ _id: sessionId, organizationId });
     await this.logAudit(organizationId, "session.deleted", null, null, sessionId, session.name);
+  }
+
+  async softDeleteSession(sessionId: string, organizationId: string) {
+    await connectDB();
+    const session = await Session.findOne({ _id: sessionId, organizationId }).lean() as any;
+    if (!session) throw new Error("Session not found");
+
+    // Stop the socket if running
+    this.cancelReconnect(sessionId);
+    const sock = this.sockets.get(sessionId);
+    if (sock) {
+      try { await sock.end(undefined as any); } catch { /* ignore */ }
+      this.sockets.delete(sessionId);
+    }
+
+    await Session.updateOne(
+      { _id: sessionId, organizationId },
+      { deletedAt: new Date().toISOString(), status: "disconnected", updatedAt: new Date().toISOString() }
+    );
+    await this.logAudit(organizationId, "session.soft_deleted", null, null, sessionId, session.name);
+  }
+
+  async restoreSession(sessionId: string, organizationId: string) {
+    await connectDB();
+    const session = await Session.findOne({ _id: sessionId, organizationId, deletedAt: { $ne: null } }).lean() as any;
+    if (!session) throw new Error("Session not found");
+
+    const restored = await Session.findOneAndUpdate(
+      { _id: sessionId, organizationId },
+      { $unset: { deletedAt: 1 }, $set: { status: "created", updatedAt: new Date().toISOString() } },
+      { new: true }
+    ).lean();
+    await this.logAudit(organizationId, "session.restored", null, null, sessionId, session.name);
+    return restored;
   }
 
   // ── Connect / Disconnect ──────────────────────────────────

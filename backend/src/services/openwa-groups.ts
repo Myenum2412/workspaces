@@ -4,15 +4,31 @@ import { openwaSessions } from "./openwa-session.js";
 import crypto from "crypto";
 
 class OpenWAGroupService {
-  async getGroups(organizationId: string, sessionId: string) {
+  async getGroups(organizationId: string, sessionId: string, opts?: { page?: number; limit?: number; search?: string }) {
     await connectDB();
     const sock = openwaSessions.getSocket(sessionId);
     if (!sock?.user) throw new Error("Session not active");
     const groups = await sock.groupFetchAllParticipating().catch(() => ({}));
-    return Object.values(groups || {}).map((g: any) => ({
+    let list = Object.values(groups || {}).map((g: any) => ({
       id: g.id, name: g.subject, participantsCount: g.participants?.length || 0,
       isAdmin: g.participants?.some((p: any) => p.id === sock.user?.id && (p.admin === "admin" || p.admin === "superadmin")),
     }));
+
+    // Apply search filter
+    if (opts?.search) {
+      const q = opts.search.toLowerCase();
+      list = list.filter((g: any) => g.name?.toLowerCase().includes(q) || g.id?.toLowerCase().includes(q));
+    }
+
+    // Apply pagination
+    if (opts?.page && opts?.limit) {
+      const total = list.length;
+      const start = (opts.page - 1) * opts.limit;
+      const paginated = list.slice(start, start + opts.limit);
+      return { groups: paginated, total, page: opts.page, limit: opts.limit, pages: Math.ceil(total / opts.limit) };
+    }
+
+    return list;
   }
 
   async getGroupInfo(organizationId: string, sessionId: string, groupId: string) {

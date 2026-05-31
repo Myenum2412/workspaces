@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaChats } from "../services/openwa-chats.js";
 import { Message } from "../models/openwa.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 // ── Chat List ──────────────────────────────────────────────
 router.get("/", async (req: any, res) => {

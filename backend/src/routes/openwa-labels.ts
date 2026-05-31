@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { Label } from "../models/openwa.js";
 import crypto from "crypto";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.post("/", async (req: any, res) => {
   try {

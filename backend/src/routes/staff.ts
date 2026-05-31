@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
-import { UserProfile, OrgMember, Organization, Staff } from "../models/index.js";
+import { UserProfile, OrgMember, Organization } from "../models/index.js";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { sendSignupWelcomeEmail } from "../email/resend.js";
@@ -20,7 +20,7 @@ router.get("/", async (req: Request, res: Response) => {
       query.organizationId = member.organizationId;
     }
     
-    const staffs = await Staff.find(query).lean();
+    const staffs = await UserProfile.find(query).lean();
     res.json({ success: true, staffs });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to list staff" });
@@ -39,7 +39,7 @@ router.post("/", async (req: Request, res: Response) => {
     
     // Check email
     if (req.body.email) {
-      const existing = await Staff.findOne({ email: req.body.email }).lean();
+      const existing = await UserProfile.findOne({ email: req.body.email }).lean();
       if (existing) return res.status(400).json({ error: "Email already in use" });
     }
 
@@ -49,7 +49,7 @@ router.post("/", async (req: Request, res: Response) => {
       passwordHash = await bcrypt.hash(rawPassword, 10);
     }
 
-    const newStaff = await Staff.create({
+    const newStaff = await UserProfile.create({
       userId: req.body.userId || newUserId,
       email: req.body.email || "",
       passwordHash,
@@ -119,7 +119,7 @@ router.post("/", async (req: Request, res: Response) => {
 // Get staff by ID
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const staff = await Staff.findById(req.params.id).lean();
+    const staff = await UserProfile.findById(req.params.id).lean();
     if (!staff) return res.status(404).json({ error: "Staff not found" });
     res.json({ success: true, staff });
   } catch (error: any) {
@@ -130,7 +130,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 // Update staff
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const staff = await Staff.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+    const staff = await UserProfile.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
     if (!staff) return res.status(404).json({ error: "Staff not found" });
     res.json({ success: true, staff });
   } catch (error: any) {
@@ -138,14 +138,35 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Delete staff
+// Delete staff (soft delete)
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const staff = await Staff.findByIdAndUpdate(req.params.id, { status: "Deleted" }, { new: true });
+    const authReq = req as AuthRequest;
+    const staff = await UserProfile.findOneAndUpdate(
+      { _id: req.params.id, organizationId: authReq.user!.organizationId },
+      { $set: { deletedAt: new Date().toISOString() } },
+      { new: true }
+    );
     if (!staff) return res.status(404).json({ error: "Staff not found" });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: "Failed to delete staff" });
+  }
+});
+
+// Restore staff
+router.post("/:id/restore", async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const restored = await UserProfile.findOneAndUpdate(
+      { _id: req.params.id, organizationId: authReq.user!.organizationId, deletedAt: { $ne: null } },
+      { $unset: { deletedAt: 1 } },
+      { new: true }
+    ).lean();
+    if (!restored) return res.status(404).json({ error: "Staff not found or not deleted" });
+    res.json({ success: true, staff: restored });
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to restore staff" });
   }
 });
 

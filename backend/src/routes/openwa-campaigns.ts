@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaCampaigns } from "../services/openwa-campaigns.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.post("/", async (req: any, res) => {
   try {
@@ -14,7 +16,10 @@ router.post("/", async (req: any, res) => {
 
 router.get("/", async (req: any, res) => {
   try {
-    const campaigns = await openwaCampaigns.findAll(req.user!.organizationId, req.query.sessionId as string);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const status = req.query.status as string | undefined;
+    const campaigns = await openwaCampaigns.findAll(req.user!.organizationId, req.query.sessionId as string, { page, limit, status });
     res.json(campaigns);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
@@ -35,8 +40,15 @@ router.put("/:id", async (req: any, res) => {
 
 router.delete("/:id", async (req: any, res) => {
   try {
-    await openwaCampaigns.delete(req.user!.organizationId, req.params.id);
+    await openwaCampaigns.softDelete(req.user!.organizationId, req.params.id);
     res.status(204).send();
+  } catch (err: any) { res.status(404).json({ error: err.message }); }
+});
+
+router.post("/:id/restore", async (req: any, res) => {
+  try {
+    const campaign = await openwaCampaigns.restore(req.user!.organizationId, req.params.id);
+    res.json(campaign);
   } catch (err: any) { res.status(404).json({ error: err.message }); }
 });
 

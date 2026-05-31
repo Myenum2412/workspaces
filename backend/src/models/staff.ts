@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { softDeletePlugin } from "../middleware/soft-delete.js";
 
 export interface IStaff extends Document {
   userId: string;
@@ -73,5 +74,6 @@ const StaffSchema = new Schema<IStaff>({
   dependentDetails: [{ type: Schema.Types.Mixed }],
   avatarUrl: { type: String },
 }, { timestamps: true });
+StaffSchema.plugin(softDeletePlugin);
 
 export const Staff = mongoose.models.Staff || mongoose.model<IStaff>("Staff", StaffSchema);

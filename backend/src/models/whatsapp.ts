@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { softDeletePlugin } from "../middleware/soft-delete.js";
 
 // ── WhatsApp Instance ──────────────────────────────────────
 
@@ -45,6 +46,7 @@ const WhatsappInstanceSchema = new Schema<IWhatsappInstance>({
 }, { timestamps: true });
 
 WhatsappInstanceSchema.index({ organizationId: 1 }, { unique: true });
+WhatsappInstanceSchema.plugin(softDeletePlugin);
 
 export const WhatsappInstance =
   mongoose.models.WhatsappInstance ??
@@ -102,6 +104,7 @@ const WhatsappMessageSchema = new Schema<IWhatsappMessage>({
 }, { timestamps: true });
 
 WhatsappMessageSchema.index({ organizationId: 1, jid: 1, createdAt: -1 });
+WhatsappMessageSchema.plugin(softDeletePlugin);
 
 export const WhatsappMessage =
   mongoose.models.WhatsappMessage ??
@@ -153,6 +156,7 @@ const WhatsappChatSchema = new Schema<IWhatsappChat>({
 }, { timestamps: true });
 
 WhatsappChatSchema.index({ instanceId: 1, jid: 1 }, { unique: true });
+WhatsappChatSchema.plugin(softDeletePlugin);
 
 export const WhatsappChat =
   mongoose.models.WhatsappChat ??

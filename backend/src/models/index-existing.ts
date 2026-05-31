@@ -2,6 +2,7 @@
  * Existing workspace models (MongoDB/Mongoose).
  */
 import mongoose, { Schema, Document } from "mongoose";
+import { softDeletePlugin } from "../middleware/soft-delete.js";
 
 export interface IOrganization extends Document<string> {
   name: string;
@@ -35,6 +36,7 @@ const OrganizationSchema = new Schema<IOrganization>({
   themeSettings: { type: Schema.Types.Mixed, default: {} },
   createdAt: String,
 }, { timestamps: true });
+OrganizationSchema.plugin(softDeletePlugin);
 
 export const Organization = mongoose.models.Organization ?? mongoose.model<IOrganization>("Organization", OrganizationSchema);
 
@@ -175,6 +177,7 @@ UserProfileSchema.index({ email: 1 }, { unique: true, sparse: true });
 UserProfileSchema.index({ userId: 1 }, { unique: true });
 UserProfileSchema.index({ organizationId: 1, status: 1 });
 UserProfileSchema.index({ firstName: "text", lastName: "text", email: "text" });
+UserProfileSchema.plugin(softDeletePlugin);
 
 export const UserProfile = mongoose.models.UserProfile ?? mongoose.model<IUserProfile>("UserProfile", UserProfileSchema);
 
@@ -196,6 +199,7 @@ const OrgMemberSchema = new Schema<IOrgMember>({
   invitedBy: String,
   joinedAt: String,
 }, { timestamps: true });
+OrgMemberSchema.plugin(softDeletePlugin);
 
 export const OrgMember = mongoose.models.OrgMember ?? mongoose.model<IOrgMember>("OrgMember", OrgMemberSchema);
 
@@ -220,6 +224,7 @@ const OrgInvitationSchema = new Schema<IOrgInvitation>({
   expiresAt: { type: String, required: true },
 }, { timestamps: true });
 
+OrgInvitationSchema.plugin(softDeletePlugin);
 export const OrgInvitation = mongoose.models.OrgInvitation ?? mongoose.model<IOrgInvitation>("OrgInvitation", OrgInvitationSchema);
 
 export interface IClient extends Document<string> {
@@ -251,6 +256,7 @@ const ClientSchema = new Schema<IClient>({
   updatedAt: String,
 }, { timestamps: true });
 
+ClientSchema.plugin(softDeletePlugin);
 export const Client = mongoose.models.Client ?? mongoose.model<IClient>("Client", ClientSchema);
 
 export interface ITask extends Document<string> {
@@ -278,6 +284,7 @@ const TaskSchema = new Schema<ITask>({
   organizationId: { type: String, required: true },
 }, { timestamps: true });
 
+TaskSchema.plugin(softDeletePlugin);
 export const Task = mongoose.models.Task ?? mongoose.model<ITask>("Task", TaskSchema);
 
 export interface ITeam extends Document<string> {
@@ -299,6 +306,7 @@ const TeamSchema = new Schema<ITeam>({
   organizationId: { type: String, required: true },
 }, { timestamps: true });
 
+TeamSchema.plugin(softDeletePlugin);
 export const Team = mongoose.models.Team ?? mongoose.model<ITeam>("Team", TeamSchema);
 
 export interface IBranch extends Document<string> {
@@ -318,6 +326,7 @@ const BranchSchema = new Schema<IBranch>({
   organizationId: { type: String, required: true },
 }, { timestamps: true });
 
+BranchSchema.plugin(softDeletePlugin);
 export const Branch = mongoose.models.Branch ?? mongoose.model<IBranch>("Branch", BranchSchema);
 
 export interface ISavedTask extends Document<string> {
@@ -343,6 +352,7 @@ const SavedTaskSchema = new Schema<ISavedTask>({
   organizationId: { type: String, required: true },
 }, { timestamps: true });
 
+SavedTaskSchema.plugin(softDeletePlugin);
 export const SavedTask = mongoose.models.SavedTask ?? mongoose.model<ISavedTask>("SavedTask", SavedTaskSchema);
 
 export interface IMasterData extends Document<string> {
@@ -358,6 +368,7 @@ const MasterDataSchema = new Schema<IMasterData>({
   organizationId: { type: String, required: true },
 }, { timestamps: true });
 
+MasterDataSchema.plugin(softDeletePlugin);
 export const MasterData = mongoose.models.MasterData ?? mongoose.model<IMasterData>("MasterData", MasterDataSchema);
 
 export interface IUserStatus extends Document<string> {

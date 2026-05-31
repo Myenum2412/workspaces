@@ -3,7 +3,7 @@
   "cwd": "/home/j0k3r/Desktop/workspaces/backend",
   "duration_minutes": 0,
   "ended_at": "2026-05-31T08:54:59Z",
-  "event_seq": 87,
+  "event_seq": 0,
   "fork_count": 0,
   "git": {
     "branch": "main",
@@ -16,7 +16,7 @@
     "last_error": ""
   },
   "intent": "literal",
-  "last_event_id": "event-000087",
+  "last_event_id": "",
   "memory_logged": true,
   "orchestration": {
     "max_state_retries": 3,
@@ -32,11 +32,11 @@
     "wip_tasks": 0
   },
   "project_name": "backend",
-  "prompt_seq": 5,
+  "prompt_seq": 1,
   "resume_token": "resume-1780217690536143065",
   "session_id": "session-1780217690536140159",
   "started_at": "2026-05-31T08:54:50Z",
   "state": "stopped",
   "state_version": 1,
-  "updated_at": "2026-05-31T10:40:42Z"
+  "updated_at": "2026-05-31T08:54:50Z"
 }

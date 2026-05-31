@@ -1,13 +1,18 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaGroups } from "../services/openwa-groups.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.get("/sessions/:sessionId/groups", async (req: any, res) => {
   try {
-    const groups = await openwaGroups.getGroups(req.user!.organizationId, req.params.sessionId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const search = req.query.search as string | undefined;
+    const groups = await openwaGroups.getGroups(req.user!.organizationId, req.params.sessionId, { page, limit, search });
     res.json(groups);
   } catch (err: any) { res.status(400).json({ error: err.message }); }
 });

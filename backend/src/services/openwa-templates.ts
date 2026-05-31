@@ -37,9 +37,22 @@ class OpenWATemplateService {
     });
   }
 
-  async findAll(organizationId: string) {
+  async findAll(organizationId: string, opts?: { page?: number; limit?: number; category?: string; search?: string }) {
     await connectDB();
-    return MessageTemplate.find({ organizationId }).sort({ name: 1 }).lean();
+    const filter: any = { organizationId };
+    if (opts?.category) filter.category = opts.category;
+    if (opts?.search) filter.name = { $regex: opts.search, $options: "i" };
+
+    if (opts?.page && opts?.limit) {
+      const skip = (opts.page - 1) * opts.limit;
+      const [templates, total] = await Promise.all([
+        MessageTemplate.find(filter).sort({ name: 1 }).skip(skip).limit(opts.limit).lean(),
+        MessageTemplate.countDocuments(filter),
+      ]);
+      return { templates, total, page: opts.page, limit: opts.limit, pages: Math.ceil(total / opts.limit) };
+    }
+
+    return MessageTemplate.find(filter).sort({ name: 1 }).lean();
   }
 
   async findOne(organizationId: string, id: string) {
@@ -72,9 +85,12 @@ class OpenWATemplateService {
 
   async delete(organizationId: string, id: string) {
     await connectDB();
-    const t = await MessageTemplate.findOne({ _id: id, organizationId });
+    const t = await MessageTemplate.findOneAndUpdate(
+      { _id: id, organizationId },
+      { $set: { deletedAt: new Date().toISOString() } },
+      { new: true }
+    );
     if (!t) throw new Error("Template not found");
-    await t.deleteOne();
   }
 
   async sendWithTemplate(organizationId: string, sessionId: string, dto: {

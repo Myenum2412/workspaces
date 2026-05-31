@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
+import { requireRole } from "../middleware/security.js";
 import { openwaContacts } from "../services/openwa-contacts.js";
+import { Contact } from "../models/openwa.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(requireRole("member", "admin", "owner"));
 
 router.get("/sessions/:sessionId/contacts", async (req: any, res) => {
   try {
@@ -59,6 +62,32 @@ router.get("/sessions/:sessionId/contacts/export", async (req: any, res) => {
     const contacts = await openwaContacts.exportContacts(req.user!.organizationId, req.params.sessionId);
     res.json(contacts);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// Bulk delete (soft)
+router.post("/sessions/:sessionId/contacts/bulk-delete", async (req: any, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: "ids array required" });
+    const result = await Contact.updateMany(
+      { _id: { $in: ids }, organizationId: req.user!.organizationId },
+      { $set: { deletedAt: new Date().toISOString() } }
+    );
+    res.json({ success: true, deleted: result.modifiedCount });
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
+});
+
+// Bulk restore
+router.post("/sessions/:sessionId/contacts/bulk-restore", async (req: any, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: "ids array required" });
+    const result = await Contact.updateMany(
+      { _id: { $in: ids }, organizationId: req.user!.organizationId, deletedAt: { $ne: null } },
+      { $unset: { deletedAt: 1 } }
+    );
+    res.json({ success: true, restored: result.modifiedCount });
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
 });
 
 export default router;
