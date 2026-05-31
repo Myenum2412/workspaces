@@ -60,3 +60,6 @@
 {"file":"src/routes/profile.ts","action":"Edit","timestamp":"2026-05-31T11:28:06Z","important":false}
 {"file":"check_db.js","action":"Write","timestamp":"2026-05-31T11:29:47Z","important":false}
 {"file":"src/routes/workspace.ts","action":"Edit","timestamp":"2026-05-31T11:37:27Z","important":false}
+{"file":"src/middleware/auth.ts","action":"Edit","timestamp":"2026-05-31T17:54:12Z","important":false}
+{"file":"src/middleware/security.ts","action":"Edit","timestamp":"2026-05-31T17:58:09Z","important":false}
+{"file":"src/ws/server.ts","action":"Edit","timestamp":"2026-05-31T17:59:40Z","important":false}

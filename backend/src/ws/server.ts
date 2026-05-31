@@ -179,7 +179,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     });
 
     socket.on("whatsapp:subscribe", (orgId: string) => {
-      if (user?.organizationId === orgId || user?.email === SUPER_ADMIN_EMAIL) socket.join(`org:${orgId}`);
+      if (user?.organizationId === orgId || (user?.email && isSuperAdmin(user.email))) socket.join(`org:${orgId}`);
     });
     socket.on("whatsapp:unsubscribe", (orgId: string) => { socket.leave(`org:${orgId}`); });
     socket.on("subscribe", (ch: string) => { socket.join(ch); });

@@ -24,7 +24,7 @@ export interface TokenPair {
 // ── Token Configuration ───────────────────────────────────────
 
 const ACCESS_TOKEN_EXPIRY = env.JWT_ACCESS_EXPIRY || "15m";
-const REFRESH_TOKEN_EXPIRY = env.JWT_REFRESH_TOKEN_EXPIRY || "30d";
+const REFRESH_TOKEN_EXPIRY = env.JWT_REFRESH_EXPIRY || "30d";
 
 // ── Refresh Token Store (in production, use Redis) ────────────
 
@@ -57,7 +57,7 @@ setInterval(() => {
 /** Sign a short-lived access token (15 minutes) */
 export function signAccessToken(payload: AuthPayload): string {
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: ACCESS_TOKEN_EXPIRY,
+    expiresIn: ACCESS_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
     jwtid: crypto.randomUUID(),
   });
 }
@@ -81,7 +81,7 @@ export function signRefreshToken(payload: AuthPayload, req?: Request): string {
   });
 
   return jwt.sign({ ...payload, tokenId }, env.JWT_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRY,
+    expiresIn: REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
     jwtid: tokenId,
   });
 }

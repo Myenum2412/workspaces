@@ -71,8 +71,8 @@ export function mongoSanitizeMiddleware(req: Request, _res: Response, next: Next
   // Use express-mongo-sanitize for body, query, params
   mongoSanitize({
     replaceWith: "_",
-    onSanitize: ({ req: sanitizedReq, key }) => {
-      console.warn(`[Sanitize] Removed prohibited key "${key}" from ${sanitizedReq.originalUrl}`);
+    onSanitize: ({ req: sanitizedReq, key }: { req: Request; key: string }) => {
+      console.warn(`[Sanitize] Removed prohibited key "${key}" from ${(sanitizedReq as any).originalUrl}`);
     },
   })(req, _res, next);
 }
