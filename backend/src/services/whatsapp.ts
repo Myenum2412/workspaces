@@ -70,7 +70,7 @@ class WhatsappService {
     // Check if instance already exists for this org
     const existing = await WhatsappInstance.findOne({ organizationId }).lean();
     if (existing) {
-      throw new Error("WhatsApp instance already exists for this workspace");
+      return existing;
     }
 
     const instance = await WhatsappInstance.create({

@@ -4,22 +4,25 @@ import path from "path";
 import { connectDB } from "../config/connection.js";
 import { Organization } from "../models/index.js";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import crypto from "crypto";
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(process.cwd(), "uploads", "avatars"));
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${crypto.randomUUID()}${ext}`);
+const s3 = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   },
 });
 
+const storage = multer.memoryStorage();
+
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (allowed.includes(file.mimetype)) {
@@ -39,7 +42,17 @@ router.post("/avatar", authenticate, upload.single("file"), async (req: Request,
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    const ext = path.extname(file.originalname);
+    const filename = `profile_images/${crypto.randomUUID()}${ext}`;
+
+    await s3.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: filename,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    }));
+
+    const avatarUrl = `${process.env.R2_PUBLIC_URL}/${filename}`;
 
     await connectDB();
 
@@ -52,6 +65,30 @@ router.post("/avatar", authenticate, upload.single("file"), async (req: Request,
     res.json({ success: true, url: avatarUrl, avatarUrl });
   } catch (error: any) {
     console.error("Avatar upload error:", error);
+    res.status(500).json({ error: error.message || "Upload failed" });
+  }
+});
+
+router.post("/image", authenticate, upload.single("file"), async (req: Request, res: Response) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    const ext = path.extname(file.originalname);
+    const filename = `profile_images/${crypto.randomUUID()}${ext}`;
+
+    await s3.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: filename,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    }));
+
+    const url = `${process.env.R2_PUBLIC_URL}/${filename}`;
+    res.json({ success: true, url });
+  } catch (error: any) {
+    console.error("Image upload error:", error);
     res.status(500).json({ error: error.message || "Upload failed" });
   }
 });

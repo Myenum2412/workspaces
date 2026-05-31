@@ -28,17 +28,24 @@ export interface Row {
 }
 
 // Sub-components
-export function ProfileImageUpload() {
-  const [preview, setPreview] = React.useState<string | null>(null)
+export function ProfileImageUpload({
+  avatar,
+  onAvatarChange,
+}: {
+  avatar?: string;
+  onAvatarChange?: (url: string) => void;
+}) {
+  const [preview, setPreview] = React.useState<string | null>(avatar || null)
   const [error, setError] = React.useState<string | null>(null)
+  const [isUploading, setIsUploading] = React.useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0]
     if (!file) return
 
-    const MAX_SIZE = 50 * 1024 * 1024
+    const MAX_SIZE = 15 * 1024 * 1024
     if (file.size > MAX_SIZE) {
-      setError("File size exceeds 50MB limit.")
+      setError("File size exceeds 15MB limit.")
       setPreview(null)
       return
     }
@@ -49,6 +56,38 @@ export function ProfileImageUpload() {
       setPreview(reader.result as string)
     }
     reader.readAsDataURL(file)
+
+    // Upload to backend
+    const uploadImage = async () => {
+      try {
+        setIsUploading(true)
+        const formData = new FormData()
+        formData.append("file", file)
+        
+        const token = localStorage.getItem("auth_token")
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/api/upload/image`, {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: formData
+        })
+        
+        if (!res.ok) throw new Error("Upload failed")
+        
+        const data = await res.json()
+        if (data.url && onAvatarChange) {
+          onAvatarChange(data.url)
+        }
+      } catch (err) {
+        setError("Failed to upload image. Please try again.")
+        setPreview(null)
+      } finally {
+        setIsUploading(false)
+      }
+    }
+    
+    uploadImage()
   }
 
   return (
@@ -61,14 +100,16 @@ export function ProfileImageUpload() {
           </AvatarFallback>
           <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
             <CameraIcon className="size-8 mb-1" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider">Change</span>
-            <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">
+              {isUploading ? "Uploading..." : "Change"}
+            </span>
+            <input type="file" className="sr-only" accept="image/png, image/jpeg, image/gif" onChange={handleFileChange} disabled={isUploading} />
           </label>
         </Avatar>
       </div>
       <div className="text-center space-y-1">
         <h3 className="text-sm font-semibold text-foreground">Profile Photo</h3>
-        <p className="text-xs text-muted-foreground">Up to 50MB. PNG, JPG or GIF.</p>
+        <p className="text-xs text-muted-foreground">Up to 15MB. PNG, JPG or GIF.</p>
         {error && <p className="text-xs font-medium text-destructive mt-2">{error}</p>}
       </div>
     </div>
@@ -204,6 +245,7 @@ export type FirstSlideStaffForm = {
   joiningDate: string
   currentExperience: string
   totalExperience: string
+  avatar?: string
 }
 
 export function BasicInfoSection({

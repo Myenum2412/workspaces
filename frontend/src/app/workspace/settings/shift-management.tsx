@@ -23,8 +23,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Plus, Trash2, Edit2 } from "lucide-react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { workspaceApi } from "@/lib/api"
 
 interface Shift {
   id: string
@@ -32,6 +33,8 @@ interface Shift {
   startTime: string
   endTime: string
   organizationId?: string
+  description?: string
+  shiftType?: string
 }
 
 export function ShiftManagement() {
@@ -40,65 +43,88 @@ export function ShiftManagement() {
   const [formData, setFormData] = useState({
     title: "",
     startTime: "09:00",
-    endTime: "17:00",
+    startAmPm: "AM",
+    endTime: "05:00",
+    endAmPm: "PM",
+    description: "",
+    shiftType: "regular",
   })
 
   const queryClient = useQueryClient()
   const [orgId] = useState<string | null>(null)
   const [shifts, setShifts] = useState<Shift[]>([])
 
-  const createMutation = {
-    mutate: (data: any) => {
-      const newShift: Shift = {
-        id: crypto.randomUUID(),
-        title: data.title,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        organizationId: orgId || undefined,
-      }
-      setShifts((prev) => [...prev, newShift])
+  // Load shifts
+  const { data: shiftsData, refetch } = useQuery({
+    queryKey: ["workspace-shifts"],
+    queryFn: () => workspaceApi.getShifts(),
+  })
+  
+  React.useEffect(() => {
+    if (shiftsData?.success) setShifts(shiftsData.shifts || [])
+  }, [shiftsData])
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => workspaceApi.createShift(data),
+    onSuccess: (res) => {
+      setShifts((prev) => [...prev, res.shift])
       toast.success("Shift created successfully")
       setIsDialogOpen(false)
       resetForm()
+      refetch()
     },
-    isPending: false,
-  }
+    onError: () => toast.error("Failed to create shift")
+  })
 
-  const updateMutation = {
-    mutate: ({ id, data }: { id: string; data: any }) => {
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => workspaceApi.updateShift(id, data),
+    onSuccess: (res, variables) => {
       setShifts((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...data } : s))
+        prev.map((s) => (s.id === variables.id ? { ...s, ...res.shift } : s))
       )
       toast.success("Shift updated successfully")
       setIsDialogOpen(false)
       setEditingShift(null)
       resetForm()
+      refetch()
     },
-    isPending: false,
-  }
+    onError: () => toast.error("Failed to update shift")
+  })
 
-  const deleteMutation = {
-    mutate: (id: string) => {
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => workspaceApi.deleteShift(id),
+    onSuccess: (_, id) => {
       setShifts((prev) => prev.filter((s) => s.id !== id))
       toast.success("Shift deleted successfully")
+      refetch()
     },
-    isPending: false,
-  }
+    onError: () => toast.error("Failed to delete shift")
+  })
 
   const resetForm = () => {
     setFormData({
       title: "",
       startTime: "09:00",
-      endTime: "17:00",
+      startAmPm: "AM",
+      endTime: "05:00",
+      endAmPm: "PM",
+      description: "",
+      shiftType: "regular",
     })
   }
 
   const handleEdit = (shift: Shift) => {
     setEditingShift(shift)
+    const [startT, startA] = (shift.startTime || "09:00 AM").split(" ")
+    const [endT, endA] = (shift.endTime || "05:00 PM").split(" ")
     setFormData({
       title: shift.title,
-      startTime: shift.startTime,
-      endTime: shift.endTime,
+      startTime: startT || "09:00",
+      startAmPm: startA || "AM",
+      endTime: endT || "05:00",
+      endAmPm: endA || "PM",
+      description: shift.description || "",
+      shiftType: shift.shiftType || "regular",
     })
     setIsDialogOpen(true)
   }
@@ -109,10 +135,19 @@ export function ShiftManagement() {
       return
     }
 
+    const payload = {
+      title: formData.title,
+      startTime: `${formData.startTime} ${formData.startAmPm}`,
+      endTime: `${formData.endTime} ${formData.endAmPm}`,
+      description: formData.description,
+      shiftType: formData.shiftType,
+      organizationId: orgId || undefined,
+    }
+
     if (editingShift) {
-      updateMutation.mutate({ id: editingShift.id, data: formData })
+      updateMutation.mutate({ id: editingShift.id, data: payload })
     } else {
-      createMutation.mutate({ ...formData, branchId: null, organizationId: orgId })
+      createMutation.mutate(payload)
     }
   }
 
@@ -134,7 +169,7 @@ export function ShiftManagement() {
               Add Shift
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[600px] w-auto overflow-visible">
             <DialogHeader>
               <DialogTitle>{editingShift ? "Edit Shift" : "Create Shift"}</DialogTitle>
               <DialogDescription>
@@ -154,21 +189,68 @@ export function ShiftManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="startTime">Start Time</Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    value={formData.startTime}
-                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="startTime"
+                      type="text"
+                      placeholder="HH:MM"
+                      value={formData.startTime}
+                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    />
+                    <select
+                      value={formData.startAmPm}
+                      onChange={(e) => setFormData({ ...formData, startAmPm: e.target.value })}
+                      className="w-[80px] h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="endTime">End Time</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={formData.endTime}
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="endTime"
+                      type="text"
+                      placeholder="HH:MM"
+                      value={formData.endTime}
+                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    />
+                    <select
+                      value={formData.endAmPm}
+                      onChange={(e) => setFormData({ ...formData, endAmPm: e.target.value })}
+                      className="w-[80px] h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="e.g., Standard operational hours"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid gap-2">
+                  <Label>Shift Type</Label>
+                  <select
+                    value={formData.shiftType}
+                    onChange={(e) => setFormData({ ...formData, shiftType: e.target.value })}
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="regular">Regular</option>
+                    <option value="flexible">Flexible</option>
+                    <option value="night">Night</option>
+                  </select>
                 </div>
               </div>
             </div>

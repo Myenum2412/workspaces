@@ -9,94 +9,13 @@
 
 ---
 
-## セッション: 2026-05-25T09:38:43Z
+## セッション: 2026-05-31T07:38:04Z
 
-- session_id: `session-1779701906391058742`
+- session_id: `session-1780213073281108680`
 - project: `workspaces`
 - branch: `main`
-- started_at: `2026-05-25T09:38:26Z`
-- ended_at: `2026-05-25T09:38:43Z`
-- changes: 0
-
-### 変更ファイル
-- （なし）
-
-### 重要な変更（important=true）
-- （なし）
-
-### 次回への引き継ぎ（任意）
-- （必要に応じて追記）
-
----
-
-## セッション: 2026-05-25T09:38:56Z
-
-- session_id: `session-1779701906391058742`
-- project: `workspaces`
-- branch: `main`
-- started_at: `2026-05-25T09:38:26Z`
-- ended_at: `2026-05-25T09:38:56Z`
-- changes: 0
-
-### 変更ファイル
-- （なし）
-
-### 重要な変更（important=true）
-- （なし）
-
-### 次回への引き継ぎ（任意）
-- （必要に応じて追記）
-
----
-
-## セッション: 2026-05-25T11:47:38Z
-
-- session_id: `session-1779709621311223810`
-- project: `workspaces`
-- branch: `main`
-- started_at: `2026-05-25T11:47:01Z`
-- ended_at: `2026-05-25T11:47:38Z`
-- changes: 0
-
-### 変更ファイル
-- （なし）
-
-### 重要な変更（important=true）
-- （なし）
-
-### 次回への引き継ぎ（任意）
-- （必要に応じて追記）
-
----
-
-## セッション: 2026-05-25T14:53:30Z
-
-- session_id: `session-1779720219119382795`
-- project: `workspaces`
-- branch: `main`
-- started_at: `2026-05-25T14:43:39Z`
-- ended_at: `2026-05-25T14:53:30Z`
-- duration_minutes: 9
-- changes: 0
-
-### 変更ファイル
-- （なし）
-
-### 重要な変更（important=true）
-- （なし）
-
-### 次回への引き継ぎ（任意）
-- （必要に応じて追記）
-
----
-
-## セッション: 2026-05-28T17:21:55Z
-
-- session_id: `session-1779988905037829734`
-- project: `workspaces`
-- branch: `main`
-- started_at: `2026-05-28T17:21:45Z`
-- ended_at: `2026-05-28T17:21:55Z`
+- started_at: `2026-05-31T07:37:53Z`
+- ended_at: `2026-05-31T07:38:04Z`
 - changes: 0
 
 ### 変更ファイル

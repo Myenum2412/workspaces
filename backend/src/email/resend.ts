@@ -91,3 +91,21 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
     html,
   });
 }
+
+export async function sendVerificationEmail(params: ForgotPasswordEmailParams) {
+  const { to, otp, resetUrl } = params;
+  const html = forgotPasswordTemplate({ otp, resetUrl });
+
+  const resend = getResend();
+  if (!resend) {
+    console.log(`[Email] EMAIL VERIFICATION → ${to} | otp: ${otp} | reset: ${resetUrl}`);
+    return;
+  }
+
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "Verification Mail",
+    html,
+  });
+}

@@ -12,24 +12,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Settings2, Database, Shield, Bell, Users, Mail, Palette, RotateCcw, KeyRound } from "lucide-react"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { workspaceApi } from "@/lib/api"
 
 export default function SettingsPage() {
   const [workspaceId, setWorkspaceId] = useState("")
-  const [heldIds, setHeldIds] = useState<string[]>([])
+  const [heldIds, setHeldIds] = useState<any[]>([])
+  const [holdReason, setHoldReason] = useState("")
 
-  React.useEffect(() => {
+  useEffect(() => {
     setWorkspaceId(localStorage.getItem("employeeIdPrefix") || "EMP-")
     try {
       const stored = localStorage.getItem("heldEmployeeIds")
       if (stored) setHeldIds(JSON.parse(stored))
     } catch (e) {}
+
+    // Load HR settings
+    workspaceApi.getHrSettings()
+      .then(res => {
+        if (res.success && res.hrSettings && Object.keys(res.hrSettings).length > 0) {
+          setHrSettings(prev => ({ ...prev, ...res.hrSettings }))
+        }
+      })
+      .catch(err => console.error("Failed to load HR settings", err))
   }, [])
   const [hrSettings, setHrSettings] = useState({
     workStartTime: "09:00",
-    workEndTime: "17:30",
-    breakDuration: "1:00",
+    workStartAmPm: "AM",
+    workEndTime: "05:30",
+    workEndAmPm: "PM",
     weeklyWorkingDays: 5,
     annualLeaves: 20,
     sickLeaves: 10,
@@ -45,8 +57,13 @@ export default function SettingsPage() {
     setHrSettings((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handleHrSave = () => {
-    // Settings saved
+  const handleHrSave = async () => {
+    try {
+      await workspaceApi.updateHrSettings(hrSettings)
+      toast.success("HR Settings saved successfully!")
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save HR Settings")
+    }
   }
 
   return (
@@ -65,7 +82,6 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between border-b pb-1">
           <TabsList className="bg-transparent h-auto p-0 gap-8">
             {[
-              { id: "general", label: "General", icon: Settings2 },
               { id: "master-data", label: "Master Data", icon: Database },
               { id: "hr", label: "HR Settings", icon: Users },
               { id: "email", label: "Email Settings", icon: Mail },
@@ -86,7 +102,12 @@ export default function SettingsPage() {
           </TabsList>
         </div>
 
-        <TabsContent value="general">
+
+        <TabsContent value="master-data" className="border-none p-0 outline-none">
+          <MasterDataManagement />
+        </TabsContent>
+
+        <TabsContent value="hr" className="border-none p-0 outline-none space-y-6">
           <div className="grid gap-6">
             <Card>
               <CardHeader>
@@ -117,23 +138,36 @@ export default function SettingsPage() {
                 </div>
                 
                 <div className="pt-4 border-t mt-4 flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-end justify-between gap-4">
+                    <div className="flex-1 space-y-2">
                       <h4 className="text-sm font-medium text-slate-900">Hold Employee ID</h4>
                       <p className="text-xs text-slate-500">Add the current ID prefix to the hold list.</p>
+                      <input
+                        type="text"
+                        value={holdReason}
+                        onChange={(e) => setHoldReason(e.target.value)}
+                        className="max-w-md w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="Reason for holding (optional)"
+                      />
                     </div>
                     <Button 
                       variant="destructive"
                       onClick={() => {
                         if (!workspaceId) return
-                        if (heldIds.includes(workspaceId)) {
+                        if (heldIds.some(h => (typeof h === 'string' ? h : h.id) === workspaceId)) {
                           toast.error("This ID is already on hold.")
                           return
                         }
-                        const newHeld = [...heldIds, workspaceId]
+                        const newHeld = [...heldIds, { 
+                          id: workspaceId, 
+                          reason: holdReason || "Reserved", 
+                          date: new Date().toISOString(),
+                          status: "On Hold"
+                        }]
                         setHeldIds(newHeld)
                         localStorage.setItem("heldEmployeeIds", JSON.stringify(newHeld))
                         setWorkspaceId("EMP-")
+                        setHoldReason("")
                         toast.success('Employee ID Prefix put on hold.')
                       }}
                     >
@@ -142,35 +176,51 @@ export default function SettingsPage() {
                   </div>
                   
                   {heldIds.length > 0 && (
-                    <div className="rounded-md border mt-4">
+                    <div className="rounded-md border mt-4 overflow-hidden">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-slate-50">
                           <TableRow>
-                            <TableHead>Held ID Prefix</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead className="font-semibold">Held ID Prefix</TableHead>
+                            <TableHead className="font-semibold">Reason</TableHead>
+                            <TableHead className="font-semibold">Date Held</TableHead>
+                            <TableHead className="font-semibold">Status</TableHead>
+                            <TableHead className="text-right font-semibold">Action</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {heldIds.map((id) => (
-                            <TableRow key={id}>
-                              <TableCell className="font-medium">{id}</TableCell>
-                              <TableCell className="text-right">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  className="text-emerald-600 hover:text-emerald-700"
-                                  onClick={() => {
-                                    const newHeld = heldIds.filter(h => h !== id)
-                                    setHeldIds(newHeld)
-                                    localStorage.setItem("heldEmployeeIds", JSON.stringify(newHeld))
-                                    toast.success("Hold released.")
-                                  }}
-                                >
-                                  Release
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {heldIds.map((item, index) => {
+                            const id = typeof item === 'string' ? item : item.id
+                            const reason = typeof item === 'string' ? 'Reserved' : item.reason
+                            const date = typeof item === 'string' ? 'N/A' : new Date(item.date).toLocaleDateString()
+                            const status = typeof item === 'string' ? 'On Hold' : item.status
+
+                            return (
+                              <TableRow key={index} className="hover:bg-slate-50/50">
+                                <TableCell className="font-medium text-emerald-700">{id}</TableCell>
+                                <TableCell className="text-slate-600">{reason}</TableCell>
+                                <TableCell className="text-slate-500 text-sm">{date}</TableCell>
+                                <TableCell>
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                    {status}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => {
+                                      const newHeld = heldIds.filter((h: any) => (typeof h === 'string' ? h : h.id) !== id)
+                                      setHeldIds(newHeld)
+                                      localStorage.setItem("heldEmployeeIds", JSON.stringify(newHeld))
+                                    }}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    Release
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
                         </TableBody>
                       </Table>
                     </div>
@@ -178,15 +228,8 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
 
-        <TabsContent value="master-data" className="border-none p-0 outline-none">
-          <MasterDataManagement />
-        </TabsContent>
 
-        <TabsContent value="hr" className="border-none p-0 outline-none space-y-6">
-          <div className="grid gap-6">
             {/* Working Hours */}
             <Card>
               <CardHeader>
@@ -194,34 +237,46 @@ export default function SettingsPage() {
                 <CardDescription>Configure daily working hours and schedule preferences.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Work Start Time</label>
-                    <input
-                      type="time"
-                      value={hrSettings.workStartTime}
-                      onChange={(e) => handleHrChange("workStartTime", e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="HH:MM"
+                        value={hrSettings.workStartTime}
+                        onChange={(e) => handleHrChange("workStartTime", e.target.value)}
+                        className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                      <select
+                        value={hrSettings.workStartAmPm}
+                        onChange={(e) => handleHrChange("workStartAmPm", e.target.value)}
+                        className="w-[80px] h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Work End Time</label>
-                    <input
-                      type="time"
-                      value={hrSettings.workEndTime}
-                      onChange={(e) => handleHrChange("workEndTime", e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Break Duration (HH:MM)</label>
-                    <input
-                      type="text"
-                      value={hrSettings.breakDuration}
-                      onChange={(e) => handleHrChange("breakDuration", e.target.value)}
-                      placeholder="01:00"
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="HH:MM"
+                        value={hrSettings.workEndTime}
+                        onChange={(e) => handleHrChange("workEndTime", e.target.value)}
+                        className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                      <select
+                        value={hrSettings.workEndAmPm}
+                        onChange={(e) => handleHrChange("workEndAmPm", e.target.value)}
+                        className="w-[80px] h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Weekly Working Days</label>
@@ -372,11 +427,13 @@ export default function SettingsPage() {
           <ThemeSettings />
         </TabsContent>
 
-        <TabsContent value="security" className="border-none p-0 outline-none">
-          <ChangePassword />
+        <TabsContent value="security" className="border-none p-0 outline-none space-y-6">
+          <div className="grid gap-6">
+            <ChangePassword />
+          </div>
         </TabsContent>
 
-        <TabsContent value="notifications">
+        <TabsContent value="notifications" className="border-none p-0 outline-none space-y-6">
           <div className="grid gap-6">
             <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
               <Bell className="size-12 text-slate-300 mb-4" />

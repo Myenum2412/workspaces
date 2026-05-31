@@ -81,7 +81,9 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
   React.useEffect(() => {
     const prefix = localStorage.getItem("employeeIdPrefix")
     if (prefix) {
-      setFirstSlideData(prev => ({ ...prev, displayId: prefix }))
+      const count = parseInt(localStorage.getItem("employeeIdCount") || "1", 10)
+      const displayId = `${prefix}${String(count).padStart(3, '0')}`
+      setFirstSlideData(prev => ({ ...prev, displayId }))
     }
   }, [])
 
@@ -112,10 +114,11 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
 
   const createStaffMutation = useMutation({
     mutationFn: () => staffService.createStaff({
-      displayId: firstSlideData.displayId.trim() || undefined,
+      empId: firstSlideData.displayId.trim() || undefined,
       firstName: firstSlideData.firstName.trim(),
       lastName: firstSlideData.lastName.trim(),
       email: firstSlideData.email.trim(),
+      avatar: firstSlideData.avatar || "",
       department: firstSlideData.department || null,
       phone: null,
       roleName: firstSlideData.roleName || firstSlideData.designation || null,
@@ -161,10 +164,11 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
     trackEvent('save_employee_start')
     try {
       return await staffService.createStaff({
-        displayId: firstSlideData.displayId.trim() || undefined,
+        empId: firstSlideData.displayId.trim() || undefined,
         firstName: firstSlideData.firstName.trim(),
         lastName: firstSlideData.lastName.trim(),
         email: firstSlideData.email.trim(),
+        avatar: firstSlideData.avatar || "",
         password: finalPassword,
         department: firstSlideData.department || null,
         phone: null,
@@ -180,6 +184,11 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
         totalExperience: firstSlideData.totalExperience || null,
       }).then(staff => {
         setSavedStaff(staff)
+        
+        // Increment the employee ID count in localStorage
+        const currentCount = parseInt(localStorage.getItem("employeeIdCount") || "1", 10)
+        localStorage.setItem("employeeIdCount", String(currentCount + 1))
+        
         queryClient.invalidateQueries({ queryKey: ["staff"] })
         queryClient.invalidateQueries({ queryKey: ["staff-stats"] })
         trackEvent('save_employee_success')
@@ -193,12 +202,14 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
 
   const nextStep = async () => {
     if (currentStep === 1) {
-      const staff = await saveFirstSlide()
-      if (!staff) return
+      if (!firstSlideData.firstName.trim() || !firstSlideData.email.trim()) {
+        setFormError("First name and email address are required.")
+        return
+      }
     }
 
     setDirection(1)
-    setCurrentStep((prev) => Math.min(prev + 1, 4))
+    setCurrentStep((prev) => Math.min(prev + 1, 5))
     trackEvent('form_next_step', { from: currentStep, to: currentStep + 1 })
   }
 
@@ -264,7 +275,7 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
       {/* Progress Indicator */}
       <div className="px-6 pt-4">
         <div className="flex items-center justify-between mb-4">
-          {[1, 2, 3, 4].map((step) => (
+          {[1, 2, 3, 4, 5].map((step) => (
             <div key={step} className="flex flex-col items-center gap-2 flex-1 relative">
               <div 
                 className={cn(
@@ -278,9 +289,9 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
                 "text-[9px] font-bold uppercase tracking-wider transition-colors duration-300",
                 currentStep >= step ? "text-slate-700" : "text-muted-foreground"
               )}>
-                {step === 1 ? "Profile" : step === 2 ? "Contact" : step === 3 ? "History" : "History"}
+                {step === 1 ? "Profile" : step === 2 ? "Work Info" : step === 3 ? "Contact" : step === 4 ? "Social" : "History"}
               </span>
-                  {step < 4 && (
+                  {step < 5 && (
                 <div className="absolute top-4 left-[60%] right-[-40%] h-[2px] bg-muted -z-0">
                   <div 
                     className="h-full bg-emerald-600 transition-all duration-500"
@@ -301,21 +312,28 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
                 {currentStep === 1 && (
                   <div className="space-y-8">
                     <div className="flex gap-12 items-start mb-6">
-  <div className="flex-shrink-0">
-    <ProfileImageUpload />
-  </div>
-  <div className="flex-1">
-    <BasicInfoSection formData={firstSlideData} onChange={updateFirstSlideField} />
-  </div>
-</div>
-<Separator />
-
-                    <WorkInfoSection formData={firstSlideData} onChange={updateFirstSlideField} />
+                      <div className="flex-shrink-0">
+                        <ProfileImageUpload 
+                          avatar={firstSlideData.avatar} 
+                          onAvatarChange={(url) => updateFirstSlideField("avatar", url)} 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <BasicInfoSection formData={firstSlideData} onChange={updateFirstSlideField} />
+                      </div>
+                    </div>
                     <Separator />
                   </div>
                 )}
 
                 {currentStep === 2 && (
+                  <div className="space-y-8">
+                    <WorkInfoSection formData={firstSlideData} onChange={updateFirstSlideField} />
+                    <Separator />
+                  </div>
+                )}
+
+                {currentStep === 3 && (
                   <div className="space-y-8">
                     <ContactDetailsSection />
                     <Separator />
@@ -331,13 +349,13 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
                   </div>
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 4 && (
                   <div className="space-y-8">
                     <SocialPresenceSection />
                   </div>
                 )}
 
-                {currentStep === 4 && (
+                {currentStep === 5 && (
                   <div className="space-y-8 pb-8">
                     <DynamicRowSection
                       title="Work experience"
@@ -435,9 +453,9 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
           {currentStep === 1 ? "Cancel" : "Back"}
         </Button>
         <div className="flex gap-3">
-          {currentStep < 4 ? (
+          {currentStep < 5 ? (
             <Button className="bg-emerald-600 hover:bg-emerald-700 w-32" onClick={nextStep} disabled={createStaffMutation.isPending}>
-              {currentStep === 1 && createStaffMutation.isPending ? "Saving..." : "Next Step"}
+              {createStaffMutation.isPending ? "Saving..." : "Next Step"}
             </Button>
           ) : (
             <Button className="bg-emerald-600 hover:bg-emerald-700 w-32" onClick={handleSave} disabled={createStaffMutation.isPending}>

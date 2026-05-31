@@ -11,7 +11,7 @@ import {
 import { authenticate, signToken, AuthRequest } from "../middleware/auth.js";
 import { validateBody } from "../middleware/validate.js";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validators/auth.js";
-import { sendForgotPasswordEmail, sendSignupWelcomeEmail } from "../email/resend.js";
+import { sendForgotPasswordEmail, sendSignupWelcomeEmail, sendVerificationEmail } from "../email/resend.js";
 import { getIO } from "../ws/server.js";
 
 const router = Router();
@@ -151,8 +151,15 @@ router.post("/login", validateBody(loginSchema), async (req: Request, res: Respo
     }
 
     const member = await OrgMember.findOne({ userId: profile._id.toString() }).lean() as any;
+    const userId = profile._id.toString();
+
+    // Update login info + activity log (non-blocking)
+    const { ProfileService } = await import("../services/profile.js");
+    ProfileService.updateLoginInfo(userId, req).catch(() => {});
+    ProfileService.logActivity({ userId, action: "user_login", req }).catch(() => {});
+
     const token = signToken({
-      userId: profile._id.toString(),
+      userId,
       email: profile.email,
       organizationId: member?.organizationId ?? profile.organizationId ?? "",
       role: member?.role ?? "member",
@@ -162,9 +169,15 @@ router.post("/login", validateBody(loginSchema), async (req: Request, res: Respo
       success: true,
       token,
       user: {
-        $id: profile._id.toString(),
+        $id: userId,
         email: profile.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
         name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
+        avatarUrl: profile.avatarUrl,
+        emailVerified: profile.emailVerified,
+        role: member?.role ?? "member",
+        organizationId: member?.organizationId ?? profile.organizationId ?? "",
       },
     });
   } catch (error: any) {
@@ -293,11 +306,20 @@ router.post("/statuses", async (req: Request, res: Response) => {
     await connectDB();
     const { UserStatus } = await import("../models/index.js");
     const statuses = await UserStatus.find({ userId: { $in: userIds } }).select("userId status lastActiveAt").lean();
-    
+
+    // Get currently-online user IDs from socket map
+    const { getOnlineUserIds } = await import("../ws/server.js");
+    const onlineIds = getOnlineUserIds();
+
     const TWELVE_HOURS = 12 * 60 * 60 * 1000;
     const now = new Date().getTime();
 
     const result = statuses.reduce((acc: any, curr: any) => {
+      // If user has active socket connection, always show Online
+      if (onlineIds.has(curr.userId)) {
+        acc[curr.userId] = "Online";
+        return acc;
+      }
       let finalStatus = curr.status;
       if (curr.lastActiveAt) {
         const timeDiff = now - new Date(curr.lastActiveAt).getTime();
@@ -311,6 +333,127 @@ router.post("/statuses", async (req: Request, res: Response) => {
     res.json({ statuses: result });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to fetch statuses" });
+  }
+});
+
+router.get("/status", authenticate, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    await connectDB();
+    const { UserStatus } = await import("../models/index.js");
+    const record = await UserStatus.findOne({ userId: authReq.user!.userId }).lean() as any;
+    res.json({ status: record?.status ?? "Offline", lastActiveAt: record?.lastActiveAt ?? null });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to fetch status" });
+  }
+});
+
+router.post("/status", authenticate, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: "status required" });
+    await connectDB();
+    const { UserStatus } = await import("../models/index.js");
+    await UserStatus.findOneAndUpdate(
+      { userId: authReq.user!.userId },
+      { status, lastActiveAt: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, status });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to update status" });
+  }
+});
+
+// ── Status history + screen time ────────────────────────────
+router.get("/status/history", authenticate, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    await connectDB();
+    const { UserStatusHistory } = await import("../models/index.js");
+
+    const days = Math.min(parseInt(req.query.days as string) || 7, 30);
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - days);
+
+    const sessions = await UserStatusHistory.find({
+      userId: authReq.user!.userId,
+      loginTimestamp: { $gte: since },
+    })
+      .sort({ loginTimestamp: -1 })
+      .lean() as any[];
+
+    // Aggregate: use durations if available, otherwise estimate from session span
+    const totals: Record<string, number> = {};
+    const dailyBreakdown: Record<string, Record<string, number>> = {};
+
+    for (const session of sessions) {
+      const dateKey = new Date(session.loginTimestamp).toISOString().slice(0, 10);
+      if (!dailyBreakdown[dateKey]) dailyBreakdown[dateKey] = {};
+
+      if (session.durations && session.durations.length > 0) {
+        // Use recorded slices
+        for (const slice of session.durations) {
+          const dur = slice.durationSeconds || 0;
+          if (dur <= 0) continue;
+          totals[slice.status] = (totals[slice.status] || 0) + dur;
+          dailyBreakdown[dateKey][slice.status] = (dailyBreakdown[dateKey][slice.status] || 0) + dur;
+        }
+      } else {
+        // Estimate from session span — attribute to last known status
+        const end = session.logoutTimestamp ? new Date(session.logoutTimestamp) : new Date();
+        const start = new Date(session.loginTimestamp);
+        const dur = Math.max(0, Math.round((end.getTime() - start.getTime()) / 1000));
+        const status = session.status || "Online";
+        totals[status] = (totals[status] || 0) + dur;
+        dailyBreakdown[dateKey][status] = (dailyBreakdown[dateKey][status] || 0) + dur;
+      }
+    }
+
+    res.json({
+      sessions: sessions.map((s: any) => ({
+        id: s._id,
+        login: s.loginTimestamp,
+        logout: s.logoutTimestamp,
+        lastActive: s.lastActiveTime,
+        status: s.status,
+        durations: s.durations || [],
+      })),
+      totals,
+      daily: dailyBreakdown,
+      days,
+    });
+  } catch (error: any) {
+    console.error("[StatusHistory] Error:", error);
+    res.status(500).json({ error: error.message || "Failed to fetch history" });
+  }
+});
+
+router.post("/send-verification", async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    await connectDB();
+    const profile = await UserProfile.findOne({ email }) as any;
+    if (!profile) return res.json({ success: true });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    profile.resetPasswordOTP = otp;
+    profile.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+    await profile.save();
+
+    await sendVerificationEmail({
+      to: email,
+      otp,
+      resetUrl: `${process.env.FRONTEND_URL}`,
+    }).catch((err) => {
+      console.error("[Verification] Email failed:", err);
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed" });
   }
 });
 

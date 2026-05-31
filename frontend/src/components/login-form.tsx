@@ -65,9 +65,14 @@ export function LoginForm({
 
       if (json.token) {
         localStorage.setItem("auth_token", json.token)
+        document.cookie = `auth_token=${json.token}; path=/; max-age=86400; SameSite=Strict`
       }
 
-      router.push("/workspace")
+      if (json.user?.role === "staff") {
+        router.push("/staff/dashboard")
+      } else {
+        router.push("/workspace")
+      }
       router.refresh()
     } catch {
       setErrorMessage("Login failed")

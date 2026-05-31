@@ -413,7 +413,7 @@ export function StaffTablePage() {
                         </TableHead>
                         <TableHead className={cn("px-4 py-4 font-semibold", theme.textDark)}>Employee</TableHead>
                         <TableHead className={cn("px-4 py-4 font-semibold cursor-pointer group", theme.textDark)} onClick={() => handleSort("empId")}>
-                          <div className="flex items-center gap-2">Employee Id <SortIcon columnKey="empId" /></div>
+                          <div className="flex items-center gap-2">Employee ID <SortIcon columnKey="empId" /></div>
                         </TableHead>
                         <TableHead className={cn("px-4 py-4 font-semibold cursor-pointer group", theme.textDark)} onClick={() => handleSort("designation")}>
                           <div className="flex items-center gap-2">Designation <SortIcon columnKey="designation" /></div>
@@ -451,7 +451,7 @@ export function StaffTablePage() {
                               </div>
                             </div>
                           </TableCell>
-                    <TableCell className="px-4 py-4 font-medium">{staff.empId}</TableCell>
+                    <TableCell className="px-4 py-4 font-medium">{staff.empId || "N/A"}</TableCell>
                     <TableCell className="px-4 py-4 text-sm text-slate-900/80">
                       <div className="flex flex-col">
                         <span className="font-medium">{staff.designation}</span>

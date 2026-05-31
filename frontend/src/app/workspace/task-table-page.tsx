@@ -43,6 +43,7 @@ import { DataTablePagination } from "@/components/tasks/data-table-pagination"
 import { TaskCard } from "@/components/tasks/task-card"
 import { TaskViewModal } from "@/components/tasks/task-view-modal"
 import { TaskKanbanView } from "@/components/tasks/task-kanban-view"
+import { TaskCalendarView } from "@/components/tasks/task-calendar-view"
 import type { Task as AdminTask } from "@/components/admin/tasks/types"
 
 function getStatusClasses(status: string) {
@@ -85,6 +86,7 @@ export function TaskTablePage({
   isTeamTask = false,
   assignedTo,
   categoryFilter = "All",
+  defaultViewMode = "table",
 }: {
   title?: string
   tableTitle?: string
@@ -92,6 +94,7 @@ export function TaskTablePage({
   isTeamTask?: boolean
   assignedTo?: string
   categoryFilter?: string
+  defaultViewMode?: 'table' | 'kanban' | 'calendar'
 }) {
   const { trackEvent, trackInteraction } = useAnalytics("TaskTablePage")
 
@@ -177,7 +180,7 @@ export function TaskTablePage({
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
   const [viewingTask, setViewingTask] = React.useState<AdminTask | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = React.useState(false)
-  const [viewMode, setViewMode] = React.useState<'table' | 'kanban'>('table')
+  const [viewMode, setViewMode] = React.useState<'table' | 'kanban' | 'calendar'>(defaultViewMode || 'table')
 
   const selectedPageIds = React.useMemo(
     () => paginatedTasks.filter((task) => selectedIds.has(task.taskNo)),
@@ -315,6 +318,15 @@ export function TaskTablePage({
                 >
                   <LayoutGridIcon className="size-3.5 mr-1.5" />
                   <span className="text-[11px] font-bold uppercase tracking-wider">Kanban</span>
+                </Button>
+                <Button 
+                  variant={viewMode === 'calendar' ? "secondary" : "ghost"} 
+                  size="sm" 
+                  onClick={() => setViewMode('calendar')}
+                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'calendar' ? "bg-emerald-600 text-white hover:bg-emerald-700 " : "text-slate-900 hover:bg-emerald-100")}
+                >
+                  <CalendarIcon className="size-3.5 mr-1.5" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Calendar</span>
                 </Button>
               </div>
               
@@ -544,7 +556,7 @@ export function TaskTablePage({
                       total={total}
                     />
                   </>
-                ) : (
+                ) : viewMode === 'kanban' ? (
                   <TaskKanbanView
                     tasks={filteredTasks.filter((t: Task) =>
                       (filterStatus === 'All' || t.status === filterStatus) &&
@@ -552,6 +564,14 @@ export function TaskTablePage({
                     )}
                     onTaskClick={handleViewTask}
                     onStatusChange={handleStatusChange}
+                  />
+                ) : (
+                  <TaskCalendarView
+                    tasks={filteredTasks.filter((t: Task) =>
+                      (filterStatus === 'All' || t.status === filterStatus) &&
+                      (t.task.toLowerCase().includes(searchQuery.toLowerCase()) || t.taskNo.toLowerCase().includes(searchQuery.toLowerCase()))
+                    )}
+                    onTaskClick={handleViewTask}
                   />
                 )}
               </div>

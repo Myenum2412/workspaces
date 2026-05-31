@@ -3,10 +3,11 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  SearchIcon, ChevronDownIcon, X, Smartphone, CheckCircle2, Plus,
+  SearchIcon, X, CheckCircle2, Plus,
   MessageCircle, QrCode, Shield, Zap, Users, Globe, Star,
-  Check, Loader2, ExternalLink,
+  Check, Loader2, ExternalLink, StoreIcon, ArrowRight,
 } from "lucide-react";
+import WhatsappIcon from "@/components/icons/WhatsappIcon";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,7 @@ const APP_CATALOG: StoreApp[] = [
     description: "Connect your WhatsApp Business account to communicate with customers directly from your workspace.",
     longDescription:
       "The WhatsApp Business integration allows you to manage customer conversations, send messages, receive replies, and track all communication within your workspace. Supports QR code connection, real-time messaging, chat history, and multi-device support.",
-    icon: <Smartphone className="h-8 w-8" />,
+    icon: <WhatsappIcon size={32} />,
     category: "Communication",
     tags: ["WhatsApp", "Messaging", "Customer Support", "Real-time"],
     rating: 4.8,
@@ -254,7 +255,6 @@ export default function StoresPage() {
   const [selectedApp, setSelectedApp] = React.useState<StoreApp | null>(null);
   const [showDetail, setShowDetail] = React.useState(false);
 
-  // Fetch installed WhatsApp instances
   const { data: waInstances = [] } = useQuery({
     queryKey: ["whatsapp-instances"],
     queryFn: () => whatsappService.getInstances(),
@@ -263,15 +263,13 @@ export default function StoresPage() {
 
   const installedInstance = (waInstances[0] || null) as WhatsappInstance | null;
 
-  // Filter apps
   const filteredApps = APP_CATALOG.filter((app) => {
     const matchesSearch =
       !searchQuery ||
       app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory =
-      selectedCategory === "All" || app.category === selectedCategory;
+    const matchesCategory = selectedCategory === "All" || app.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -298,80 +296,57 @@ export default function StoresPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-10">
-      {/* Header */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">App Store</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Discover and install apps to extend your workspace capabilities
-          </p>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search apps..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 py-6 text-base bg-white shadow-sm border-slate-200 rounded-xl"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              aria-label="Clear search"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground flex items-center justify-center hover:text-slate-700"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Category Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          {CATEGORIES.map((cat) => (
-            <Button
-              key={cat}
-              variant={selectedCategory === cat ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(cat)}
-              className={
-                selectedCategory === cat
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-              }
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
+    <div className="space-y-8 max-w-6xl mx-auto pb-10">
+      {/* Centered Hero */}
+      <div className="flex flex-col items-center justify-center text-center pt-8 pb-4">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">App Store</h1>
+        <p className="text-base text-slate-500 mt-2 max-w-full">
+          Discover and install apps to extend your workspace capabilities
+        </p>
       </div>
 
-      {/* Installed Section */}
-      {installedInstance && (
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Installed</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {APP_CATALOG.filter((a) => a.id === "whatsapp-business").map((app) => (
-              <StoreAppCard
-                key={app.id}
-                app={app}
-                installed={true}
-                onInstall={() => handleInstall(app.id)}
-                onOpen={() => handleOpenApp(app)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Search */}
+      <div className="relative max-w-xl mx-auto">
+        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input
+          placeholder="Search apps..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 pr-10 py-6 text-base bg-white shadow-sm border-slate-200 rounded-xl"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground flex items-center justify-center hover:text-slate-700"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
-      {/* Available Apps */}
+      {/* Category Filters */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {CATEGORIES.map((cat) => (
+          <Button
+            key={cat}
+            variant={selectedCategory === cat ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory(cat)}
+            className={
+              selectedCategory === cat
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+            }
+          >
+            {cat}
+          </Button>
+        ))}
+      </div>
+
+      {/* App Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">
-          {installedInstance ? "More Apps" : "Available Apps"}
-        </h2>
         {filteredApps.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
             <SearchIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />

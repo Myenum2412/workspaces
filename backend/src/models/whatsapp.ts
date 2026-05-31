@@ -22,7 +22,7 @@ export interface IWhatsappInstance extends Document<string> {
 
 const WhatsappInstanceSchema = new Schema<IWhatsappInstance>({
   _id: { type: String },
-  organizationId: { type: String, required: true, index: true },
+  organizationId: { type: String, required: true },
   workspaceOwnerId: { type: String, required: true },
   instanceName: { type: String, required: true, default: "WhatsApp" },
   connectionStatus: {
@@ -78,10 +78,10 @@ export interface IWhatsappMessage extends Document<string> {
 
 const WhatsappMessageSchema = new Schema<IWhatsappMessage>({
   _id: { type: String },
-  organizationId: { type: String, required: true, index: true },
+  organizationId: { type: String, required: true },
   instanceId: { type: String, required: true, index: true },
   messageId: { type: String, required: true },
-  jid: { type: String, required: true, index: true },
+  jid: { type: String, required: true },
   fromMe: { type: Boolean, default: false },
   senderJid: { type: String, required: true },
   senderName: String,
@@ -132,7 +132,7 @@ export interface IWhatsappChat extends Document<string> {
 
 const WhatsappChatSchema = new Schema<IWhatsappChat>({
   _id: { type: String },
-  organizationId: { type: String, required: true, index: true },
+  organizationId: { type: String, required: true },
   instanceId: { type: String, required: true },
   jid: { type: String, required: true },
   name: String,

@@ -4,7 +4,6 @@ import * as React from "react"
 import { useEffect, useState } from "react"
 import { TaskTablePage } from "../task-table-page"
 import { TaskAllocationModal } from "@/components/tasks/task-allocation-modal"
-import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { taskService } from "@/lib/services/task-service"
@@ -16,7 +15,6 @@ export default function MyTasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>("All")
   const [userName, setUserName] = useState<string>("")
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {
     async function fetchUser() {
@@ -149,11 +147,7 @@ export default function MyTasksPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-6">
-              <ToggleSwitch 
-                checked={showAdvanced} 
-                onChange={setShowAdvanced} 
-                label="Advanced View" 
-              />
+
               <Button
                 onClick={() => setIsDialogOpen(true)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white "
@@ -191,25 +185,14 @@ export default function MyTasksPage() {
             })}
           </div>
 
-          {/* Individual Tasks Table */}
+          {/* Common Tasks Table */}
           <div className="space-y-4">
             <TaskTablePage 
-              title="" 
+              tableTitle="My Assigned Tasks" 
               showPageHeader={false} 
-              isTeamTask={false} 
               categoryFilter={selectedCategory} 
               assignedTo={userName || undefined} 
-            />
-          </div>
-
-          {/* Team Tasks Table */}
-          <div className="space-y-4">
-            <TaskTablePage 
-              tableTitle="Team Task" 
-              showPageHeader={false} 
-              isTeamTask={true} 
-              categoryFilter={selectedCategory} 
-              assignedTo={userName || undefined} 
+              defaultViewMode="calendar"
             />
           </div>
         </CardContent>

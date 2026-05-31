@@ -9,7 +9,23 @@
  * The org admin user ID is set via NEXT_PUBLIC_ORG_USER_ID env var.
  */
 
-import { databases, Query, ID, COLLECTIONS, DB_ID } from "@/lib/appwrite/client";
+import { ID } from "@/lib/appwrite/client";
+import { API_BASE_URL } from "@/lib/api/config";
+
+async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem("auth_token") : null;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Request failed");
+  }
+  return res.json();
+}
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -113,6 +129,7 @@ function staffToProfile(staff: Partial<UIStaff>): Record<string, any> {
     firstName: staff.firstName ?? "",
     lastName: staff.lastName ?? "",
     email: staff.email ?? "",
+    password: staff.password ?? "",
     phone: staff.mobile ?? "",
     designation: staff.designation ?? "",
     department: staff.department ?? "",
@@ -157,12 +174,8 @@ export const staffService = {
   /** Get all staff profiles for an organization */
   async getAllStaff(organizationId?: string): Promise<UIStaff[]> {
     try {
-      const queries: any[] = [Query.limit(100)];
-      if (organizationId) {
-        queries.push(Query.equal("organizationId", organizationId));
-      }
-      const res = await databases.listDocuments(DB_ID, COLLECTIONS.USER_PROFILES, queries);
-      return res.documents.map((doc: any) => profileToStaff(doc));
+      const res = await apiFetch<{ success: boolean; staffs: any[] }>(`/api/staff`);
+      return res.staffs.map((doc: any) => profileToStaff({ ...doc, $id: doc._id }));
     } catch (error) {
       console.warn("staffService.getAllStaff error:", error);
       return [];
@@ -172,8 +185,8 @@ export const staffService = {
   /** Get a single staff profile by user_profiles document ID */
   async getStaffById(id: string): Promise<UIStaff | null> {
     try {
-      const doc = await databases.getDocument(DB_ID, COLLECTIONS.USER_PROFILES, id);
-      return profileToStaff(doc as unknown as Record<string, any>);
+      const res = await apiFetch<{ success: boolean; staff: any }>(`/api/staff/${id}`);
+      return profileToStaff({ ...res.staff, $id: res.staff._id });
     } catch {
       return null;
     }
@@ -182,12 +195,10 @@ export const staffService = {
   /** Get staff by Appwrite user ID */
   async getStaffByUserId(userId: string): Promise<UIStaff | null> {
     try {
-      const res = await databases.listDocuments(DB_ID, COLLECTIONS.USER_PROFILES, [
-        Query.equal("userId", userId),
-        Query.limit(1),
-      ]);
-      if (res.documents.length === 0) return null;
-      return profileToStaff(res.documents[0] as unknown as Record<string, any>);
+      const res = await apiFetch<{ success: boolean; staffs: any[] }>(`/api/staff`);
+      const user = res.staffs.find(s => s.userId === userId);
+      if (!user) return null;
+      return profileToStaff({ ...user, $id: user._id });
     } catch {
       return null;
     }
@@ -251,30 +262,12 @@ export const staffService = {
       ...data,
     };
 
-    const doc = await databases.createDocument(
-      DB_ID,
-      COLLECTIONS.USER_PROFILES,
-      ID.unique(),
-      staffToProfile(newStaff)
-    );
+    const res = await apiFetch<{ success: boolean; staff: any }>("/api/staff", {
+      method: "POST",
+      body: JSON.stringify(staffToProfile(newStaff)),
+    });
 
-    // Also create org membership if we have an orgId
-    if (newStaff.orgId) {
-      try {
-        await databases.createDocument(DB_ID, COLLECTIONS.ORG_MEMBERS, ID.unique(), {
-          organizationId: newStaff.orgId,
-          userId: newStaff.userId,
-          role: newStaff.role || "staff",
-          status: "active",
-          invitedBy: "",
-          joinedAt: now,
-        });
-      } catch {
-        // Non-fatal: membership can be created later
-      }
-    }
-
-    return { ...newStaff, id: doc.$id };
+    return profileToStaff({ ...res.staff, $id: res.staff._id });
   },
 
   /** Update an existing staff profile */
@@ -283,26 +276,23 @@ export const staffService = {
     if (!existing) throw new Error("Staff not found");
 
     const merged = { ...existing, ...data };
-    await databases.updateDocument(
-      DB_ID,
-      COLLECTIONS.USER_PROFILES,
-      id,
-      staffToProfile(merged)
-    );
-    return merged;
+    const res = await apiFetch<{ success: boolean; staff: any }>(`/api/staff/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(staffToProfile(merged)),
+    });
+    return profileToStaff({ ...res.staff, $id: res.staff._id });
   },
 
   /** Soft-delete: set status to "Deleted" */
   async deleteStaff(id: string): Promise<void> {
-    await databases.updateDocument(DB_ID, COLLECTIONS.USER_PROFILES, id, {
-      status: "Deleted",
-    });
+    await apiFetch(`/api/staff/${id}`, { method: "DELETE" });
   },
 
   /** Reactivate a deleted user */
   async reactivateStaff(id: string): Promise<void> {
-    await databases.updateDocument(DB_ID, COLLECTIONS.USER_PROFILES, id, {
-      status: "Active",
+    await apiFetch(`/api/staff/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ status: "Active" }),
     });
   },
 

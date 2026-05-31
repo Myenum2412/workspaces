@@ -1,21 +1,23 @@
-"use client"
+"use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import React, { useEffect, useState, useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import {
   Building2Icon,
   CalendarDaysIcon,
+  Clock,
   GlobeIcon,
   MailIcon,
   MapPinIcon,
@@ -25,357 +27,347 @@ import {
   Check,
   Loader2,
   AlertCircle,
-  X,
   Upload,
   Camera,
-} from "lucide-react"
+  History,
+  Download,
+  Activity,
+  SmartphoneIcon,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { databases, Query, COLLECTIONS, DB_ID } from "@/lib/appwrite/client"
-import { API_BASE_URL } from "@/lib/api/config"
-import { fetchJson } from "@/lib/api/fetch-json"
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { API_BASE_URL } from "@/lib/api/config";
+import { profileApi } from "@/lib/api";
+import { queryKeys } from "@/lib/query/keys";
+import { useProfileSocket } from "@/hooks/use-profile-socket";
 
-type CompanyProfileForm = {
-  companyName: string
-  businessEmail: string
-  companyPhone: string
-  registeredOffice: string
-  addressLine1: string
-  addressLine2: string
-  city: string
-  state: string
-  postalCode: string
-  country: string
-  companyRange: string
-  industry: string
-  website: string
-  gstNumber: string
-  tagline: string
-}
+// ── Types ───────────────────────────────────────────────────
+type ProfileForm = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  designation: string;
+  department: string;
+  bio: string;
+  personalEmail: string;
+  personalPhone: string;
+  avatarUrl: string;
+  gender: string;
+  maritalStatus: string;
+  dob: string;
+  addressStreet: string;
+  addressCity: string;
+  addressState: string;
+  addressCountry: string;
+  addressPostalCode: string;
+  permanentAddress: string;
+  expertise: string;
+};
 
-const emptyProfile: CompanyProfileForm = {
-  companyName: "",
-  businessEmail: "",
-  companyPhone: "",
-  registeredOffice: "",
-  addressLine1: "",
-  addressLine2: "",
-  city: "",
-  state: "",
-  postalCode: "",
-  country: "",
-  companyRange: "",
-  industry: "",
-  website: "",
-  gstNumber: "",
-  tagline: "",
-}
+const emptyProfile: ProfileForm = {
+  firstName: "", lastName: "", email: "", phone: "", designation: "",
+  department: "", bio: "", personalEmail: "", personalPhone: "", avatarUrl: "",
+  gender: "", maritalStatus: "", dob: "", addressStreet: "", addressCity: "",
+  addressState: "", addressCountry: "", addressPostalCode: "",
+  permanentAddress: "", expertise: "",
+};
 
-function joinAddress(p: CompanyProfileForm): string {
-  const parts = [p.addressLine1, p.addressLine2, p.city, p.state, p.postalCode, p.country].filter(Boolean)
-  return parts.join(", ")
-}
-
-function formatDate(value?: string) {
-  if (!value) return "—"
-  try {
-    return new Intl.DateTimeFormat("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }).format(new Date(value))
-  } catch { return "—" }
-}
-
+// ── Helpers ─────────────────────────────────────────────────
 function displayValue(value: string) {
-  return value.trim() ? value : "Need to fill"
+  return value?.trim() ? value : "Need to fill";
 }
 
 function isMissing(value: string) {
-  return !value.trim()
+  return !value?.trim();
 }
 
+function formatDate(value?: string) {
+  if (!value) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit", month: "short", year: "numeric",
+    }).format(new Date(value));
+  } catch { return "—" }
+}
+
+function fmtDur(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+// ── Main Component ──────────────────────────────────────────
 export default function ProfilePage() {
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState<CompanyProfileForm>(emptyProfile)
-  const queryClient = useQueryClient()
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<ProfileForm>(emptyProfile);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const queryClient = useQueryClient();
+
+  // Real-time socket sync
+  useProfileSocket();
 
   // ── OTP popup state ──
-  const [showOtpDialog, setShowOtpDialog] = useState(false)
-  const [otpValue, setOtpValue] = useState("")
-  const [otpSent, setOtpSent] = useState(false)
-  const [otpError, setOtpError] = useState("")
-  const [otpSuccess, setOtpSuccess] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState("")
+  const [showOtpDialog, setShowOtpDialog] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpSuccess, setOtpSuccess] = useState(false);
 
-  // ── Fetch current user from JWT ──
+  // ── Session history tab ──
+  const [statusTab, setStatusTab] = useState<"today" | "week">("today");
+
+  // ── Fetch session ──
   const { data: sessionData } = useQuery({
     queryKey: ["profile-session"],
     queryFn: async () => {
-      const token = localStorage.getItem("auth_token")
-      if (!token) return null
+      const token = localStorage.getItem("auth_token");
+      if (!token) return null;
       const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) return null
-      return res.json()
+      });
+      if (!res.ok) return null;
+      return res.json();
     },
-  })
+  });
 
-  const userEmail = sessionData?.user?.email ?? ""
-  const isEmailVerified = sessionData?.user?.emailVerified === true
+  const userEmail = sessionData?.user?.email ?? "";
+  const isEmailVerified = sessionData?.user?.emailVerified === true;
 
-  // ── Fetch organization from DB ──
-  const orgId = sessionData?.user?.organizationId ?? sessionData?.organization?.$id
+  // ── Fetch profile via profileApi ──
+  const { data: profileRes, isLoading: profileLoading } = useQuery({
+    queryKey: queryKeys.profile(),
+    queryFn: profileApi.get,
+    enabled: !!sessionData,
+  });
 
-  const { data: orgData, isLoading: orgLoading } = useQuery({
-    queryKey: ["profile-org", orgId],
-    queryFn: async () => {
-      if (!orgId) return null
-      try {
-        const res = await databases.getDocument(DB_ID, COLLECTIONS.ORGANIZATIONS, orgId)
-        return res as any
-      } catch {
-        try {
-          const list = await databases.listDocuments(DB_ID, COLLECTIONS.ORGANIZATIONS, [
-            Query.equal("ownerEmail", userEmail),
-            Query.limit(1),
-          ])
-          return list.documents?.[0] as any
-        } catch { return null }
-      }
-    },
-    enabled: !!orgId,
-  })
+  const profileRaw = profileRes?.profile;
 
-  const { data: staffData } = useQuery({
-    queryKey: ["profile-staff", sessionData?.user?.$id],
-    queryFn: async () => {
-      const userId = sessionData?.user?.$id;
-      if (!userId) return null;
-      const { staffService } = await import("@/lib/services/staff-service");
-      return await staffService.getStaffByUserId(userId);
-    },
-    enabled: !!sessionData?.user?.$id,
-  })
-
-  // ── Merge data ──
-  const profile: CompanyProfileForm = useMemo(() => {
-    const orgSettings = orgData?.settings
-      ? (() => { try { return JSON.parse(orgData.settings) } catch { return {} } })()
-      : {}
-    const rawAddress = orgSettings.address ?? orgData?.address ?? ""
-    // Parse old single-line address into parts (best-effort: split by ", ")
-    const addrParts = rawAddress ? rawAddress.split(", ").map((s: string) => s.trim()) : []
+  // ── Flatten profile for form ──
+  const profile: ProfileForm = React.useMemo(() => {
+    if (!profileRaw) return emptyProfile;
     return {
-      companyName: orgData?.name ?? sessionData?.organization?.name ?? "",
-      businessEmail: orgSettings.businessEmail ?? userEmail,
-      companyPhone: orgSettings.companyPhone ?? "",
-      registeredOffice: orgSettings.registeredOffice ?? "",
-      addressLine1: orgSettings.addressLine1 ?? (addrParts[0] || ""),
-      addressLine2: orgSettings.addressLine2 ?? (addrParts[1] || ""),
-      city: orgSettings.city ?? (addrParts[2] || ""),
-      state: orgSettings.state ?? (addrParts[3] || ""),
-      postalCode: orgSettings.postalCode ?? (addrParts[4] || ""),
-      country: orgSettings.country ?? (addrParts[5] || ""),
-      companyRange: orgSettings.companyRange ?? orgData?.companyRange ?? "",
-      industry: orgSettings.industry ?? orgData?.industry ?? "",
-      website: orgSettings.website ?? "",
-      gstNumber: orgSettings.gstNumber ?? "",
-      tagline: orgSettings.tagline ?? "",
-    }
-  }, [orgData, sessionData, userEmail])
+      firstName: profileRaw.firstName ?? "",
+      lastName: profileRaw.lastName ?? "",
+      email: profileRaw.email ?? "",
+      phone: profileRaw.phone ?? "",
+      designation: profileRaw.designation ?? "",
+      department: profileRaw.department ?? "",
+      bio: profileRaw.bio ?? "",
+      personalEmail: profileRaw.personalEmail ?? "",
+      personalPhone: profileRaw.personalPhone ?? "",
+      avatarUrl: profileRaw.avatarUrl ?? "",
+      gender: profileRaw.gender ?? "",
+      maritalStatus: profileRaw.maritalStatus ?? "",
+      dob: profileRaw.dob ?? "",
+      addressStreet: profileRaw.address?.street ?? "",
+      addressCity: profileRaw.address?.city ?? "",
+      addressState: profileRaw.address?.state ?? "",
+      addressCountry: profileRaw.address?.country ?? "",
+      addressPostalCode: profileRaw.address?.postalCode ?? "",
+      permanentAddress: profileRaw.permanentAddress ?? "",
+      expertise: Array.isArray(profileRaw.expertise) ? profileRaw.expertise.join(", ") : "",
+    };
+  }, [profileRaw]);
 
   useEffect(() => {
-    if (profile) setFormData(profile)
-    if (orgData?.logoUrl) setAvatarUrl(orgData.logoUrl)
-  }, [profile, orgData])
+    if (profile) setFormData(profile);
+    if (profile?.avatarUrl) setAvatarUrl(profile.avatarUrl);
+  }, [profile]);
 
-  // ── Auto-send OTP on load if not verified ──
+  // ── Profile completion ──
+  const completion = profileRaw?.profileCompletion ?? 0;
+
+  // ── Status history ──
+  const { data: statusHistory } = useQuery({
+    queryKey: ["status-history", statusTab],
+    queryFn: async () => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return null;
+      const days = statusTab === "today" ? 1 : 7;
+      const res = await fetch(`${API_BASE_URL}/api/auth/status/history?days=${days}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
+  // ── Profile history ──
+  const { data: historyRes } = useQuery({
+    queryKey: queryKeys.profileHistory(1),
+    queryFn: () => profileApi.getHistory(1, 20),
+    enabled: !!profileRaw,
+  });
+
+  // ── Activity log ──
+  const { data: activityRes } = useQuery({
+    queryKey: queryKeys.profileActivity(),
+    queryFn: () => profileApi.getActivity(30),
+    enabled: !!profileRaw,
+  });
+
+  // ── Auto-send OTP ──
   const autoSendOtpMutation = useMutation({
     mutationFn: async () => {
-      return fetchJson(`${API_BASE_URL}/api/auth/forgot-password`, {
+      return fetch(`${API_BASE_URL}/api/auth/send-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail }),
-      })
+      }).then((r) => r.json());
     },
-    onSuccess: () => {
-      setOtpSent(true)
-      setShowOtpDialog(true)
-    },
-  })
+    onSuccess: () => { setOtpSent(true); setShowOtpDialog(true); },
+  });
 
   useEffect(() => {
-    if (userEmail && !isEmailVerified && !otpSuccess && !autoSendOtpMutation.isPending && !otpSent) {
-      autoSendOtpMutation.mutate()
+    const hasAsked = sessionStorage.getItem("verification_asked") === "true";
+    if (userEmail && !isEmailVerified && !otpSuccess && !autoSendOtpMutation.isPending && !otpSent && !hasAsked) {
+      sessionStorage.setItem("verification_asked", "true");
+      autoSendOtpMutation.mutate();
     }
-  }, [userEmail, isEmailVerified, otpSuccess])
+  }, [userEmail, isEmailVerified, otpSuccess]);
 
-  // ── Verify OTP ──
   const verifyOtpMutation = useMutation({
     mutationFn: async () => {
-      // First verify OTP via forgot-password check, then mark verified
-      return fetchJson(`${API_BASE_URL}/api/auth/verify`, {
+      return fetch(`${API_BASE_URL}/api/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail }),
-      })
+      }).then((r) => r.json());
     },
     onSuccess: () => {
-      setOtpSuccess(true)
-      setOtpError("")
-      setShowOtpDialog(false)
-      queryClient.invalidateQueries({ queryKey: ["profile-session"] })
-      // Update localStorage flag
-      const token = localStorage.getItem("auth_token")
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1]))
-          payload.emailVerified = true
-          // Note: JWT is signed, can't truly modify it. The backend /me endpoint reads from DB.
-        } catch { /* ignore */ }
-      }
+      setOtpSuccess(true); setOtpError(""); setShowOtpDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["profile-session"] });
+      toast.success("Email verified successfully");
     },
-    onError: () => {
-      setOtpError("Invalid OTP. Please try again.")
-    },
-  })
+    onError: () => { setOtpError("Invalid OTP. Please try again."); },
+  });
 
-  // ── Resend OTP ──
   const resendOtpMutation = useMutation({
     mutationFn: async () => {
-      return fetchJson(`${API_BASE_URL}/api/auth/forgot-password`, {
+      return fetch(`${API_BASE_URL}/api/auth/send-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail }),
-      })
+      }).then((r) => r.json());
     },
-    onSuccess: () => {
-      setOtpError("")
-      setOtpValue("")
-    },
-    onError: () => {
-      setOtpError("Failed to resend OTP")
-    },
-  })
+    onSuccess: () => { setOtpError(""); setOtpValue(""); },
+    onError: () => { setOtpError("Failed to resend OTP"); },
+  });
 
   // ── Save profile ──
   const saveMutation = useMutation({
-    mutationFn: async (data: CompanyProfileForm) => {
-      if (orgId) {
-        try {
-          await databases.updateDocument(DB_ID, COLLECTIONS.ORGANIZATIONS, orgId, {
-            name: data.companyName,
-            companyRange: data.companyRange,
-            industry: data.industry,
-          })
-        } catch { /* non-fatal */ }
+    mutationFn: async (data: ProfileForm) => {
+      const payload: Record<string, unknown> = {};
+      if (data.firstName.trim()) payload.firstName = data.firstName.trim();
+      if (data.lastName.trim()) payload.lastName = data.lastName.trim();
+      if (data.phone.trim()) payload.phone = data.phone.trim();
+      if (data.designation.trim()) payload.designation = data.designation.trim();
+      if (data.department.trim()) payload.department = data.department.trim();
+      if (data.bio.trim()) payload.bio = data.bio.trim();
+      if (data.personalEmail.trim()) payload.personalEmail = data.personalEmail.trim();
+      if (data.personalPhone.trim()) payload.personalPhone = data.personalPhone.trim();
+      if (data.gender) payload.gender = data.gender;
+      if (data.maritalStatus.trim()) payload.maritalStatus = data.maritalStatus.trim();
+      if (data.dob.trim()) payload.dob = data.dob.trim();
+
+      // Build address subdocument (only include if at least one field filled)
+      const addr: Record<string, string> = {};
+      if (data.addressStreet.trim()) addr.street = data.addressStreet.trim();
+      if (data.addressCity.trim()) addr.city = data.addressCity.trim();
+      if (data.addressState.trim()) addr.state = data.addressState.trim();
+      if (data.addressCountry.trim()) addr.country = data.addressCountry.trim();
+      if (data.addressPostalCode.trim()) addr.postalCode = data.addressPostalCode.trim();
+      if (Object.keys(addr).length > 0) payload.address = addr;
+
+      if (data.permanentAddress.trim()) payload.permanentAddress = data.permanentAddress.trim();
+
+      if (data.expertise.trim()) {
+        payload.expertise = data.expertise.split(",").map((s) => s.trim()).filter(Boolean);
       }
-      const settings = {
-        businessEmail: data.businessEmail,
-        companyPhone: data.companyPhone,
-        registeredOffice: data.registeredOffice,
-        address: joinAddress(data),
-        addressLine1: data.addressLine1,
-        addressLine2: data.addressLine2,
-        city: data.city,
-        state: data.state,
-        postalCode: data.postalCode,
-        country: data.country,
-        companyRange: data.companyRange,
-        industry: data.industry,
-        website: data.website,
-        gstNumber: data.gstNumber,
-        tagline: data.tagline,
-      }
-      if (orgId) {
-        try {
-          await databases.updateDocument(DB_ID, COLLECTIONS.ORGANIZATIONS, orgId, {
-            settings: JSON.stringify(settings),
-          })
-        } catch { /* non-fatal */ }
-      }
-      localStorage.setItem("org-settings", JSON.stringify(settings))
+
+      return profileApi.update(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile-org"] })
-      queryClient.invalidateQueries({ queryKey: ["profile-session"] })
-      setIsEditing(false)
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileHistory(1) });
+      setIsEditing(false);
+      toast.success("Profile updated successfully");
     },
-  })
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update profile");
+    },
+  });
 
   // ── Avatar upload ──
   const avatarMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData()
-      formData.append("file", file)
-      const token = localStorage.getItem("auth_token")
-      const res = await fetch(`${API_BASE_URL}/api/upload/avatar`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      })
-      if (!res.ok) throw new Error("Upload failed")
-      return res.json()
-    },
+    mutationFn: profileApi.uploadAvatar,
     onSuccess: (data) => {
-      const url = data.url || data.avatarUrl || ""
-      setAvatarUrl(url)
-      // Update org in DB
-      if (orgId && url) {
-        databases.updateDocument(DB_ID, COLLECTIONS.ORGANIZATIONS, orgId, { logoUrl: url }).catch(() => {})
-      }
-      // Broadcast to sidebar
-      window.dispatchEvent(new CustomEvent("profile-updated", { detail: { avatar: url } }))
-      queryClient.invalidateQueries({ queryKey: ["profile-org"] })
+      const url = data.avatarUrl || "";
+      setAvatarUrl(url);
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile() });
+      window.dispatchEvent(new CustomEvent("profile-updated", { detail: { avatar: url } }));
+      toast.success("Avatar updated");
     },
-  })
+    onError: (err: any) => {
+      toast.error(err.message || "Avatar upload failed");
+    },
+  });
+
+  // ── Export ──
+  const handleExport = useCallback(async () => {
+    try {
+      const data = await profileApi.export();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `profile-export.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Profile exported");
+    } catch {
+      toast.error("Export failed");
+    }
+  }, []);
 
   const handleAvatarChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) avatarMutation.mutate(file)
-  }, [avatarMutation])
+    const file = e.target.files?.[0];
+    if (file) avatarMutation.mutate(file);
+  }, [avatarMutation]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleSave = () => saveMutation.mutate(formData)
-  const handleCancel = () => { setIsEditing(false); setFormData(profile) }
+  const handleSave = () => saveMutation.mutate(formData);
+  const handleCancel = () => { setIsEditing(false); setFormData(profile); };
 
-  const companyInitials = (profile.companyName || "Company")
-    .split(" ").filter(Boolean).slice(0, 2)
-    .map((w: string) => w[0]?.toUpperCase()).join("") || "CP"
+  const statusColor: Record<string, string> = {
+    Online: "bg-emerald-500", "Lunch Break": "bg-amber-500", "In a Meeting": "bg-blue-500",
+    Away: "bg-orange-500", Offline: "bg-slate-300", Leave: "bg-red-500",
+  };
 
-  const isLoading = orgLoading && !orgData
+  const initials = (profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "") || "U";
 
-  if (isLoading) {
+  if (profileLoading && !profileRaw) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
     <section className="space-y-6">
-      <Tabs defaultValue="company" className="w-full space-y-6">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="company">Company Details</TabsTrigger>
-            <TabsTrigger value="personal">Personal Profile</TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="company" className="space-y-6">
       {/* ── OTP Verification Popup ── */}
       <Dialog open={showOtpDialog} onOpenChange={(open) => { if (!otpSuccess) setShowOtpDialog(open) }}>
         <DialogContent className="sm:max-w-md">
@@ -388,7 +380,6 @@ export default function ProfilePage() {
               A verification code has been sent to <strong>{userEmail}</strong>. Enter it below to verify.
             </DialogDescription>
           </DialogHeader>
-
           {otpSuccess ? (
             <div className="flex flex-col items-center gap-4 py-6">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
@@ -403,39 +394,22 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-4 py-4">
               <div className="flex flex-col items-center gap-3">
-                <Input
-                  type="text"
-                  placeholder="000000"
-                  value={otpValue}
+                <Input type="text" placeholder="000000" value={otpValue}
                   onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="text-center text-2xl tracking-[12px] font-mono h-14 max-w-[240px] mx-auto"
-                  maxLength={6}
-                  autoFocus
-                />
-                {otpError && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" /> {otpError}
-                  </p>
-                )}
+                  className="text-center text-2xl tracking-[12px] font-mono h-14 max-w-[240px] mx-auto" maxLength={6} autoFocus />
+                {otpError && <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> {otpError}
+                </p>}
               </div>
-
-              <Button
-                onClick={() => verifyOtpMutation.mutate()}
+              <Button onClick={() => verifyOtpMutation.mutate()}
                 disabled={verifyOtpMutation.isPending || otpValue.length < 6}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-              >
-                {verifyOtpMutation.isPending ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</>
-                ) : "Verify Email"}
+                className="w-full bg-emerald-600 hover:bg-emerald-700">
+                {verifyOtpMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</> : "Verify Email"}
               </Button>
-
               <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => resendOtpMutation.mutate()}
+                <button type="button" onClick={() => resendOtpMutation.mutate()}
                   disabled={resendOtpMutation.isPending}
-                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-                >
+                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
                   {resendOtpMutation.isPending ? "Resending..." : "Didn't receive code? Resend"}
                 </button>
               </div>
@@ -443,368 +417,503 @@ export default function ProfilePage() {
           )}
         </DialogContent>
       </Dialog>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-start gap-4">
-              {/* Avatar with upload */}
-              <div className="relative group">
-                {avatarUrl ? (
-                  <Avatar className="h-16 w-16 rounded-xl ring-1 ring-border">
-                    <AvatarImage src={avatarUrl} alt={profile.companyName} />
-                    <AvatarFallback className="rounded-xl bg-emerald-100 text-emerald-800">
-                      {companyInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-600">
-                    <Camera className="h-6 w-6" />
-                  </div>
-                )}
-                <label className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                  <div className="flex flex-col items-center gap-1">
-                    <Upload className="h-5 w-5 text-white" />
-                    <span className="text-[10px] font-medium text-white">Upload</span>
-                  </div>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                </label>
-                {avatarMutation.isPending && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40">
-                    <Loader2 className="h-5 w-5 text-white animate-spin" />
-                  </div>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <CardTitle className="text-3xl font-semibold tracking-tight">
-                    {displayValue(profile.companyName)}
-                  </CardTitle>
-                  <CardDescription>{displayValue(profile.tagline)}</CardDescription>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant={isEmailVerified || otpSuccess ? "secondary" : "outline"}>
-                    {(isEmailVerified || otpSuccess) ? "Email verified" : "Email not verified"}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            <Button
-              onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
-              variant={isEditing ? "outline" : "default"}
-            >
-              {isEditing ? "Cancel Edit" : "Edit Company"}
+      <Tabs defaultValue="personal" className="w-full space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="personal">Personal Profile</TabsTrigger>
+            <TabsTrigger value="activity">Activity Log</TabsTrigger>
+            <TabsTrigger value="status">My Status</TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2">
+            <Button onClick={handleExport} variant="outline" size="sm">
+              <Download className="mr-1 h-3.5 w-3.5" /> Export
+            </Button>
+            <Button onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
+              variant={isEditing ? "outline" : "default"}>
+              {isEditing ? "Cancel" : "Edit Profile"}
             </Button>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="space-y-6">
-          {/* Stats */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Company Status</CardTitle>
-                <ShieldCheckIcon className="h-4 w-4 text-slate-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">Active</div>
-                <p className="text-xs text-slate-700 mt-1 font-medium">Operating normally</p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-emerald-100 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Company Size</CardTitle>
-                <Building2Icon className="h-4 w-4 text-slate-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">{displayValue(profile.companyRange)}</div>
-                <p className="text-xs text-slate-700 mt-1 font-medium">From signup</p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-emerald-100 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Email Status</CardTitle>
-                <MailIcon className="h-4 w-4 text-slate-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">
-                  {(isEmailVerified || otpSuccess) ? "Verified" : "Not verified"}
-                </div>
-                <p className="text-xs text-slate-700 mt-1 font-medium">{userEmail || "No email"}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-emerald-100 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Account Created</CardTitle>
-                <CalendarDaysIcon className="h-4 w-4 text-slate-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">
-                  {formatDate(orgData?.$createdAt ?? orgData?.createdAt)}
-                </div>
-                <p className="text-xs text-slate-700 mt-1 font-medium">Organization created</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Company Details */}
-          <Card className="border">
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* PERSONAL PROFILE TAB                                      */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        <TabsContent value="personal" className="space-y-6">
+          {/* Profile Header */}
+          <Card>
             <CardHeader>
-              <CardTitle>Company Details</CardTitle>
-              <CardDescription>Key business information and registered company data.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> Company Name</label>
-                      <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><MailIcon className="size-4 text-slate-600" /> Business Email</label>
-                      <input type="email" name="businessEmail" value={formData.businessEmail} onChange={handleInputChange}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-slate-600" /> Company Phone</label>
-                      <input type="tel" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" /> Registered Office</label>
-                      <input type="text" name="registeredOffice" value={formData.registeredOffice} onChange={handleInputChange}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Company Size</label>
-                      <input type="text" name="companyRange" value={formData.companyRange} onChange={handleInputChange} placeholder="e.g. 1-10"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Industry</label>
-                      <input type="text" name="industry" value={formData.industry} onChange={handleInputChange}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><GlobeIcon className="size-4 text-slate-600" /> Website</label>
-                      <input type="url" name="website" value={formData.website} onChange={handleInputChange} placeholder="https://"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><ShieldCheckIcon className="size-4 text-slate-600" /> GST Number</label>
-                      <input type="text" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Tagline</label>
-                      <input type="text" name="tagline" value={formData.tagline} onChange={handleInputChange} placeholder="One line about the company"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-4">
+                  {/* Avatar */}
+                  <div className="relative group">
+                    {avatarUrl || profile.avatarUrl ? (
+                      <Avatar className="h-16 w-16 rounded-xl ring-1 ring-border">
+                        <AvatarImage src={`${API_BASE_URL}${avatarUrl || profile.avatarUrl}`} alt={profile.firstName} />
+                        <AvatarFallback className="rounded-xl bg-emerald-100 text-emerald-800">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-600">
+                        <Camera className="h-6 w-6" />
+                      </div>
+                    )}
+                    <label className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="h-5 w-5 text-white" />
+                        <span className="text-[10px] font-medium text-white">Upload</span>
+                      </div>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    </label>
+                    {avatarMutation.isPending && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40">
+                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" /> Company Address</label>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-xs text-muted-foreground">Address Line 1</label>
-                        <input type="text" name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} placeholder="Street address, P.O. box"
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                      </div>
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-xs text-muted-foreground">Address Line 2 <span className="text-muted-foreground">(optional)</span></label>
-                        <input type="text" name="addressLine2" value={formData.addressLine2} onChange={handleInputChange} placeholder="Apartment, suite, unit, building, floor"
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-muted-foreground">City</label>
-                        <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="e.g. Mumbai"
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-muted-foreground">State / Province</label>
-                        <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="e.g. Maharashtra"
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-muted-foreground">Postal / ZIP Code</label>
-                        <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} placeholder="e.g. 400001"
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs text-muted-foreground">Country</label>
-                        <input type="text" name="country" value={formData.country} onChange={handleInputChange} placeholder="e.g. India"
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-4">
-                    <Button onClick={handleSave} disabled={saveMutation.isPending} className="bg-emerald-600 hover:bg-emerald-700">
-                      {saveMutation.isPending ? "Saving..." : "Save Changes"}
-                    </Button>
-                    <Button onClick={handleCancel} variant="outline">Cancel</Button>
-                  </div>
-                  {saveMutation.isError && <p className="text-sm text-destructive">{(saveMutation.error as Error)?.message || "Failed to save"}</p>}
-                </>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {([
-                    { label: "Company Name", value: profile.companyName, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: false },
-                    { label: "Business Email", value: profile.businessEmail, icon: <MailIcon className="size-4 text-slate-600" />, span: false },
-                    { label: "Company Phone", value: profile.companyPhone, icon: <PhoneIcon className="size-4 text-slate-600" />, span: false },
-                    { label: "Registered Office", value: profile.registeredOffice, icon: <MapPinIcon className="size-4 text-slate-600" />, span: false },
-                    { label: "Company Size", value: profile.companyRange, icon: <Building2Icon className="size-4 text-slate-600" />, span: false },
-                    { label: "Industry", value: profile.industry, icon: <Building2Icon className="size-4 text-slate-600" />, span: false },
-                    { label: "Website", value: profile.website, icon: <GlobeIcon className="size-4 text-slate-600" />, span: false },
-                    { label: "GST Number", value: profile.gstNumber, icon: <ShieldCheckIcon className="size-4 text-slate-600" />, span: false },
-                    { label: "Tagline", value: profile.tagline, icon: <Building2Icon className="size-4 text-slate-600" />, span: true },
-                  ] as const).map((field) => (
-                    <div key={field.label} className={`space-y-2 rounded-lg border p-4${field.span ? " sm:col-span-2" : ""}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm font-medium">{field.icon}{field.label}</div>
-                        {isMissing(field.value) && <AlertCircle className="size-4 text-red-500" />}
-                      </div>
-                      <p className={`text-sm ${isMissing(field.value) ? "font-medium text-red-600" : "text-muted-foreground"}`}>
-                        {displayValue(field.value)}
-                      </p>
-                    </div>
-                  ))}
-                  <div className="space-y-2 rounded-lg border p-4 sm:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" />Company Address</div>
-                      {isMissing(joinAddress(profile)) && <AlertCircle className="size-4 text-red-500" />}
-                    </div>
+
+                  <div className="space-y-2">
                     <div className="space-y-1">
-                      {profile.addressLine1 && <p className="text-sm text-muted-foreground">{profile.addressLine1}</p>}
-                      {profile.addressLine2 && <p className="text-sm text-muted-foreground">{profile.addressLine2}</p>}
-                      <p className={`text-sm ${isMissing(joinAddress(profile)) ? "font-medium text-red-600" : "text-muted-foreground"}`}>
-                        {[profile.city, profile.state, profile.postalCode].filter(Boolean).join(", ") || (isMissing(joinAddress(profile)) ? "Need to fill" : "")}
-                      </p>
-                      {profile.country && <p className="text-sm text-muted-foreground">{profile.country}</p>}
-                      {isMissing(joinAddress(profile)) && (
-                        <p className="text-sm font-medium text-red-600">Need to fill</p>
+                      <CardTitle className="text-3xl font-semibold tracking-tight">
+                        {displayValue(`${profile.firstName} ${profile.lastName}`.trim())}
+                      </CardTitle>
+                      <CardDescription>{displayValue(profile.designation)}</CardDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant={isEmailVerified || otpSuccess ? "secondary" : "outline"}>
+                        {(isEmailVerified || otpSuccess) ? "Email verified" : "Email not verified"}
+                      </Badge>
+                      {profileRaw?.status && (
+                        <Badge variant={profileRaw.status === "active" ? "secondary" : profileRaw.status === "suspended" ? "destructive" : "outline"}>
+                          {profileRaw.status}
+                        </Badge>
                       )}
                     </div>
                   </div>
                 </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              {/* Profile Completion */}
+              <Card className="border-emerald-100">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-medium">Profile Completion</p>
+                      <p className="text-xs text-muted-foreground">
+                        Fill all fields to reach 100%
+                      </p>
+                    </div>
+                    <span className="text-2xl font-bold text-emerald-700">{completion}%</span>
+                  </div>
+                  <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500"
+                      style={{ width: `${completion}%` }}
+                    />
+                  </div>
+                  {completion < 100 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {isMissing(profile.firstName) && <Badge variant="outline" className="text-xs">First name</Badge>}
+                      {isMissing(profile.phone) && <Badge variant="outline" className="text-xs">Phone</Badge>}
+                      {isMissing(profile.designation) && <Badge variant="outline" className="text-xs">Designation</Badge>}
+                      {isMissing(profile.bio) && <Badge variant="outline" className="text-xs">Bio</Badge>}
+                      {isMissing(profile.avatarUrl) && <Badge variant="outline" className="text-xs">Avatar</Badge>}
+                      {isMissing(profile.addressCity) && <Badge variant="outline" className="text-xs">City</Badge>}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Stats */}
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Card className="overflow-hidden border-emerald-100 bg-card">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700">Account Status</CardTitle>
+                    <ShieldCheckIcon className="h-4 w-4 text-slate-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-950 capitalize">{profileRaw?.status ?? "active"}</div>
+                    <p className="text-xs text-slate-700 mt-1 font-medium">Created {formatDate(profileRaw?.createdAt)}</p>
+                  </CardContent>
+                </Card>
+                <Card className="overflow-hidden border-emerald-100 bg-card">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700">Last Login</CardTitle>
+                    <Clock className="h-4 w-4 text-slate-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-950">{formatDate(profileRaw?.lastLogin)}</div>
+                    <p className="text-xs text-slate-700 mt-1 font-medium">{profileRaw?.loginCount ?? 0} total logins</p>
+                  </CardContent>
+                </Card>
+                <Card className="overflow-hidden border-emerald-100 bg-card">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700">Email Status</CardTitle>
+                    <MailIcon className="h-4 w-4 text-slate-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-950">
+                      {(isEmailVerified || otpSuccess) ? "Verified" : "Not verified"}
+                    </div>
+                    <p className="text-xs text-slate-700 mt-1 font-medium">{userEmail || "No email"}</p>
+                  </CardContent>
+                </Card>
+                <Card className="overflow-hidden border-emerald-100 bg-card">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700">Profile Version</CardTitle>
+                    <History className="h-4 w-4 text-slate-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-950">v{profileRaw?.profileVersion ?? 1}</div>
+                    <p className="text-xs text-slate-700 mt-1 font-medium">Updated {formatDate(profileRaw?.updatedAt)}</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Profile Details */}
+              <Card className="border">
+                <CardHeader>
+                  <CardTitle>Personal Details</CardTitle>
+                  <CardDescription>Your personal and professional information.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isEditing ? (
+                    <>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> First Name</label>
+                          <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> Last Name</label>
+                          <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-slate-600" /> Phone</label>
+                          <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Designation</label>
+                          <input type="text" name="designation" value={formData.designation} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Department</label>
+                          <input type="text" name="department" value={formData.department} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><MailIcon className="size-4 text-slate-600" /> Personal Email</label>
+                          <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-slate-600" /> Personal Phone</label>
+                          <input type="tel" name="personalPhone" value={formData.personalPhone} onChange={handleInputChange}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><CalendarDaysIcon className="size-4 text-slate-600" /> Date of Birth</label>
+                          <input type="text" name="dob" value={formData.dob} onChange={handleInputChange} placeholder="YYYY-MM-DD"
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> Bio</label>
+                          <textarea name="bio" value={formData.bio} onChange={handleInputChange} rows={3} placeholder="Short bio..."
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        </div>
+                      </div>
+
+                      {/* Address */}
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" /> Address</label>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1.5 sm:col-span-2">
+                            <label className="text-xs text-muted-foreground">Street</label>
+                            <input type="text" name="addressStreet" value={formData.addressStreet} onChange={handleInputChange}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs text-muted-foreground">City</label>
+                            <input type="text" name="addressCity" value={formData.addressCity} onChange={handleInputChange}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs text-muted-foreground">State</label>
+                            <input type="text" name="addressState" value={formData.addressState} onChange={handleInputChange}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs text-muted-foreground">Postal Code</label>
+                            <input type="text" name="addressPostalCode" value={formData.addressPostalCode} onChange={handleInputChange}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs text-muted-foreground">Country</label>
+                            <input type="text" name="addressCountry" value={formData.addressCountry} onChange={handleInputChange}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-4">
+                        <Button onClick={handleSave} disabled={saveMutation.isPending} className="bg-emerald-600 hover:bg-emerald-700">
+                          {saveMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Changes"}
+                        </Button>
+                        <Button onClick={handleCancel} variant="outline">Cancel</Button>
+                      </div>
+                      {saveMutation.isError && <p className="text-sm text-destructive">{(saveMutation.error as Error)?.message}</p>}
+                    </>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {([
+                        { label: "First Name", value: profile.firstName, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: false },
+                        { label: "Last Name", value: profile.lastName, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: false },
+                        { label: "Phone", value: profile.phone, icon: <PhoneIcon className="size-4 text-slate-600" />, span: false },
+                        { label: "Designation", value: profile.designation, icon: <Building2Icon className="size-4 text-slate-600" />, span: false },
+                        { label: "Department", value: profile.department, icon: <Building2Icon className="size-4 text-slate-600" />, span: false },
+                        { label: "Personal Email", value: profile.personalEmail, icon: <MailIcon className="size-4 text-slate-600" />, span: false },
+                        { label: "Personal Phone", value: profile.personalPhone, icon: <PhoneIcon className="size-4 text-slate-600" />, span: false },
+                        { label: "Bio", value: profile.bio, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: true },
+                      ] as const).map((field) => (
+                        <div key={field.label} className={`space-y-2 rounded-lg border p-4${field.span ? " sm:col-span-2" : ""}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm font-medium">{field.icon}{field.label}</div>
+                            {isMissing(field.value) && <AlertCircle className="size-4 text-red-500" />}
+                          </div>
+                          <p className={`text-sm ${isMissing(field.value) ? "font-medium text-red-600" : "text-muted-foreground"}`}>
+                            {displayValue(field.value)}
+                          </p>
+                        </div>
+                      ))}
+                      <div className="space-y-2 rounded-lg border p-4 sm:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" /> Address</div>
+                          {isMissing([profile.addressStreet, profile.addressCity, profile.addressCountry].join("")) && <AlertCircle className="size-4 text-red-500" />}
+                        </div>
+                        <div className="space-y-1">
+                          {profile.addressStreet && <p className="text-sm text-muted-foreground">{profile.addressStreet}</p>}
+                          {[profile.addressCity, profile.addressState, profile.addressPostalCode].filter(Boolean).join(", ") &&
+                            <p className="text-sm text-muted-foreground">{[profile.addressCity, profile.addressState, profile.addressPostalCode].filter(Boolean).join(", ")}</p>}
+                          {profile.addressCountry && <p className="text-sm text-muted-foreground">{profile.addressCountry}</p>}
+                          {isMissing([profile.addressStreet, profile.addressCity, profile.addressCountry].join("")) &&
+                            <p className="text-sm font-medium text-red-600">Need to fill</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Device Info */}
+              {profileRaw?.deviceInfo && profileRaw.deviceInfo.length > 0 && (
+                <Card className="border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><SmartphoneIcon className="h-4 w-4" /> Devices</CardTitle>
+                    <CardDescription>Recent devices used to access your account</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {profileRaw.deviceInfo.slice(-5).reverse().map((d: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+                          <SmartphoneIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium">{d.deviceType ?? "Device"} {d.browser && `• ${d.browser}`} {d.os && `on ${d.os}`}</p>
+                            <p className="text-xs text-muted-foreground truncate">{d.userAgent}</p>
+                          </div>
+                          <span className="text-xs text-muted-foreground shrink-0">{formatDate(d.lastUsed)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </CardContent>
           </Card>
-
-          {/* Timeline */}
-          <Card className="border">
-            <CardHeader>
-              <CardTitle>Company Timeline</CardTitle>
-              <CardDescription>Important company milestones and registration dates.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-3">
-              <Card className="overflow-hidden border-emerald-100 bg-card">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-700"><CalendarDaysIcon className="size-4" /> Organization Created</div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-emerald-950">{formatDate(orgData?.$createdAt ?? orgData?.createdAt)}</p>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-emerald-100 bg-card">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-700"><ShieldCheckIcon className="size-4" /> Email Verification</div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-emerald-950">{(isEmailVerified || otpSuccess) ? "Verified" : "Not verified"}</p>
-                </CardContent>
-              </Card>
-              <Card className="overflow-hidden border-emerald-100 bg-card">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-700"><UserCircle2Icon className="size-4" /> Last Update</div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-emerald-950">{formatDate(orgData?.$updatedAt ?? orgData?.updatedAt)}</p>
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-        </CardContent>
         </TabsContent>
-        <TabsContent value="personal" className="space-y-6">
-          <Card className="border">
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* ACTIVITY TAB                                             */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        <TabsContent value="activity" className="space-y-6">
+          <Card>
             <CardHeader>
-              <CardTitle>Personal Profile</CardTitle>
-              <CardDescription>Your personal and professional details.</CardDescription>
+              <CardTitle className="flex items-center gap-2"><Activity className="h-4 w-4" /> Account Activity</CardTitle>
+              <CardDescription>Logins, profile changes, and account events.</CardDescription>
             </CardHeader>
             <CardContent>
-              {staffData ? (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={staffData.avatar} />
-                      <AvatarFallback>{staffData.firstName?.[0]}{staffData.lastName?.[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-xl font-bold">{staffData.firstName} {staffData.lastName}</h3>
-                      <p className="text-sm text-muted-foreground">{staffData.designation} • {staffData.department}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Email</p>
-                      <p className="text-sm font-medium">{staffData.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Phone</p>
-                      <p className="text-sm font-medium">{displayValue(staffData.mobile)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Employee ID</p>
-                      <p className="text-sm font-medium">{staffData.empId}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Status</p>
-                      <p className="text-sm font-medium">{staffData.status}</p>
-                    </div>
-                  </div>
-                  
-                  {(staffData.workExperience?.length ?? 0) > 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm font-bold mb-2">Work Experience</p>
-                      <div className="space-y-2">
-                        {staffData.workExperience?.map((exp: any, i: number) => (
-                          <div key={i} className="p-3 rounded-lg border bg-muted/20">
-                            <p className="text-sm font-semibold">{exp.company} - {exp.title}</p>
-                            <p className="text-xs text-muted-foreground">{exp.from} to {exp.to}</p>
+              {activityRes?.activity && activityRes.activity.length > 0 ? (
+                <div className="space-y-2">
+                  {activityRes.activity.slice(0, 50).map((entry: any) => (
+                    <div key={entry._id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium capitalize">{entry.action?.replace(/_/g, " ")}</p>
+                        {entry.deviceInfo?.userAgent && (
+                          <p className="text-xs text-muted-foreground truncate">{entry.deviceInfo.userAgent}</p>
+                        )}
+                        {entry.deviceInfo?.ip && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>IP: {entry.deviceInfo.ip}</span>
+                            {entry.deviceInfo.location && (
+                              <>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <MapPinIcon className="h-3 w-3" />
+                                  {entry.deviceInfo.location}
+                                </span>
+                              </>
+                            )}
                           </div>
-                        ))}
+                        )}
                       </div>
+                      <span className="text-xs text-muted-foreground shrink-0">{formatDate(entry.timestamp)}</span>
                     </div>
-                  )}
-
-                  {(staffData.educationDetails?.length ?? 0) > 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm font-bold mb-2">Education Details</p>
-                      <div className="space-y-2">
-                        {staffData.educationDetails?.map((edu: any, i: number) => (
-                          <div key={i} className="p-3 rounded-lg border bg-muted/20">
-                            <p className="text-sm font-semibold">{edu.institute}</p>
-                            <p className="text-xs text-muted-foreground">{edu.degree} - {edu.specialization}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
+                  ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No personal profile record found.</p>
-                </div>
+                <p className="text-center py-8 text-sm text-muted-foreground">No activity recorded yet.</p>
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* STATUS TAB                                               */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        <TabsContent value="status" className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Object.entries(statusHistory?.totals || {}).map(([status, seconds]) => (
+              <Card key={status} className="overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-700">{status}</CardTitle>
+                  <div className={`h-3 w-3 rounded-full ${statusColor[status] || "bg-slate-300"}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{fmtDur(seconds as number)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {statusTab === "today" ? "Today" : "Last 7 days"}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+            {(!statusHistory?.totals || Object.keys(statusHistory.totals).length === 0) && (
+              <Card className="sm:col-span-2 xl:col-span-4">
+                <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                  No status history yet.
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant={statusTab === "today" ? "default" : "outline"} size="sm" onClick={() => setStatusTab("today")}>Today</Button>
+            <Button variant={statusTab === "week" ? "default" : "outline"} size="sm" onClick={() => setStatusTab("week")}>Last 7 Days</Button>
+          </div>
+
+          {statusHistory?.daily && Object.keys(statusHistory.daily).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CalendarDaysIcon className="w-4 h-4" /> Daily Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {Object.entries(statusHistory.daily).sort(([a], [b]) => b.localeCompare(a)).map(([date, statuses]) => (
+                  <div key={date} className="space-y-2">
+                    <p className="text-sm font-semibold text-slate-800">{formatDate(date)}</p>
+                    <div className="flex flex-wrap gap-3">
+                      {Object.entries(statuses as Record<string, number>).map(([st, sec]) => (
+                        <div key={st} className="flex items-center gap-1.5 text-xs">
+                          <div className={`h-2.5 w-2.5 rounded-full ${statusColor[st] || "bg-slate-300"}`} />
+                          <span className="font-medium">{st}</span>
+                          <span className="text-muted-foreground">{fmtDur(sec)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {statusHistory?.sessions && statusHistory.sessions.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Clock className="w-4 h-4" /> Timeline</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {statusHistory.sessions.map((session: any) => {
+                  const login = new Date(session.login);
+                  const end = session.logout ? new Date(session.logout) : new Date();
+                  const totalSec = Math.round((end.getTime() - login.getTime()) / 1000);
+                  const h = Math.floor(totalSec / 3600);
+                  const m = Math.floor((totalSec % 3600) / 60);
+                  const slices = (session.durations || []).length > 0
+                    ? session.durations.map((d: any) => ({
+                        status: d.status,
+                        startSec: Math.max(0, (new Date(d.startedAt).getTime() - login.getTime()) / 1000),
+                        endSec: Math.min(totalSec, (new Date(d.endedAt).getTime() - login.getTime()) / 1000),
+                      }))
+                    : [{ status: session.status || "Online", startSec: 0, endSec: totalSec }];
+                  return (
+                    <div key={session.id} className="rounded-lg border p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="text-center shrink-0">
+                            <p className="text-lg font-bold leading-none">{login.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{login.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
+                          </div>
+                          <div className="text-muted-foreground">→</div>
+                          <div className="text-center shrink-0">
+                            <p className="text-lg font-bold leading-none">
+                              {session.logout ? end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : <span className="text-emerald-600">now</span>}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{session.logout ? end.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) : "active"}</p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold">{h}h {m}m</p>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <div className="h-8 rounded-md bg-slate-100 overflow-hidden relative">
+                          {slices.map((seg: any, i: number) => {
+                            const leftPct = totalSec > 0 ? (seg.startSec / totalSec) * 100 : 0;
+                            const widthPct = totalSec > 0 ? ((seg.endSec - seg.startSec) / totalSec) * 100 : 100;
+                            return (
+                              <div key={i} className={`absolute top-0 h-full ${statusColor[seg.status] || "bg-slate-400"} relative group cursor-default`}
+                                style={{ left: `${leftPct}%`, width: `${Math.max(widthPct, 0.3)}%` }}>
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10 pointer-events-none">
+                                  <div className="bg-slate-800 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                                    {seg.status} · {fmtDur(Math.round(seg.endSec - seg.startSec))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {slices.map((seg: any, i: number) => (
+                          <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                            <div className={`h-2.5 w-2.5 rounded-sm ${statusColor[seg.status] || "bg-slate-300"}`} />
+                            <span className="font-medium">{seg.status}</span>
+                            <span className="text-muted-foreground">{fmtDur(Math.round(seg.endSec - seg.startSec))}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </section>
-  )
+  );
 }
-

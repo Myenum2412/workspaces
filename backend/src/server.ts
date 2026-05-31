@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import passport from "passport";
 import path from "path";
+import fs from "fs";
 import { createServer } from "http";
 import { connectDB } from "./config/connection.js";
 import { initSocketServer } from "./ws/server.js";
@@ -21,6 +22,9 @@ import webhookRoutes from "./routes/webhooks.js";
 import templateRoutes from "./routes/templates.js";
 import campaignRoutesOld from "./routes/campaigns.js";
 import { auditMiddleware } from "./middleware/audit.js";
+import profileRoutes from "./routes/profile.js";
+import workspaceRoutes from "./routes/workspace.js";
+import staffRoutes from "./routes/staff.js";
 
 // OpenWA migrated routes
 import openwaSessionRoutes from "./routes/openwa-sessions.js";
@@ -65,6 +69,9 @@ app.use("/api", auditMiddleware);
 
 // ── Existing Routes ────────────────────────────────────────
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/workspace", workspaceRoutes);
+app.use("/api/staff", staffRoutes);
 app.use("/api/db", dbRoutes);
 app.use("/api/invites", inviteRoutes);
 app.use("/api/setup", setupRoutes);
@@ -98,11 +105,22 @@ app.get("/api/health", (_req, res) => {
 
 // ── Server setup ───────────────────────────────────────────
 const httpServer = createServer(app);
+
 const io = initSocketServer(httpServer);
 
 // Pass Socket.io to all services that need it
 whatsappService.setSocketIO(io);
 openwaSessions.setSocketIO(io);
+
+// Ensure uploads directories exist
+const uploadDirs = ["uploads", "uploads/avatars", "uploads/files", "uploads/temp"];
+for (const dir of uploadDirs) {
+  const fullPath = path.join(process.cwd(), dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`Created: ${fullPath}`);
+  }
+}
 
 httpServer.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

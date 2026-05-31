@@ -82,6 +82,15 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
         bio: editedStaff.bio,
         presentAddress: editedStaff.presentAddress,
         permanentAddress: editedStaff.permanentAddress,
+        dob: editedStaff.dob,
+        gender: editedStaff.gender,
+        maritalStatus: editedStaff.maritalStatus,
+        category: editedStaff.category,
+        pan: editedStaff.pan,
+        aadhaar: editedStaff.aadhaar,
+        uan: editedStaff.uan,
+        personalPhone: editedStaff.personalPhone,
+        personalEmail: editedStaff.personalEmail,
       }
 
       await staffService.updateStaff(staff.id, updateData)
@@ -340,6 +349,110 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                         <p className="text-[11px] font-bold text-foreground truncate">{editedStaff.mobile}</p>
                       )}
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <Label className="text-[12px] font-bold uppercase tracking-widest text-muted-foreground">Personal Information</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 rounded-2xl border bg-background">
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Date of Birth</p>
+                    {isEditing ? (
+                      <Input type="date" className="h-7 text-xs" value={editedStaff.dob || ""} onChange={(e) => handleChange("dob", e.target.value)} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700">{editedStaff.dob || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Gender</p>
+                    {isEditing ? (
+                      <select 
+                        className="flex h-7 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={editedStaff.gender || ""}
+                        onChange={(e) => handleChange("gender", e.target.value)}
+                      >
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700">{editedStaff.gender || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Marital Status</p>
+                    {isEditing ? (
+                      <select 
+                        className="flex h-7 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={editedStaff.maritalStatus || ""}
+                        onChange={(e) => handleChange("maritalStatus", e.target.value)}
+                      >
+                        <option value="">Select</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                      </select>
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700">{editedStaff.maritalStatus || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Category</p>
+                    {isEditing ? (
+                      <Input className="h-7 text-xs" value={editedStaff.category || ""} onChange={(e) => handleChange("category", e.target.value)} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700">{editedStaff.category || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Personal Phone</p>
+                    {isEditing ? (
+                      <Input className="h-7 text-xs" value={editedStaff.personalPhone || ""} onChange={(e) => handleChange("personalPhone", e.target.value)} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700">{editedStaff.personalPhone || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Personal Email</p>
+                    {isEditing ? (
+                      <Input className="h-7 text-xs" value={editedStaff.personalEmail || ""} onChange={(e) => handleChange("personalEmail", e.target.value)} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700">{editedStaff.personalEmail || "—"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Government IDs */}
+              <div className="space-y-4">
+                <Label className="text-[12px] font-bold uppercase tracking-widest text-muted-foreground">Government IDs</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5 rounded-2xl border bg-emerald-50/20">
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">PAN Card</p>
+                    {isEditing ? (
+                      <Input className="h-7 text-xs uppercase" value={editedStaff.pan || ""} onChange={(e) => handleChange("pan", e.target.value.toUpperCase())} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700 uppercase tracking-wider">{editedStaff.pan || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">Aadhaar</p>
+                    {isEditing ? (
+                      <Input className="h-7 text-xs tracking-widest" value={editedStaff.aadhaar || ""} onChange={(e) => handleChange("aadhaar", e.target.value)} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700 tracking-widest">{editedStaff.aadhaar || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">UAN (PF)</p>
+                    {isEditing ? (
+                      <Input className="h-7 text-xs tracking-widest" value={editedStaff.uan || ""} onChange={(e) => handleChange("uan", e.target.value)} />
+                    ) : (
+                      <p className="text-xs font-medium text-slate-700 tracking-widest">{editedStaff.uan || "—"}</p>
+                    )}
                   </div>
                 </div>
               </div>

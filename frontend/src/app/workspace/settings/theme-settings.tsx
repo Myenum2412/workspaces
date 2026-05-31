@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { workspaceApi } from "@/lib/api"
 import { Palette, Upload, RotateCcw, Sun, Moon, Monitor } from "lucide-react"
 
 interface ThemeSettings {
@@ -124,21 +124,31 @@ export function ThemeSettings() {
   const [settings, setSettings] = useState<ThemeSettings>(DEFAULT_THEME)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("brand")
   const [logoPreview, setLogoPreview] = useState<string>("")
 
   useEffect(() => {
     loadSettings()
   }, [])
 
-  function loadSettings() {
+  async function loadSettings() {
     try {
-      const stored = localStorage.getItem("theme-settings")
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        setSettings({ ...DEFAULT_THEME, ...parsed })
-        if (parsed.companyLogo) {
-          setLogoPreview(parsed.companyLogo)
+      const res = await workspaceApi.getThemeSettings()
+      if (res.success && res.themeSettings && Object.keys(res.themeSettings).length > 0) {
+        setSettings({ ...DEFAULT_THEME, ...res.themeSettings })
+        if (res.themeSettings.companyLogo) {
+          setLogoPreview(res.themeSettings.companyLogo)
+        }
+        applyTheme({ ...DEFAULT_THEME, ...res.themeSettings })
+      } else {
+        // Fallback to local storage if API is empty
+        const stored = localStorage.getItem("theme-settings")
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          setSettings({ ...DEFAULT_THEME, ...parsed })
+          if (parsed.companyLogo) {
+            setLogoPreview(parsed.companyLogo)
+          }
+          applyTheme({ ...DEFAULT_THEME, ...parsed })
         }
       }
     } catch (error) {
@@ -148,18 +158,19 @@ export function ThemeSettings() {
     }
   }
 
-  function saveSettings() {
+  async function saveSettings() {
     setSaving(true)
     try {
+      await workspaceApi.updateThemeSettings(settings)
       localStorage.setItem("theme-settings", JSON.stringify(settings))
 
       // Apply theme immediately
       applyTheme(settings)
 
-      alert("Theme settings saved successfully!")
+      alert("Theme & Branding settings saved successfully!")
     } catch (error) {
       console.error("Error saving theme settings:", error)
-      alert("Failed to save theme settings. Please try again.")
+      alert("Failed to save theme settings to server. Please try again.")
     } finally {
       setSaving(false)
     }
@@ -289,16 +300,9 @@ export function ThemeSettings() {
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="brand">Brand Identity</TabsTrigger>
-          <TabsTrigger value="colors">Color Scheme</TabsTrigger>
-          <TabsTrigger value="components">Components</TabsTrigger>
-          <TabsTrigger value="presets">Presets</TabsTrigger>
-        </TabsList>
-
-        {/* Brand Identity */}
-        <TabsContent value="brand" className="space-y-6 mt-6">
+    <div className="space-y-8 pb-10">
+      {/* Brand Identity */}
+      <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -358,10 +362,10 @@ export function ThemeSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </div>
 
-        {/* Color Scheme */}
-        <TabsContent value="colors" className="space-y-6 mt-6">
+      {/* Color Scheme */}
+      <div className="space-y-6">
           {/* Primary Colors */}
           <Card>
             <CardHeader>
@@ -608,10 +612,10 @@ export function ThemeSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </div>
 
-        {/* Components */}
-        <TabsContent value="components" className="space-y-6 mt-6">
+      {/* Components */}
+      <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Component Customization</CardTitle>
@@ -786,10 +790,10 @@ export function ThemeSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </div>
 
-        {/* Presets */}
-        <TabsContent value="presets" className="space-y-6 mt-6">
+      {/* Presets */}
+      <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -834,9 +838,9 @@ export function ThemeSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+      </div>
 
+      </div>
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
         <Button variant="outline" onClick={resetToDefaults}>
