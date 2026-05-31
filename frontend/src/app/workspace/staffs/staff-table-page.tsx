@@ -440,9 +440,9 @@ export function StaffTablePage() {
                           <TableCell className="px-4 py-4">
                             <div className="flex items-center gap-3">
                               <Avatar className={cn("size-10 border-2", theme.border)}>
-                                <AvatarImage src={staff.avatar} />
+                                <AvatarImage src={staff.avatar ?? undefined} />
                                 <AvatarFallback className="bg-slate-50 text-slate-700 font-bold">
-                                  {staff.firstName[0]}{staff.lastName[0]}
+                                  {staff.firstName?.[0] ?? ""}{staff.lastName?.[0] ?? ""}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex flex-col">

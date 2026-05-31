@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { fetchJson } from "@/lib/api/fetch-json"
+import { apiFetch } from "@/lib/api/client"
 import { API_BASE_URL } from "@/lib/api/config"
 
 export function ForgotPasswordForm() {
@@ -13,7 +13,7 @@ export function ForgotPasswordForm() {
 
   const mutation = useMutation({
     mutationFn: async (email: string) => {
-      return fetchJson(`${API_BASE_URL}/api/auth/forgot-password`, {
+      return apiFetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

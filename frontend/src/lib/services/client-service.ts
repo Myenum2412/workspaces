@@ -1,37 +1,31 @@
-import { databases, Query, ID, COLLECTIONS, DB_ID } from "@/lib/appwrite/client";
-import type { ClientDoc } from "@/lib/appwrite/types";
+/**
+ * Client service — CRUD via backend REST API.
+ */
 
-export interface ClientProfile {
-  id: string;
-  name: string;
-  contactPerson?: string;
-  email?: string;
-  phone?: string;
-  status: string;
-  industry?: string;
-  location?: string;
-  logoId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { api } from "@/lib/api/client";
+import type { Client } from "@/types";
 
-function docToProfile(doc: ClientDoc): ClientProfile {
+export type { Client as ClientProfile };
+
+function mapClient(doc: any): Client {
   return {
-    id: doc.$id,
-    name: doc.name,
+    id: doc._id ?? doc.id ?? "",
+    name: doc.name ?? "",
     contactPerson: doc.contactPerson,
     email: doc.email,
     phone: doc.phone,
-    status: doc.status,
+    status: doc.status ?? "",
     industry: doc.industry,
     location: doc.location,
     logoId: doc.logoId,
-    createdAt: doc.createdAt ?? "",
-    updatedAt: doc.updatedAt ?? "",
+    organizationId: doc.organizationId ?? "",
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+    deletedAt: doc.deletedAt,
   };
 }
 
-function profileToDoc(data: Partial<ClientProfile>): Record<string, unknown> {
+function toPayload(data: Partial<Client>): Record<string, unknown> {
   return {
     name: data.name ?? "",
     contactPerson: data.contactPerson ?? "",
@@ -41,8 +35,7 @@ function profileToDoc(data: Partial<ClientProfile>): Record<string, unknown> {
     industry: data.industry ?? "",
     location: data.location ?? "",
     logoId: data.logoId ?? "",
-    createdAt: data.createdAt ?? new Date().toISOString(),
-    updatedAt: data.updatedAt ?? new Date().toISOString(),
+    organizationId: data.organizationId ?? "",
   };
 }
 
@@ -57,17 +50,17 @@ export const clientService = {
 
   async getClientStats(organizationId?: string) {
     try {
-      const queries: any[] = [Query.limit(500)];
-      if (organizationId) queries.push(Query.equal("organizationId", organizationId));
-      const res = await databases.listDocuments(DB_ID, COLLECTIONS.CLIENTS, queries);
-      const clients = res.documents as unknown as ClientDoc[];
+      const q = organizationId ? `?organizationId=${organizationId}` : "";
+      const res = await api.get<{ success: boolean; clients: any[] }>(`/api/clients${q}`);
+      const clients = res.clients ?? [];
       const now = new Date();
       return {
         totalClients: clients.length,
-        activePartners: clients.filter(c => c.status === "Active").length,
-        inactiveClients: clients.filter(c => c.status === "Inactive").length,
-        newThisMonth: clients.filter(c => {
-          const d = new Date(c.createdAt ?? "");
+        activePartners: clients.filter((c: any) => c.status === "Active").length,
+        inactiveClients: clients.filter((c: any) => c.status === "Inactive").length,
+        newThisMonth: clients.filter((c: any) => {
+          if (!c.createdAt) return false;
+          const d = new Date(c.createdAt);
           return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         }).length,
       };
@@ -76,36 +69,28 @@ export const clientService = {
     }
   },
 
-  async getAllClients(organizationId?: string): Promise<ClientProfile[]> {
+  async getAllClients(organizationId?: string): Promise<Client[]> {
     try {
-      const queries: any[] = [Query.limit(500)];
-      if (organizationId) queries.push(Query.equal("organizationId", organizationId));
-      const res = await databases.listDocuments(DB_ID, COLLECTIONS.CLIENTS, queries);
-      return (res.documents as unknown as ClientDoc[]).map(docToProfile);
+      const q = organizationId ? `?organizationId=${organizationId}` : "";
+      const res = await api.get<{ success: boolean; clients: any[] }>(`/api/clients${q}`);
+      return (res.clients ?? []).map(mapClient);
     } catch (error) {
       console.warn("clientService.getAllClients error:", error);
       return [];
     }
   },
 
-  async createClient(data: Partial<ClientProfile>, organizationId?: string): Promise<ClientProfile> {
-    const doc = await databases.createDocument(
-      DB_ID,
-      COLLECTIONS.CLIENTS,
-      ID.unique(),
-      { ...profileToDoc(data), organizationId: organizationId ?? "" }
-    );
-    return docToProfile(doc as unknown as ClientDoc);
+  async createClient(data: Partial<Client>): Promise<Client> {
+    const res = await api.post<{ success: boolean; client: any }>("/api/clients", toPayload(data));
+    return mapClient(res.client);
   },
 
-  async updateClient(id: string, data: Partial<ClientProfile>): Promise<ClientProfile> {
-    const payload = profileToDoc(data);
-    payload.updatedAt = new Date().toISOString();
-    const doc = await databases.updateDocument(DB_ID, COLLECTIONS.CLIENTS, id, payload);
-    return docToProfile(doc as unknown as ClientDoc);
+  async updateClient(id: string, data: Partial<Client>): Promise<Client> {
+    const res = await api.put<{ success: boolean; client: any }>(`/api/clients/${id}`, toPayload(data));
+    return mapClient(res.client);
   },
 
   async deleteClient(id: string): Promise<void> {
-    await databases.deleteDocument(DB_ID, COLLECTIONS.CLIENTS, id);
+    await api.delete(`/api/clients/${id}`);
   },
 };

@@ -51,7 +51,7 @@ import { toast } from "sonner"
 
 const pageSizeOptions = [5, 10, 20, 50]
 
-function getStatusClasses(status: string | null) {
+function getStatusClasses(status: string | null | undefined) {
   switch (status) {
     case "Active":
       return "bg-slate-50 text-slate-700 border-emerald-100"

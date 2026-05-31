@@ -48,7 +48,7 @@ export function OrgSidebar({ className, ...props }: React.ComponentProps<typeof 
   const { session } = useOrgAuth();
   const orgName = session?.organization?.name ?? "Organization";
   const userName = session?.profile
-    ? `${session.profile.firstName} ${session.profile.lastName}`
+    ? `${session.profile.firstName ?? ""} ${session.profile.lastName ?? ""}`.trim()
     : session?.user.name ?? "User";
   const email = session?.user.email ?? "user@example.com";
 

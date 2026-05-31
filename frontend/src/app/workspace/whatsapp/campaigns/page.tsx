@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Play, Pause, BarChart3, Trash2, Megaphone, Clock, CheckCircle2 } from "lucide-react";
-import { campaignsApi } from "@/lib/api";
+import { campaignsApi } from "@/lib/api/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

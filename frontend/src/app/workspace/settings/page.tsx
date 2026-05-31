@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Settings2, Database, Shield, Bell, Users, Mail, Palette, RotateCcw, KeyRound } from "lucide-react"
 import React, { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { workspaceApi } from "@/lib/api"
+import { workspaceApi } from "@/lib/api/client"
 
 export default function SettingsPage() {
   const [workspaceId, setWorkspaceId] = useState("")

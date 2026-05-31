@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { fetchJson } from "@/lib/api/fetch-json"
+import { apiFetch } from "@/lib/api/client"
 import { API_BASE_URL } from "@/lib/api/config"
 import Link from "next/link"
 import { Copy, Check, Mail } from "lucide-react"
@@ -37,7 +37,7 @@ export function SignupForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: { firstName: string; lastName: string; companyName: string; companyRange: string; email: string }) => {
-      return fetchJson<RegisterResponse>(`${API_BASE_URL}/api/auth/register`, {
+      return apiFetch<RegisterResponse>(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, category: "Other" }),

@@ -24,7 +24,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ChevronsUpDownIcon, SparklesIcon, BadgeCheckIcon, CreditCardIcon, BellIcon, LogOutIcon, Building2 } from "lucide-react";
-import { authApi, profileApi } from "@/lib/api";
+import { authApi, profileApi } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 
 export function NavUser({

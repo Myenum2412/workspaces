@@ -1,86 +1,16 @@
 /**
- * Staff / User service — all data comes from Appwrite Database.
- * No more fake/mock data or localStorage.
- *
- * Collections used:
- *   - user_profiles  (organizations, user_profiles, org_members, org_invitations)
- *   - org_members
- *
- * The org admin user ID is set via NEXT_PUBLIC_ORG_USER_ID env var.
+ * Staff / User service — CRUD via backend REST API at /api/staff.
+ * Replaces AppWrite databases.* calls.
  */
 
-import { ID } from "@/lib/appwrite/client";
-import { API_BASE_URL } from "@/lib/api/config";
+import { api } from "@/lib/api/client";
+import type { UIStaff, StaffStatus, EmploymentType } from "@/types";
 
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem("auth_token") : null;
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || err.message || "Request failed");
-  }
-  return res.json();
-}
+export type { UIStaff, StaffStatus, EmploymentType };
 
-// ── Types ────────────────────────────────────────────────────
-
-export type StaffStatus = "Active" | "Inactive" | "On Leave" | "Deleted" | "active" | "inactive" | string;
-export type EmploymentType = "Full Time" | "Part Time" | "Contract" | "Intern" | "Freelance" | string;
-
-export interface UIStaff {
-  [key: string]: unknown;
-  id: string;               // Appwrite document $id
-  userId: string;           // Appwrite user $id
-  empId: string;
-  firstName: string;
-  lastName: string;
-  nickname: string;
-  email: string;
-  designation: string;
-  department: string | null;
-  status: StaffStatus | null;
-  joiningDate: string;
-  mobile: string;
-  avatar: string;
-  employmentType: EmploymentType | null;
-  currentExperience: string | null;
-  totalExperience: string | null;
-  dob: string;
-  gender: string;
-  maritalStatus: string;
-  sourceOfHire: string | null;
-  bio: string;
-  expertise: string[];
-  pan: string;
-  aadhaar: string;
-  uan: string;
-  presentAddress: string;
-  permanentAddress: string;
-  personalPhone: string;
-  personalEmail: string;
-  category?: string;
-  activeHours?: string;
-  screenTime?: string;
-  orgId?: string;
-  role?: string;
-  joinedAt?: string;
-  workExperience?: any[];
-  educationDetails?: any[];
-  dependentDetails?: any[];
-  socialLinks?: Record<string, string>;
-  exitDate?: string;
-}
-
-// ── Mappers ──────────────────────────────────────────────────
-
-function profileToStaff(doc: Record<string, any>): UIStaff {
+function mapStaff(doc: any): UIStaff {
   return {
-    id: doc.$id ?? "",
+    id: doc._id ?? doc.id ?? "",
     userId: doc.userId ?? "",
     empId: doc.empId ?? "",
     firstName: doc.firstName ?? "",
@@ -89,8 +19,8 @@ function profileToStaff(doc: Record<string, any>): UIStaff {
     email: doc.email ?? "",
     designation: doc.designation ?? "",
     department: doc.department ?? null,
-    status: (doc.status as StaffStatus) ?? "Active",
-    joiningDate: doc.joiningDate ?? doc.$createdAt ?? "",
+    status: (doc.status as StaffStatus) ?? "active",
+    joiningDate: doc.joiningDate ?? doc.createdAt ?? "",
     mobile: doc.phone ?? doc.mobile ?? "",
     avatar: doc.avatarUrl ?? "",
     employmentType: (doc.employmentType as EmploymentType) ?? null,
@@ -105,35 +35,39 @@ function profileToStaff(doc: Record<string, any>): UIStaff {
     pan: doc.pan ?? "",
     aadhaar: doc.aadhaar ?? "",
     uan: doc.uan ?? "",
-    presentAddress: doc.presentAddress ?? "",
+    presentAddress: doc.presentAddress ?? doc.address?.street ?? "",
     permanentAddress: doc.permanentAddress ?? "",
     personalPhone: doc.personalPhone ?? "",
     personalEmail: doc.personalEmail ?? "",
     category: doc.category ?? "",
-    activeHours: doc.activeHours || "8h",
-    screenTime: doc.screenTime || "6h 45m",
+    activeHours: doc.activeHours ?? "8h",
+    screenTime: doc.screenTime ?? "6h 45m",
     orgId: doc.organizationId ?? "",
     role: doc.role ?? "",
     joinedAt: doc.joinedAt ?? "",
-    workExperience: doc.workExperience ? (typeof doc.workExperience === 'string' ? JSON.parse(doc.workExperience) : doc.workExperience) : [],
-    educationDetails: doc.educationDetails ? (typeof doc.educationDetails === 'string' ? JSON.parse(doc.educationDetails) : doc.educationDetails) : [],
-    dependentDetails: doc.dependentDetails ? (typeof doc.dependentDetails === 'string' ? JSON.parse(doc.dependentDetails) : doc.dependentDetails) : [],
-    socialLinks: doc.socialLinks ? (typeof doc.socialLinks === 'string' ? JSON.parse(doc.socialLinks) : doc.socialLinks) : {},
+    workExperience: doc.workEducation ?? [],
+    educationDetails: doc.educationDetails ?? [],
+    dependentDetails: doc.dependentDetails ?? [],
+    socialLinks: doc.socialLinks ?? {},
     exitDate: doc.exitDate ?? "",
+    emailVerified: doc.emailVerified ?? false,
+    phoneVerified: doc.phoneVerified ?? false,
+    profileCompletion: doc.profileCompletion ?? 0,
+    lastLogin: doc.lastLogin,
+    loginCount: doc.loginCount ?? 0,
   };
 }
 
-function staffToProfile(staff: Partial<UIStaff>): Record<string, any> {
+function toPayload(staff: Record<string, any>): Record<string, unknown> {
   return {
     userId: staff.userId ?? "",
     firstName: staff.firstName ?? "",
     lastName: staff.lastName ?? "",
     email: staff.email ?? "",
-    password: staff.password ?? "",
-    phone: staff.mobile ?? "",
+    phone: staff.mobile ?? staff.phone ?? "",
     designation: staff.designation ?? "",
     department: staff.department ?? "",
-    status: staff.status ?? "Active",
+    status: staff.status ?? "active",
     joiningDate: staff.joiningDate ?? "",
     employmentType: staff.employmentType ?? "Full Time",
     currentExperience: staff.currentExperience ?? "",
@@ -154,89 +88,46 @@ function staffToProfile(staff: Partial<UIStaff>): Record<string, any> {
     category: staff.category ?? "",
     organizationId: staff.orgId ?? "",
     role: staff.role ?? "staff",
-    invitedBy: "",
-    joinedAt: staff.joinedAt ?? new Date().toISOString(),
     empId: staff.empId ?? "",
-    avatarUrl: staff.avatar ?? "",
+    avatarUrl: staff.avatar ?? staff.avatarUrl ?? "",
     nickname: staff.nickname ?? "",
-    passwordHash: staff.password ?? "",
-    workExperience: staff.workExperience ? JSON.stringify(staff.workExperience) : undefined,
-    educationDetails: staff.educationDetails ? JSON.stringify(staff.educationDetails) : undefined,
-    dependentDetails: staff.dependentDetails ? JSON.stringify(staff.dependentDetails) : undefined,
-    socialLinks: staff.socialLinks ? JSON.stringify(staff.socialLinks) : undefined,
-    exitDate: staff.exitDate ?? "",
   };
 }
 
-// ── Service ──────────────────────────────────────────────────
-
 export const staffService = {
-  /** Get all staff profiles for an organization */
-  async getAllStaff(organizationId?: string): Promise<UIStaff[]> {
+  async getAllStaff(): Promise<UIStaff[]> {
     try {
-      const res = await apiFetch<{ success: boolean; staffs: any[] }>(`/api/staff`);
-      return res.staffs.map((doc: any) => profileToStaff({ ...doc, $id: doc._id }));
+      const res = await api.get<{ success: boolean; staffs: any[] }>("/api/staff");
+      return (res.staffs ?? []).map(mapStaff);
     } catch (error) {
       console.warn("staffService.getAllStaff error:", error);
       return [];
     }
   },
 
-  /** Get a single staff profile by user_profiles document ID */
   async getStaffById(id: string): Promise<UIStaff | null> {
     try {
-      const res = await apiFetch<{ success: boolean; staff: any }>(`/api/staff/${id}`);
-      return profileToStaff({ ...res.staff, $id: res.staff._id });
+      const res = await api.get<{ success: boolean; staff: any }>(`/api/staff/${id}`);
+      return mapStaff(res.staff);
     } catch {
       return null;
     }
   },
 
-  /** Get staff by Appwrite user ID */
-  async getStaffByUserId(userId: string): Promise<UIStaff | null> {
-    try {
-      const res = await apiFetch<{ success: boolean; staffs: any[] }>(`/api/staff`);
-      const user = res.staffs.find(s => s.userId === userId);
-      if (!user) return null;
-      return profileToStaff({ ...user, $id: user._id });
-    } catch {
-      return null;
-    }
-  },
-
-  /** Create a new staff profile + org membership */
-  async createStaff(data: Partial<UIStaff>): Promise<UIStaff> {
+  async createStaff(data: Record<string, any>): Promise<UIStaff> {
     const now = new Date().toISOString();
-    
-    let finalEmpId = data.empId;
-    if (!finalEmpId) {
-      let prefix = "EMP-";
-      if (typeof window !== "undefined") {
-         prefix = localStorage.getItem("employeeIdPrefix") || "EMP-";
-      }
-      try {
-        const allStaff = await this.getAllStaff(data.orgId);
-        const nextCount = allStaff.length + 1;
-        finalEmpId = `${prefix}${nextCount.toString().padStart(3, "0")}`;
-      } catch {
-        finalEmpId = `${prefix}${String(Date.now()).slice(-4)}`;
-      }
-    }
-
     const newStaff: UIStaff = {
       id: "",
-      userId: data.userId || ID.unique(),
-      empId: finalEmpId,
+      userId: data.userId || crypto.randomUUID(),
+      empId: data.empId || "",
       firstName: data.firstName || "New",
       lastName: data.lastName || "User",
       nickname: data.firstName || "New",
       email: data.email || "",
       designation: data.designation || "Staff",
       department: data.department || "",
-      status: "Active",
-      joiningDate: new Date().toLocaleDateString("en-GB", {
-        day: "2-digit", month: "short", year: "numeric",
-      }).replace(/ /g, "-"),
+      status: "active",
+      joiningDate: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-"),
       mobile: data.mobile || "",
       avatar: "",
       employmentType: data.employmentType || "Full Time",
@@ -259,50 +150,37 @@ export const staffService = {
       orgId: data.orgId || "",
       role: data.role || "staff",
       joinedAt: now,
+      workExperience: [],
+      educationDetails: [],
+      dependentDetails: [],
+      socialLinks: {},
+      exitDate: "",
       ...data,
     };
 
-    const res = await apiFetch<{ success: boolean; staff: any }>("/api/staff", {
-      method: "POST",
-      body: JSON.stringify(staffToProfile(newStaff)),
-    });
-
-    return profileToStaff({ ...res.staff, $id: res.staff._id });
+    const res = await api.post<{ success: boolean; staff: any }>("/api/staff", toPayload(newStaff));
+    return mapStaff(res.staff);
   },
 
-  /** Update an existing staff profile */
-  async updateStaff(id: string, data: Partial<UIStaff>): Promise<UIStaff> {
-    const existing = await this.getStaffById(id);
-    if (!existing) throw new Error("Staff not found");
-
-    const merged = { ...existing, ...data };
-    const res = await apiFetch<{ success: boolean; staff: any }>(`/api/staff/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(staffToProfile(merged)),
-    });
-    return profileToStaff({ ...res.staff, $id: res.staff._id });
+  async updateStaff(id: string, data: Record<string, any>): Promise<UIStaff> {
+    const res = await api.put<{ success: boolean; staff: any }>(`/api/staff/${id}`, toPayload(data));
+    return mapStaff(res.staff);
   },
 
-  /** Soft-delete: set status to "Deleted" */
   async deleteStaff(id: string): Promise<void> {
-    await apiFetch(`/api/staff/${id}`, { method: "DELETE" });
+    await api.delete(`/api/staff/${id}`);
   },
 
-  /** Reactivate a deleted user */
   async reactivateStaff(id: string): Promise<void> {
-    await apiFetch(`/api/staff/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ status: "Active" }),
-    });
+    await api.put(`/api/staff/${id}`, { status: "active" });
   },
 
-  /** Get staff statistics */
-  async getStaffStats(organizationId?: string) {
-    const staff = await this.getAllStaff(organizationId);
+  async getStaffStats() {
+    const staff = await this.getAllStaff();
     return {
       totalStaff: staff.length,
-      activeNow: staff.filter((s) => s.status === "Active").length,
-      onLeave: staff.filter((s) => s.status === "Inactive" || s.status === "On Leave").length,
+      activeNow: staff.filter((s) => s.status === "active").length,
+      onLeave: staff.filter((s) => s.status === "inactive" || s.status === "On Leave").length,
       assignedTasks: 0,
     };
   },

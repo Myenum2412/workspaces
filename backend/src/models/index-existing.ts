@@ -174,7 +174,7 @@ const UserProfileSchema = new Schema<IUserProfile>({
 }, { timestamps: true });
 
 UserProfileSchema.index({ email: 1 }, { unique: true, sparse: true });
-UserProfileSchema.index({ userId: 1 }, { unique: true });
+// userId unique index auto-created by `unique: true` on field — no duplicate .index() needed
 UserProfileSchema.index({ organizationId: 1, status: 1 });
 UserProfileSchema.index({ firstName: "text", lastName: "text", email: "text" });
 UserProfileSchema.plugin(softDeletePlugin);

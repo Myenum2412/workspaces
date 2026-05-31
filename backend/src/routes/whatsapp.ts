@@ -2,21 +2,20 @@ import { Router, Request, Response } from "express";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
 import { OrgMember } from "../models/index.js";
 import { whatsappService } from "../services/whatsapp.js";
-
-const SUPER_ADMIN_EMAIL = "zoo@myenum.in";
+import { isSuperAdmin } from "../config/env.js";
 
 const router = Router();
 router.use(authenticate);
 
 // Helper: verify user belongs to the org
 async function verifyOrgAccess(req: AuthRequest, organizationId: string): Promise<boolean> {
-  if (req.user!.email.toLowerCase() === SUPER_ADMIN_EMAIL) return true;
+  if (isSuperAdmin(req.user!.email)) return true;
   return req.user!.organizationId === organizationId;
 }
 
 // Helper: verify user is owner/admin
 async function verifyAdminAccess(req: AuthRequest): Promise<boolean> {
-  if (req.user!.email.toLowerCase() === SUPER_ADMIN_EMAIL) return true;
+  if (isSuperAdmin(req.user!.email)) return true;
   const member = await OrgMember.findOne({ userId: req.user!.userId }).lean() as any;
   return member && ["owner", "admin"].includes(member.role);
 }

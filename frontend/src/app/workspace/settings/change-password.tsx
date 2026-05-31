@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { KeyRound, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
+import { api } from "@/lib/api/client"
 
 export function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState("")
@@ -36,8 +37,7 @@ export function ChangePassword() {
 
     setIsSubmitting(true)
     try {
-      const { account } = await import("@/lib/appwrite/client")
-      await account.updatePassword(newPassword, currentPassword)
+      await api.post("/api/auth/change-password", { currentPassword, newPassword })
       toast.success("Password changed successfully")
       setCurrentPassword("")
       setNewPassword("")

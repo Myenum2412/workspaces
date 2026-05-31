@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { API_BASE_URL } from "@/lib/api/config";
 import { whatsappService, type WhatsappInstance } from "@/lib/whatsapp/service";
-import { profileApi, workspaceApi } from "@/lib/api";
+import { profileApi, workspaceApi } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 
 // ── WhatsApp submenu items ──────────────────────────────────

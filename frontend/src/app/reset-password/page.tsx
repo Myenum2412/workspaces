@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { fetchJson } from "@/lib/api/fetch-json"
+import { apiFetch } from "@/lib/api/client"
 import { API_BASE_URL } from "@/lib/api/config"
 import Link from "next/link"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
@@ -24,7 +24,7 @@ function ResetPasswordForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: { email: string; token: string; otp: string; password: string }) => {
-      return fetchJson(`${API_BASE_URL}/api/auth/reset-password`, {
+      return apiFetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
 import { Organization, OrgMember } from "../models/index.js";
+import crypto from "crypto";
 
 const router = Router();
 

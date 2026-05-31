@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Users, UserCheck, UserPlus, Building2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrgAuth } from "../layout";
-import { databases, Query, COLLECTIONS, DB_ID } from "@/lib/appwrite/client";
+import { api } from "@/lib/api/client";
 
 interface DashboardStats {
   totalMembers: number;
@@ -14,7 +14,7 @@ interface DashboardStats {
 }
 
 interface RecentMember {
-  $id: string;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -36,56 +36,40 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!session?.organization?.$id) {
-        setLoading(false);
-        return;
-      }
+      if (!session?.organization?.id) { setLoading(false); return; }
 
       try {
-        // Fetch members
-        let members: any[] = [];
-        let totalMembers = 0;
-        try {
-          const membersRes = await databases.listDocuments(
-            DB_ID, COLLECTIONS.ORG_MEMBERS,
-            [Query.equal("organizationId", session.organization.$id)]
-          );
-          members = membersRes.documents as any[];
-          totalMembers = membersRes.total;
-        } catch { /* collection may not exist */ }
+        const orgId = session.organization.id;
 
+        // Fetch members
+        const membersRes = await api.get<{ success: boolean; members: any[] }>(
+          `/api/members?organizationId=${orgId}`
+        );
+        const members = membersRes.members ?? [];
         const activeCount = members.filter((m: any) => m.status === "active").length;
 
         // Fetch pending invites
-        let pendingInvites = 0;
-        try {
-          const invitesRes = await databases.listDocuments(
-            DB_ID, COLLECTIONS.ORG_INVITATIONS,
-            [Query.equal("organizationId", session.organization.$id), Query.equal("status", "pending")]
-          );
-          pendingInvites = invitesRes.total;
-        } catch { /* collection may not exist */ }
+        const invitesRes = await api.get<{ success: boolean; invitations: any[] }>(
+          `/api/invitations?organizationId=${orgId}`
+        );
+        const pendingInvites = (invitesRes.invitations ?? []).filter((i: any) => i.status === "pending").length;
 
         // Fetch recent profiles
-        let recent: RecentMember[] = [];
-        try {
-          const profilesRes = await databases.listDocuments(
-            DB_ID, COLLECTIONS.USER_PROFILES,
-            [Query.equal("organizationId", session.organization.$id), Query.orderDesc("$createdAt"), Query.limit(5)]
-          );
-          recent = profilesRes.documents.map((doc: any) => ({
-            $id: doc.$id,
-            firstName: doc.firstName ?? "",
-            lastName: doc.lastName ?? "",
-            email: doc.email ?? "",
-            role: doc.role ?? "",
-            status: doc.status ?? "",
-            joinedAt: doc.joinedAt ?? doc.$createdAt ?? "",
-          }));
-        } catch { /* collection may not exist */ }
+        const profilesRes = await api.get<{ success: boolean; data: any[] }>(
+          `/api/staff?organizationId=${orgId}&limit=5&sort=createdAt:desc`
+        );
+        const recent: RecentMember[] = (profilesRes.data ?? []).map((doc: any) => ({
+          id: doc._id ?? doc.id ?? "",
+          firstName: doc.firstName ?? "",
+          lastName: doc.lastName ?? "",
+          email: doc.email ?? "",
+          role: doc.role ?? "",
+          status: doc.status ?? "",
+          joinedAt: doc.joinedAt ?? doc.createdAt ?? "",
+        }));
 
         setStats({
-          totalMembers,
+          totalMembers: members.length,
           activeMembers: activeCount,
           pendingInvites,
           organizationName: session.organization?.name ?? "Organization Portal",
@@ -99,7 +83,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, [session?.organization?.$id]);
+  }, [session?.organization?.id]);
 
   return (
     <div className="space-y-6">
@@ -161,9 +145,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-slate-400">
-              <p className="text-sm">Loading...</p>
-            </div>
+            <div className="text-center py-8 text-slate-400"><p className="text-sm">Loading...</p></div>
           ) : recentMembers.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
               <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
@@ -172,7 +154,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {recentMembers.map((member) => (
-                <div key={member.$id} className="flex items-center justify-between py-3 border-b last:border-0">
+                <div key={member.id} className="flex items-center justify-between py-3 border-b last:border-0">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700">
                       {(member.firstName?.[0] ?? "?")}{(member.lastName?.[0] ?? "")}

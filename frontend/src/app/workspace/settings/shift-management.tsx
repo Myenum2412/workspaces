@@ -25,7 +25,7 @@ import {
 import { Plus, Trash2, Edit2 } from "lucide-react"
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { workspaceApi } from "@/lib/api"
+import { workspaceApi } from "@/lib/api/client"
 
 interface Shift {
   id: string

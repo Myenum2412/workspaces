@@ -43,7 +43,7 @@ export function AddTeamDialog() {
 
   const { data: staff = [], isLoading: isLoadingStaff } = useQuery({
     queryKey: ["staff-by-branch", selectedBranchId],
-    queryFn: () => staffService.getAllStaff(selectedBranchId),
+    queryFn: () => staffService.getAllStaff(),
     enabled: !!selectedBranchId,
   })
 
@@ -166,7 +166,7 @@ export function AddTeamDialog() {
                         />
                         <Avatar className="size-8 border ">
                           <AvatarFallback className="bg-slate-50 text-slate-700 font-bold text-[10px]">
-                            {member.firstName[0]}{member.lastName[0]}
+                            {member.firstName?.[0] ?? ""}{member.lastName?.[0] ?? ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col min-w-0">

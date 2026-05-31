@@ -2,73 +2,183 @@ import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import crypto from "crypto";
 import { connectDB } from "../config/connection.js";
+import { env } from "../config/env.js";
+import { isSuperAdmin } from "../config/env.js";
 import {
   UserProfile,
   Organization,
   OrgMember,
 } from "../models/index.js";
-import { authenticate, signToken, AuthRequest } from "../middleware/auth.js";
+import {
+  authenticate,
+  signAccessToken,
+  signRefreshToken,
+  signTokenPair,
+  verifyRefreshToken,
+  revokeRefreshToken,
+  revokeAllUserTokens,
+  getUserSessions,
+  AuthRequest,
+} from "../middleware/auth.js";
+import { catchAsync } from "../core/utils/catchAsync.js";
+import { apiResponse } from "../core/utils/apiResponse.js";
+import { NotFoundError, AccountLockedError, AuthenticationError, ConflictError } from "../core/errors/AppError.js";
 import { validateBody } from "../middleware/validate.js";
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validators/auth.js";
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+} from "../validators/auth.js";
 import { sendForgotPasswordEmail, sendSignupWelcomeEmail, sendVerificationEmail } from "../email/resend.js";
 import { getIO } from "../ws/server.js";
 
 const router = Router();
 
-// ── Passport Google OAuth ─────────────────────────────────────
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/api/auth/google/callback",
-  }, async (_accessToken, _refreshToken, profile, done) => {
-    try {
-      await connectDB();
-      const email = profile.emails?.[0]?.value;
-      if (!email) return done(new Error("No email from Google"));
-      let user = await UserProfile.findOne({ email }).lean() as any;
-      if (!user) {
-        const userId = crypto.randomUUID();
-        const orgId = crypto.randomUUID();
-        const displayName = profile.displayName ?? "";
-        const firstName = profile.name?.givenName ?? displayName.split(" ")[0] ?? "User";
-        const lastName = profile.name?.familyName ?? displayName.split(" ").slice(1).join(" ") ?? "";
-        await Organization.create({ _id: orgId, name: `${firstName}'s Organization` });
-        await UserProfile.create({ _id: userId, userId, email, firstName, lastName, organizationId: orgId, designation: "workspace" });
-        await OrgMember.create({ _id: crypto.randomUUID(), organizationId: orgId, userId, role: "owner", status: "active", joinedAt: new Date().toISOString() });
-        user = await UserProfile.findOne({ email }).lean() as any;
-      }
-      return done(null, user);
-    } catch (err) {
-      return done(err as Error);
+// ── Account Lockout Store (use Redis in production) ──────────
+
+interface LoginAttempt {
+  count: number;
+  lastAttempt: Date;
+  lockedUntil: Date | null;
+}
+
+const loginAttempts = new Map<string, LoginAttempt>();
+
+// Clean up expired lockouts every 5 minutes
+setInterval(() => {
+  const now = new Date();
+  for (const [key, attempt] of loginAttempts) {
+    if (attempt.lockedUntil && attempt.lockedUntil < now) {
+      loginAttempts.delete(key);
     }
-  }));
+  }
+}, 5 * 60 * 1000);
+
+const LOCKOUT_THRESHOLD = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkAccountLockout(email: string): void {
+  const key = email.toLowerCase();
+  const attempt = loginAttempts.get(key);
+
+  if (attempt?.lockedUntil && attempt.lockedUntil > new Date()) {
+    const remainingMin = Math.ceil((attempt.lockedUntil.getTime() - Date.now()) / 60000);
+    throw new AccountLockedError(
+      `Account is locked due to too many failed attempts. Try again in ${remainingMin} minute(s).`
+    );
+  }
+}
+
+function recordFailedLogin(email: string): void {
+  const key = email.toLowerCase();
+  const existing = loginAttempts.get(key);
+
+  if (!existing || existing.lockedUntil) {
+    loginAttempts.set(key, { count: 1, lastAttempt: new Date(), lockedUntil: null });
+    return;
+  }
+
+  existing.count += 1;
+  existing.lastAttempt = new Date();
+
+  if (existing.count >= LOCKOUT_THRESHOLD) {
+    existing.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+  }
+}
+
+function clearLoginAttempts(email: string): void {
+  loginAttempts.delete(email.toLowerCase());
+}
+
+// ── Passport Google OAuth ─────────────────────────────────────
+if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: env.GOOGLE_CLIENT_ID,
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+        callbackURL: "/api/auth/google/callback",
+      },
+      async (_accessToken, _refreshToken, profile, done) => {
+        try {
+          await connectDB();
+          const email = profile.emails?.[0]?.value;
+          if (!email) return done(new Error("No email from Google"));
+          let user = await UserProfile.findOne({ email }).lean() as any;
+          if (!user) {
+            const userId = crypto.randomUUID();
+            const orgId = crypto.randomUUID();
+            const displayName = profile.displayName ?? "";
+            const firstName = profile.name?.givenName ?? displayName.split(" ")[0] ?? "User";
+            const lastName = profile.name?.familyName ?? displayName.split(" ").slice(1).join(" ") ?? "";
+            await Organization.create({ _id: orgId, name: `${firstName}'s Organization` });
+            await UserProfile.create({
+              _id: userId,
+              userId,
+              email,
+              firstName,
+              lastName,
+              organizationId: orgId,
+              designation: "workspace",
+            });
+            await OrgMember.create({
+              _id: crypto.randomUUID(),
+              organizationId: orgId,
+              userId,
+              role: "owner",
+              status: "active",
+              joinedAt: new Date().toISOString(),
+            });
+            user = await UserProfile.findOne({ email }).lean() as any;
+          }
+          return done(null, user);
+        } catch (err) {
+          return done(err as Error);
+        }
+      }
+    )
+  );
 }
 
 // ── Google OAuth routes ───────────────────────────────────────
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "/login" }), (req: Request, res: Response) => {
-  const user = req.user as any;
-  const token = signToken({ userId: user._id.toString(), email: user.email, organizationId: user.organizationId ?? "", role: "owner" });
-  res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
-});
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/login" }),
+  (req: Request, res: Response) => {
+    const user = req.user as any;
+    const tokens = signTokenPair(
+      { userId: user._id.toString(), email: user.email, organizationId: user.organizationId ?? "", role: "owner" },
+      req
+    );
+    res.redirect(`${env.FRONTEND_URL}/login?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
+  }
+);
 
 // ── LinkedIn OAuth routes (placeholder) ───────────────────────
 router.get("/linkedin", (_req: Request, res: Response) => {
-  res.status(501).json({ error: "LinkedIn OAuth not configured. Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET env vars." });
+  apiResponse.success(res, null, 501);
 });
 
-router.post("/register", validateBody(registerSchema), async (req: Request, res: Response) => {
-  try {
+// ── Register ──────────────────────────────────────────────────
+
+router.post(
+  "/register",
+  validateBody(registerSchema),
+  catchAsync(async (req: Request, res: Response) => {
     const { firstName, lastName, companyName, email, category, companyRange } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
 
     await connectDB();
 
-    const existing = await UserProfile.findOne({ email }).lean();
+    const existing = await UserProfile.findOne({ email: normalizedEmail, deletedAt: null }).lean();
     if (existing) {
-      return res.status(400).json({ message: "Email already registered" });
+      throw new ConflictError("Email already registered");
     }
 
     const tempPassword = crypto.randomUUID().slice(0, 12);
@@ -77,78 +187,95 @@ router.post("/register", validateBody(registerSchema), async (req: Request, res:
     const userId = crypto.randomUUID();
     const orgId = crypto.randomUUID();
 
-    await Organization.create({
-      _id: orgId,
-      name: companyName,
-      category: category || "Other",
-      companyRange: companyRange || "1-10",
-    });
+    // Use transaction for multi-document creation
+    const session = await UserProfile.startSession();
+    let result;
+    try {
+      await session.withTransaction(async () => {
+        await Organization.create([{
+          _id: orgId,
+          name: companyName,
+          category: category || "Other",
+          companyRange: companyRange || "1-10",
+        }], { session });
 
-    await UserProfile.create({
-      _id: userId,
-      userId,
-      email,
-      firstName,
-      lastName,
-      passwordHash,
-      organizationId: orgId,
-      designation: "workspace",
-    });
+        await UserProfile.create([{
+          _id: userId,
+          userId,
+          email: normalizedEmail,
+          firstName,
+          lastName,
+          passwordHash,
+          organizationId: orgId,
+          designation: "workspace",
+        }], { session });
 
-    await OrgMember.create({
-      _id: crypto.randomUUID(),
-      organizationId: orgId,
-      userId,
-      role: "owner",
-      status: "active",
-      joinedAt: new Date().toISOString(),
-    });
+        await OrgMember.create([{
+          _id: crypto.randomUUID(),
+          organizationId: orgId,
+          userId,
+          role: "owner",
+          status: "active",
+          joinedAt: new Date().toISOString(),
+        }], { session });
+      });
+    } finally {
+      await session.endSession();
+    }
 
-    const token = signToken({
-      userId,
-      email,
-      organizationId: orgId,
-      role: "owner",
-    });
+    const tokens = signTokenPair(
+      { userId, email: normalizedEmail, organizationId: orgId, role: "owner" },
+      req
+    );
 
-    const loginUrl = `${process.env.FRONTEND_URL}/login`;
-    await sendSignupWelcomeEmail({
-      to: email,
+    const loginUrl = `${env.FRONTEND_URL}/login`;
+    sendSignupWelcomeEmail({
+      to: normalizedEmail,
       name: `${firstName} ${lastName}`.trim(),
       password: tempPassword,
       verifyUrl: loginUrl,
-    }).catch((err) => {
+    }).catch((err: Error) => {
       console.error("[Signup] Welcome email failed:", err);
     });
 
-    res.status(201).json({
-      success: true,
-      token,
+    apiResponse.created(res, {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       password: tempPassword,
-      user: { $id: userId, email, name: `${firstName} ${lastName}`, firstName, lastName },
+      user: { $id: userId, email: normalizedEmail, name: `${firstName} ${lastName}`, firstName, lastName },
       organization: { $id: orgId, name: companyName },
-    });
-  } catch (error: any) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: error.message || "Registration failed" });
-  }
-});
+    }, req.requestId);
+  })
+);
 
-router.post("/login", validateBody(loginSchema), async (req: Request, res: Response) => {
-  try {
+// ── Login ─────────────────────────────────────────────────────
+
+router.post(
+  "/login",
+  validateBody(loginSchema),
+  catchAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
 
     await connectDB();
 
-    const profile = await UserProfile.findOne({ email }).lean() as any;
+    // Check account lockout
+    checkAccountLockout(normalizedEmail);
+
+    const profile = await UserProfile.findOne({ email: normalizedEmail }).lean() as any;
     if (!profile) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      recordFailedLogin(normalizedEmail);
+      throw new AuthenticationError("Invalid email or password");
     }
 
     const valid = await bcrypt.compare(password, profile.passwordHash ?? "");
     if (!valid) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      recordFailedLogin(normalizedEmail);
+      throw new AuthenticationError("Invalid email or password");
     }
+
+    // Clear failed login attempts on successful login
+    clearLoginAttempts(normalizedEmail);
 
     const member = await OrgMember.findOne({ userId: profile._id.toString() }).lean() as any;
     const userId = profile._id.toString();
@@ -158,164 +285,332 @@ router.post("/login", validateBody(loginSchema), async (req: Request, res: Respo
     ProfileService.updateLoginInfo(userId, req).catch(() => {});
     ProfileService.logActivity({ userId, action: "user_login", req }).catch(() => {});
 
-    const token = signToken({
-      userId,
-      email: profile.email,
-      organizationId: member?.organizationId ?? profile.organizationId ?? "",
-      role: member?.role ?? "member",
-    });
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        $id: userId,
+    const tokens = signTokenPair(
+      {
+        userId,
         email: profile.email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
-        avatarUrl: profile.avatarUrl,
-        emailVerified: profile.emailVerified,
-        role: member?.role ?? "member",
         organizationId: member?.organizationId ?? profile.organizationId ?? "",
+        role: member?.role ?? "member",
       },
-    });
-  } catch (error: any) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: error.message || "Login failed" });
-  }
-});
+      req
+    );
 
-router.get("/me", authenticate, async (req: Request, res: Response) => {
-  try {
-    const authReq = req as AuthRequest;
-    await connectDB();
-    const profile = await UserProfile.findById(authReq.user!.userId).lean() as any;
-    if (!profile) {
-      return res.status(404).json({ error: "User not found" });
+    apiResponse.success(
+      res,
+      {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: {
+          $id: userId,
+          email: profile.email,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
+          avatarUrl: profile.avatarUrl,
+          emailVerified: profile.emailVerified,
+          role: member?.role ?? "member",
+          organizationId: member?.organizationId ?? profile.organizationId ?? "",
+        },
+      },
+      200,
+      req.requestId
+    );
+  })
+);
+
+// ── Refresh Token ─────────────────────────────────────────────
+
+router.post(
+  "/refresh",
+  catchAsync(async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      throw new AuthenticationError("Refresh token required");
     }
 
-    const member = await OrgMember.findOne({ userId: authReq.user!.userId }).lean() as any;
+    // Verify the refresh token
+    const { payload, tokenId } = verifyRefreshToken(refreshToken);
+
+    // Revoke the old refresh token (rotation)
+    revokeRefreshToken(tokenId);
+
+    // Issue new token pair
+    const tokens = signTokenPair(payload, req);
+
+    apiResponse.success(
+      res,
+      {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+      200,
+      req.requestId
+    );
+  })
+);
+
+// ── Logout ────────────────────────────────────────────────────
+
+router.post(
+  "/logout",
+  authenticate,
+  catchAsync(async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
+    const { refreshToken, all } = req.body;
+
+    if (all) {
+      // Revoke ALL refresh tokens for this user
+      revokeAllUserTokens(authReq.user!.userId);
+    } else if (refreshToken) {
+      try {
+        const { tokenId } = verifyRefreshToken(refreshToken);
+        revokeRefreshToken(tokenId);
+      } catch {
+        // Token might be expired — just continue with logout
+      }
+    }
+
+    // Log logout activity (non-blocking)
+    const { ProfileService } = await import("../services/profile.js");
+    ProfileService.logActivity({ userId: authReq.user!.userId, action: "user_logout", req }).catch(() => {});
+
+    apiResponse.success(res, null, 200, req.requestId);
+  })
+);
+
+// ── Get Active Sessions ───────────────────────────────────────
+
+router.get(
+  "/sessions",
+  authenticate,
+  catchAsync(async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
+    const sessions = getUserSessions(authReq.user!.userId);
+
+    apiResponse.success(res, { sessions }, 200, req.requestId);
+  })
+);
+
+// ── Get Me ────────────────────────────────────────────────────
+
+router.get(
+  "/me",
+  authenticate,
+  catchAsync(async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
+    await connectDB();
+
+    const [profile, member] = await Promise.all([
+      UserProfile.findById(authReq.user!.userId).lean() as Promise<any>,
+      OrgMember.findOne({ userId: authReq.user!.userId }).lean() as Promise<any>,
+    ]);
+
+    if (!profile) {
+      throw new NotFoundError("User");
+    }
+
     let organization = null;
     if (member) {
       organization = await Organization.findById(member.organizationId).lean() as any;
     }
 
-    res.json({
-      user: {
-        $id: profile._id.toString(),
-        email: profile.email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
+    apiResponse.success(
+      res,
+      {
+        user: {
+          $id: profile._id.toString(),
+          email: profile.email,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
+        },
+        organization: organization
+          ? { $id: organization._id.toString(), name: organization.name }
+          : null,
+        membership: member
+          ? { role: member.role, organizationId: member.organizationId }
+          : null,
       },
-      organization: organization
-        ? { $id: organization._id.toString(), name: organization.name }
-        : null,
-      membership: member
-        ? { role: member.role, organizationId: member.organizationId }
-        : null,
-    });
-  } catch (error: any) {
-    console.error("Me error:", error);
-    res.status(500).json({ error: error.message || "Failed to get user" });
-  }
-});
+      200,
+      req.requestId
+    );
+  })
+);
 
-router.post("/change-password", authenticate, validateBody(changePasswordSchema), async (req: Request, res: Response) => {
-  try {
+// ── Change Password ───────────────────────────────────────────
+
+router.post(
+  "/change-password",
+  authenticate,
+  validateBody(changePasswordSchema),
+  catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const { currentPassword, newPassword } = req.body;
 
     await connectDB();
     const profile = await UserProfile.findById(authReq.user!.userId);
     if (!profile) {
-      return res.status(404).json({ error: "User not found" });
+      throw new NotFoundError("User");
     }
 
     const valid = await bcrypt.compare(currentPassword, profile.passwordHash ?? "");
     if (!valid) {
-      return res.status(400).json({ error: "Current password is incorrect" });
+      throw new AuthenticationError("Current password is incorrect");
     }
 
     profile.passwordHash = await bcrypt.hash(newPassword, 12);
     await profile.save();
 
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Change password error:", error);
-    res.status(500).json({ error: error.message || "Failed to change password" });
-  }
-});
+    apiResponse.success(res, null, 200, req.requestId);
+  })
+);
 
-router.post("/verify", async (req: Request, res: Response) => {
-  try {
+// ── Forgot Password (with hashed OTP) ────────────────────────
+
+router.post(
+  "/forgot-password",
+  validateBody(forgotPasswordSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    await connectDB();
+    const profile = await UserProfile.findOne({ email: normalizedEmail }) as any;
+    if (!profile) {
+      // Always return success to prevent email enumeration
+      apiResponse.success(res, null, 200, req.requestId);
+      return;
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // HASH the OTP before storing — prevents plaintext OTP exposure if DB is compromised
+    profile.resetPasswordOTP = await bcrypt.hash(otp, 10);
+    profile.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+    await profile.save();
+
+    sendForgotPasswordEmail({
+      to: normalizedEmail,
+      otp,
+      resetUrl: `${env.FRONTEND_URL}/reset-password`,
+    }).catch((err: Error) => {
+      console.error("[ForgotPassword] Email failed:", err);
+    });
+
+    apiResponse.success(res, null, 200, req.requestId);
+  })
+);
+
+// ── Reset Password (verify hashed OTP) ────────────────────────
+
+router.post(
+  "/reset-password",
+  validateBody(resetPasswordSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const { email, otp, newPassword } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    await connectDB();
+    const profile = await UserProfile.findOne({ email: normalizedEmail }) as any;
+    if (!profile) {
+      throw new NotFoundError("User");
+    }
+
+    if (!profile.resetPasswordOTP) {
+      throw new AuthenticationError("No OTP was requested. Please request a new one.");
+    }
+
+    if (profile.resetPasswordExpires && new Date() > new Date(profile.resetPasswordExpires)) {
+      throw new AuthenticationError("OTP has expired. Please request a new one.");
+    }
+
+    // Compare hashed OTP
+    const otpValid = await bcrypt.compare(otp, profile.resetPasswordOTP);
+    if (!otpValid) {
+      throw new AuthenticationError("Invalid OTP");
+    }
+
+    profile.passwordHash = await bcrypt.hash(newPassword, 12);
+    profile.resetPasswordOTP = undefined;
+    profile.resetPasswordExpires = undefined;
+    await profile.save();
+
+    // Revoke all existing sessions (security: password changed)
+    revokeAllUserTokens(profile._id.toString());
+
+    apiResponse.success(res, null, 200, req.requestId);
+  })
+);
+
+// ── Verify Email ──────────────────────────────────────────────
+
+router.post(
+  "/verify",
+  catchAsync(async (req: Request, res: Response) => {
     const { email } = req.body;
     await connectDB();
     const profile = await UserProfile.findOne({ email }) as any;
     if (!profile) {
-      return res.status(404).json({ error: "User not found" });
+      throw new NotFoundError("User");
     }
     profile.emailVerified = true;
     profile.verifiedAt = new Date();
     await profile.save();
-    
-    // Emit real-time verification update
+
     const io = getIO();
     if (io) {
       io.emit("verification_update", {
         email: profile.email,
         emailVerified: profile.emailVerified,
-        verifiedAt: profile.verifiedAt
+        verifiedAt: profile.verifiedAt,
       });
     }
-    
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Verification failed" });
-  }
-});
 
-router.post("/verifications", async (req: Request, res: Response) => {
-  try {
+    apiResponse.success(res, null, 200, req.requestId);
+  })
+);
+
+// ── Email verifications (batch) ──────────────────────────────
+
+router.post(
+  "/verifications",
+  catchAsync(async (req: Request, res: Response) => {
     const { emails } = req.body;
     if (!emails || !Array.isArray(emails)) {
-      return res.status(400).json({ error: "Invalid emails array" });
+      throw new AuthenticationError("Invalid emails array");
     }
     await connectDB();
-    const profiles = await UserProfile.find({ email: { $in: emails } }).select("email emailVerified verifiedAt").lean();
+    const profiles = await UserProfile.find({ email: { $in: emails } })
+      .select("email emailVerified verifiedAt")
+      .lean();
     const verifications = profiles.reduce((acc: any, curr: any) => {
-      acc[curr.email] = {
-        emailVerified: curr.emailVerified,
-        verifiedAt: curr.verifiedAt
-      };
+      acc[curr.email] = { emailVerified: curr.emailVerified, verifiedAt: curr.verifiedAt };
       return acc;
     }, {});
-    res.json({ verifications });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed to fetch verifications" });
-  }
-});
+    apiResponse.success(res, { verifications }, 200, req.requestId);
+  })
+);
 
-router.post("/statuses", async (req: Request, res: Response) => {
-  try {
+// ── User statuses (batch) ────────────────────────────────────
+
+router.post(
+  "/statuses",
+  catchAsync(async (req: Request, res: Response) => {
     const { userIds } = req.body;
     if (!userIds || !Array.isArray(userIds)) {
-      return res.status(400).json({ error: "Invalid userIds array" });
+      throw new AuthenticationError("Invalid userIds array");
     }
     await connectDB();
     const { UserStatus } = await import("../models/index.js");
-    const statuses = await UserStatus.find({ userId: { $in: userIds } }).select("userId status lastActiveAt").lean();
+    const statuses = await UserStatus.find({ userId: { $in: userIds } })
+      .select("userId status lastActiveAt")
+      .lean();
 
-    // Get currently-online user IDs from socket map
     const { getOnlineUserIds } = await import("../ws/server.js");
     const onlineIds = getOnlineUserIds();
-
     const TWELVE_HOURS = 12 * 60 * 60 * 1000;
     const now = new Date().getTime();
 
     const result = statuses.reduce((acc: any, curr: any) => {
-      // If user has active socket connection, always show Online
       if (onlineIds.has(curr.userId)) {
         acc[curr.userId] = "Online";
         return acc;
@@ -323,36 +618,42 @@ router.post("/statuses", async (req: Request, res: Response) => {
       let finalStatus = curr.status;
       if (curr.lastActiveAt) {
         const timeDiff = now - new Date(curr.lastActiveAt).getTime();
-        if (timeDiff > TWELVE_HOURS) {
-          finalStatus = "Leave";
-        }
+        if (timeDiff > TWELVE_HOURS) finalStatus = "Leave";
       }
       acc[curr.userId] = finalStatus;
       return acc;
     }, {});
-    res.json({ statuses: result });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed to fetch statuses" });
-  }
-});
 
-router.get("/status", authenticate, async (req: Request, res: Response) => {
-  try {
+    apiResponse.success(res, { statuses: result }, 200, req.requestId);
+  })
+);
+
+// ── Own status ────────────────────────────────────────────────
+
+router.get(
+  "/status",
+  authenticate,
+  catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     await connectDB();
     const { UserStatus } = await import("../models/index.js");
     const record = await UserStatus.findOne({ userId: authReq.user!.userId }).lean() as any;
-    res.json({ status: record?.status ?? "Offline", lastActiveAt: record?.lastActiveAt ?? null });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed to fetch status" });
-  }
-});
+    apiResponse.success(
+      res,
+      { status: record?.status ?? "Offline", lastActiveAt: record?.lastActiveAt ?? null },
+      200,
+      req.requestId
+    );
+  })
+);
 
-router.post("/status", authenticate, async (req: Request, res: Response) => {
-  try {
+router.post(
+  "/status",
+  authenticate,
+  catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const { status } = req.body;
-    if (!status) return res.status(400).json({ error: "status required" });
+    if (!status) throw new AuthenticationError("status required");
     await connectDB();
     const { UserStatus } = await import("../models/index.js");
     await UserStatus.findOneAndUpdate(
@@ -360,15 +661,16 @@ router.post("/status", authenticate, async (req: Request, res: Response) => {
       { status, lastActiveAt: new Date() },
       { upsert: true, new: true }
     );
-    res.json({ success: true, status });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed to update status" });
-  }
-});
+    apiResponse.success(res, { status }, 200, req.requestId);
+  })
+);
 
-// ── Status history + screen time ────────────────────────────
-router.get("/status/history", authenticate, async (req: Request, res: Response) => {
-  try {
+// ── Status history ────────────────────────────────────────────
+
+router.get(
+  "/status/history",
+  authenticate,
+  catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     await connectDB();
     const { UserStatusHistory } = await import("../models/index.js");
@@ -385,7 +687,6 @@ router.get("/status/history", authenticate, async (req: Request, res: Response) 
       .sort({ loginTimestamp: -1 })
       .lean() as any[];
 
-    // Aggregate: use durations if available, otherwise estimate from session span
     const totals: Record<string, number> = {};
     const dailyBreakdown: Record<string, Record<string, number>> = {};
 
@@ -394,7 +695,6 @@ router.get("/status/history", authenticate, async (req: Request, res: Response) 
       if (!dailyBreakdown[dateKey]) dailyBreakdown[dateKey] = {};
 
       if (session.durations && session.durations.length > 0) {
-        // Use recorded slices
         for (const slice of session.durations) {
           const dur = slice.durationSeconds || 0;
           if (dur <= 0) continue;
@@ -402,7 +702,6 @@ router.get("/status/history", authenticate, async (req: Request, res: Response) 
           dailyBreakdown[dateKey][slice.status] = (dailyBreakdown[dateKey][slice.status] || 0) + dur;
         }
       } else {
-        // Estimate from session span — attribute to last known status
         const end = session.logoutTimestamp ? new Date(session.logoutTimestamp) : new Date();
         const start = new Date(session.loginTimestamp);
         const dur = Math.max(0, Math.round((end.getTime() - start.getTime()) / 1000));
@@ -412,7 +711,7 @@ router.get("/status/history", authenticate, async (req: Request, res: Response) 
       }
     }
 
-    res.json({
+    const formatted = {
       sessions: sessions.map((s: any) => ({
         id: s._id,
         login: s.loginTimestamp,
@@ -424,95 +723,42 @@ router.get("/status/history", authenticate, async (req: Request, res: Response) 
       totals,
       daily: dailyBreakdown,
       days,
-    });
-  } catch (error: any) {
-    console.error("[StatusHistory] Error:", error);
-    res.status(500).json({ error: error.message || "Failed to fetch history" });
-  }
-});
+    };
 
-router.post("/send-verification", async (req: Request, res: Response) => {
-  try {
+    apiResponse.success(res, formatted, 200, req.requestId);
+  })
+);
+
+// ── Send verification OTP (hashed) ────────────────────────────
+
+router.post(
+  "/send-verification",
+  catchAsync(async (req: Request, res: Response) => {
     const { email } = req.body;
     await connectDB();
     const profile = await UserProfile.findOne({ email }) as any;
-    if (!profile) return res.json({ success: true });
+    if (!profile) {
+      // Don't reveal if email exists
+      apiResponse.success(res, null, 200, req.requestId);
+      return;
+    }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    profile.resetPasswordOTP = otp;
+    // Hash OTP before storing
+    profile.resetPasswordOTP = await bcrypt.hash(otp, 10);
     profile.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     await profile.save();
 
-    await sendVerificationEmail({
+    sendVerificationEmail({
       to: email,
       otp,
-      resetUrl: `${process.env.FRONTEND_URL}`,
-    }).catch((err) => {
+      resetUrl: `${env.FRONTEND_URL}`,
+    }).catch((err: Error) => {
       console.error("[Verification] Email failed:", err);
     });
 
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed" });
-  }
-});
-
-router.post("/forgot-password", validateBody(forgotPasswordSchema), async (req: Request, res: Response) => {
-  try {
-    const { email } = req.body;
-    await connectDB();
-    const profile = await UserProfile.findOne({ email }) as any;
-    if (!profile) {
-      return res.json({ success: true });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    profile.resetPasswordOTP = otp;
-    profile.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
-    await profile.save();
-
-    await sendForgotPasswordEmail({
-      to: email,
-      otp,
-      resetUrl: `${process.env.FRONTEND_URL}/reset-password`,
-    }).catch((err) => {
-      console.error("[ForgotPassword] Email failed:", err);
-    });
-
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Forgot password error:", error);
-    res.status(500).json({ error: error.message || "Failed" });
-  }
-});
-
-router.post("/reset-password", validateBody(resetPasswordSchema), async (req: Request, res: Response) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-
-    await connectDB();
-    const profile = await UserProfile.findOne({ email }) as any;
-    if (!profile) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (!profile.resetPasswordOTP || profile.resetPasswordOTP !== otp) {
-      return res.status(400).json({ error: "Invalid OTP" });
-    }
-
-    if (profile.resetPasswordExpires && new Date() > new Date(profile.resetPasswordExpires)) {
-      return res.status(400).json({ error: "OTP has expired. Please request a new one." });
-    }
-
-    profile.passwordHash = await bcrypt.hash(newPassword, 12);
-    profile.resetPasswordOTP = undefined;
-    profile.resetPasswordExpires = undefined;
-    await profile.save();
-
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Reset failed" });
-  }
-});
+    apiResponse.success(res, null, 200, req.requestId);
+  })
+);
 
 export default router;

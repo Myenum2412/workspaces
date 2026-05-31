@@ -57,11 +57,11 @@ router.patch("/", validateBody(updateProfileSchema), async (req: Request, res: R
 
     // Uniqueness check for email/phone if being changed
     if (changes.email) {
-      const existing = await UserProfile.findOne({ email: changes.email, _id: { $ne: userId } }).lean();
+      const existing = await UserProfile.findOne({ email: changes.email, _id: { $ne: userId }, deletedAt: null }).lean();
       if (existing) return res.status(409).json({ error: "Email already in use" });
     }
     if (changes.personalEmail) {
-      const existing = await UserProfile.findOne({ personalEmail: changes.personalEmail, _id: { $ne: userId } }).lean();
+      const existing = await UserProfile.findOne({ personalEmail: changes.personalEmail, _id: { $ne: userId }, deletedAt: null }).lean();
       if (existing) return res.status(409).json({ error: "Personal email already in use" });
     }
 
@@ -175,7 +175,7 @@ router.patch("/:userId", validateBody(adminUpdateProfileSchema), async (req: Req
     }
 
     if (changes.email) {
-      const existing = await UserProfile.findOne({ email: changes.email, _id: { $ne: userId } }).lean();
+      const existing = await UserProfile.findOne({ email: changes.email, _id: { $ne: userId }, deletedAt: null }).lean();
       if (existing) return res.status(409).json({ error: "Email already in use" });
     }
 

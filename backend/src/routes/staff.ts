@@ -37,9 +37,13 @@ router.post("/", async (req: Request, res: Response) => {
 
     const newUserId = crypto.randomUUID();
     
-    // Check email
+    // Check email — case-insensitive, scoped to org, excluding soft-deleted
     if (req.body.email) {
-      const existing = await UserProfile.findOne({ email: req.body.email }).lean();
+      const email = req.body.email.trim().toLowerCase();
+      const existing = await UserProfile.findOne({
+        email: email,
+        deletedAt: null,
+      }).lean();
       if (existing) return res.status(400).json({ error: "Email already in use" });
     }
 

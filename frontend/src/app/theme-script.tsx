@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { workspaceApi } from "@/lib/api";
+import { workspaceApi } from "@/lib/api/client";
 
 export default function ThemeScript() {
   useEffect(() => {

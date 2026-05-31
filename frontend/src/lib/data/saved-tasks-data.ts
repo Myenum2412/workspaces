@@ -1,48 +1,35 @@
-import { databases, Query, COLLECTIONS, DB_ID } from "@/lib/appwrite/client";
-import type { SavedTaskDoc } from "@/lib/appwrite/types";
+/**
+ * Saved task templates — via backend REST API.
+ */
 
-export interface SavedTask {
-  id: string;
-  title: string;
-  description: string;
-  priority: string;
-  taskType: string;
-  assignedType: string;
-  estimatedTime: string;
-  createdAt: string;
-  templateCategory: string;
-}
+import { api } from "@/lib/api/client";
+import type { SavedTask } from "@/types";
 
-function docToTask(doc: SavedTaskDoc): SavedTask {
+export type { SavedTask };
+
+function mapSavedTask(doc: any): SavedTask {
   return {
-    id: doc.$id,
-    title: doc.title,
-    description: doc.description,
-    priority: doc.priority,
-    taskType: doc.taskType,
-    assignedType: doc.assignedType,
-    estimatedTime: doc.estimatedTime,
-    createdAt: doc.$createdAt ?? "",
-    templateCategory: doc.templateCategory,
+    id: doc._id ?? doc.id ?? "",
+    title: doc.title ?? "",
+    description: doc.description ?? "",
+    priority: doc.priority ?? "",
+    taskType: doc.taskType ?? "",
+    assignedType: doc.assignedType ?? "",
+    estimatedTime: doc.estimatedTime ?? "",
+    templateCategory: doc.templateCategory ?? "",
+    organizationId: doc.organizationId ?? "",
+    createdAt: doc.createdAt,
+    deletedAt: doc.deletedAt,
   };
 }
 
-let cachedTasks: SavedTask[] | null = null;
-
 export async function getSavedTasks(organizationId?: string): Promise<SavedTask[]> {
-  if (cachedTasks) return cachedTasks;
   try {
-    const queries: any[] = [Query.limit(500)];
-    if (organizationId) queries.push(Query.equal("organizationId", organizationId));
-    const res = await databases.listDocuments(DB_ID, COLLECTIONS.SAVED_TASKS, queries);
-    cachedTasks = (res.documents as unknown as SavedTaskDoc[]).map(docToTask);
-    return cachedTasks;
+    const q = organizationId ? `?organizationId=${organizationId}` : "";
+    const res = await api.get<{ success: boolean; savedTasks: any[] }>(`/api/tasks/saved${q}`);
+    return (res.savedTasks ?? []).map(mapSavedTask);
   } catch (error) {
     console.warn("getSavedTasks error:", error);
     return [];
   }
-}
-
-export function clearSavedTasksCache(): void {
-  cachedTasks = null;
 }

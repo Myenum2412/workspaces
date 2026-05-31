@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { API_BASE_URL } from "@/lib/api/config";
-import { profileApi } from "@/lib/api";
+import { profileApi } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import {
   Loader2,

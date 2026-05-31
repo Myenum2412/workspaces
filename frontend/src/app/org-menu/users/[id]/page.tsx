@@ -33,7 +33,7 @@ import { DeleteUserDialog } from "../delete-user-dialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
-function getStatusColor(status: string | null) {
+function getStatusColor(status: string | null | undefined) {
   switch (status) {
     case "Active": return "bg-emerald-500"
     case "Inactive": return "bg-slate-400"
@@ -45,7 +45,7 @@ function getStatusColor(status: string | null) {
 
 function ProfileField({ label, value, field, isEditing, onChange, type = "text" }: {
   label: string
-  value: string | null
+  value?: string | null
   field: string
   isEditing: boolean
   onChange: (field: string, value: string) => void
@@ -97,7 +97,7 @@ export default function StaffProfilePage() {
   const handleSave = async () => {
     if (!editedUser) return
     try {
-      await staffService.updateStaff(userId, editedUser)
+      await staffService.updateStaff(userId, editedUser as Record<string, any>)
       toast.success("Profile updated successfully")
       setIsEditing(false)
       queryClient.invalidateQueries({ queryKey: ["users-all"] })
@@ -176,8 +176,8 @@ export default function StaffProfilePage() {
               <div className="flex flex-wrap items-center gap-3">
                 {isEditing ? (
                   <div className="flex gap-2">
-                    <Input className="h-9 text-xl font-bold w-36" value={editedUser.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
-                    <Input className="h-9 text-xl font-bold w-36" value={editedUser.lastName} onChange={(e) => handleChange("lastName", e.target.value)} />
+                    <Input className="h-9 text-xl font-bold w-36" value={editedUser.firstName ?? ""} onChange={(e) => handleChange("firstName", e.target.value)} />
+                    <Input className="h-9 text-xl font-bold w-36" value={editedUser.lastName ?? ""} onChange={(e) => handleChange("lastName", e.target.value)} />
                   </div>
                 ) : (
                   <h1 className="text-2xl font-bold tracking-tight">
@@ -247,7 +247,7 @@ export default function StaffProfilePage() {
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Present Address</p>
                 {isEditing ? (
-                  <Textarea value={editedUser.presentAddress} onChange={(e) => handleChange("presentAddress", e.target.value)} className="text-sm min-h-[80px]" />
+                  <Textarea value={editedUser.presentAddress ?? ""} onChange={(e) => handleChange("presentAddress", e.target.value)} className="text-sm min-h-[80px]" />
                 ) : (
                   <p className="text-sm font-semibold">{editedUser.presentAddress}</p>
                 )}
@@ -255,7 +255,7 @@ export default function StaffProfilePage() {
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Permanent Address</p>
                 {isEditing ? (
-                  <Textarea value={editedUser.permanentAddress} onChange={(e) => handleChange("permanentAddress", e.target.value)} className="text-sm min-h-[80px]" />
+                  <Textarea value={editedUser.permanentAddress ?? ""} onChange={(e) => handleChange("permanentAddress", e.target.value)} className="text-sm min-h-[80px]" />
                 ) : (
                   <p className="text-sm font-semibold">{editedUser.permanentAddress}</p>
                 )}
@@ -301,7 +301,7 @@ export default function StaffProfilePage() {
             </CardHeader>
             <CardContent>
               {isEditing ? (
-                <Textarea value={editedUser.bio} onChange={(e) => handleChange("bio", e.target.value)} className="text-sm min-h-[120px]" placeholder="Add bio or notes..." />
+                <Textarea value={editedUser.bio ?? ""} onChange={(e) => handleChange("bio", e.target.value)} className="text-sm min-h-[120px]" placeholder="Add bio or notes..." />
               ) : (
                 <p className="text-sm text-muted-foreground">{editedUser.bio || "No bio added."}</p>
               )}

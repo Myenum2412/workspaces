@@ -41,7 +41,7 @@ const priorities = [
 import type { AssigneeType } from "@/components/task-allocation/types"
 import TableUpload from "@/components/table-upload"
 
-import { taskService, type UITask } from "@/lib/services/task-service"
+import { taskService, type Task } from "@/lib/services/task-service"
 import { staffService } from "@/lib/services/staff-service"
 import { teamService } from "@/lib/services/team-service"
 
@@ -107,7 +107,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
     if (open) {
       setIsLoadingData(true)
       Promise.all([staffService.getAllStaff(), teamService.getAllTeams()]).then(([staff, teams]) => {
-        setEmployees(staff.map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}`.trim(), role: s.designation })))
+        setEmployees(staff.map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}`.trim(), role: s.designation ?? "" })))
         setTeams(teams.map(t => ({ id: t.id, name: t.name, created_by: t.head, memberCount: t.members })))
         setIsLoadingData(false)
       })
@@ -164,7 +164,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
         dueDate: dueDate?.toISOString(),
 
         finalStatus: "Open",
-      } as Partial<UITask>)
+      } as Partial<Task>)
 
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       toast.success(`Task "${title}" assigned successfully`)

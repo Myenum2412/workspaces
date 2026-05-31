@@ -1,30 +1,16 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
-import { 
-  PlusIcon, 
-  Trash2Icon, 
-  SearchIcon, 
-  Settings2, 
-  Building2, 
-  Globe, 
-  Heart, 
-  CreditCard, 
-  History 
-} from "lucide-react"
-
-
+import { PlusIcon, Trash2Icon, SearchIcon, Settings2, Building2, Globe, Heart, CreditCard, History } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { databases, Query, ID, COLLECTIONS, DB_ID } from "@/lib/appwrite/client"
-import type { MasterDataDoc } from "@/lib/appwrite/types"
-
+import { api } from "@/lib/api/client"
+import type { MasterData } from "@/types"
 
 const MASTER_CATEGORIES = [
   { id: "work", label: "Work", icon: Building2, lists: ["Departments", "Locations", "Designations", "Roles", "Employment Types", "Employee Status"] },
@@ -49,13 +35,10 @@ const DEFAULT_VALUES: Record<string, string[]> = {
   "Payment Modes": ["Bank Transfer", "Cheque", "Cash", "UPI"],
 }
 
-async function loadData(orgId: string): Promise<Record<string, string[]>> {
+async function loadData(): Promise<Record<string, string[]>> {
   try {
-    const res = await databases.listDocuments(DB_ID, COLLECTIONS.MASTER_DATA, [
-      Query.equal("organizationId", orgId),
-      Query.limit(100),
-    ])
-    const docs = res.documents as unknown as MasterDataDoc[]
+    const res = await api.get<{ success: boolean; masterData: any[] }>("/api/master-data")
+    const docs = res.masterData as MasterData[]
     const result: Record<string, string[]> = {}
     for (const name of Object.keys(DEFAULT_VALUES)) {
       const doc = docs.find(d => d.name === name)
@@ -67,22 +50,14 @@ async function loadData(orgId: string): Promise<Record<string, string[]>> {
   }
 }
 
-async function saveList(orgId: string, name: string, values: string[]) {
+async function saveList(name: string, values: string[]) {
   try {
-    const res = await databases.listDocuments(DB_ID, COLLECTIONS.MASTER_DATA, [
-      Query.equal("organizationId", orgId),
-      Query.equal("name", name),
-      Query.limit(1),
-    ])
-    const existing = res.documents[0]
+    const res = await api.get<{ success: boolean; masterData: any[] }>("/api/master-data")
+    const existing = (res.masterData as MasterData[]).find(d => d.name === name)
     if (existing) {
-      await databases.updateDocument(DB_ID, COLLECTIONS.MASTER_DATA, existing.$id, { values })
+      await api.put(`/api/master-data/${existing.id}`, { values })
     } else {
-      await databases.createDocument(DB_ID, COLLECTIONS.MASTER_DATA, ID.unique(), {
-        name,
-        values,
-        organizationId: orgId,
-      })
+      await api.post("/api/master-data", { name, values })
     }
   } catch (error) {
     console.warn("saveList error:", error)
@@ -95,126 +70,79 @@ export function MasterDataManagement() {
   const [activeList, setActiveList] = React.useState("Departments")
   const [newItem, setNewItem] = React.useState("")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [orgId, setOrgId] = React.useState("")
 
   React.useEffect(() => {
-    async function init() {
-      try {
-        const { account, databases, Query, COLLECTIONS, DB_ID } = await import("@/lib/appwrite/client")
-        const user = await account.get()
-        const profiles = await databases.listDocuments(DB_ID, COLLECTIONS.USER_PROFILES, [
-          Query.equal("userId", user.$id),
-          Query.limit(1),
-        ])
-        const profile = profiles.documents[0] as Record<string, any> | undefined
-        if (profile?.organizationId) {
-          setOrgId(profile.organizationId)
-          const d = await loadData(profile.organizationId)
-          setData(d)
-        }
-      } catch {
-        // not authenticated
-      }
-    }
-    init()
+    loadData().then(setData)
   }, [])
 
   const currentLists = MASTER_CATEGORIES.find(c => c.id === activeCategory)?.lists || []
-  
   React.useEffect(() => {
-    if (!currentLists.includes(activeList)) {
-      setActiveList(currentLists[0])
-    }
+    if (!currentLists.includes(activeList)) setActiveList(currentLists[0])
   }, [activeCategory, currentLists, activeList])
 
   const handleAddItem = async () => {
-    if (newItem.trim() && !data[activeList].includes(newItem.trim())) {
-      const updated = [...data[activeList], newItem.trim()]
+    if (newItem.trim() && !data[activeList]?.includes(newItem.trim())) {
+      const updated = [...(data[activeList] || []), newItem.trim()]
       setData(prev => ({ ...prev, [activeList]: updated }))
       setNewItem("")
-      if (orgId) await saveList(orgId, activeList, updated)
+      await saveList(activeList, updated)
     }
   }
 
   const handleRemoveItem = async (item: string) => {
-    const updated = data[activeList].filter(i => i !== item)
+    const updated = (data[activeList] || []).filter(i => i !== item)
     setData(prev => ({ ...prev, [activeList]: updated }))
-    if (orgId) await saveList(orgId, activeList, updated)
+    await saveList(activeList, updated)
   }
 
-  const filteredItems = data[activeList]?.filter(item => 
-    item.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || []
+  const filteredItems = data[activeList]?.filter(item => item.toLowerCase().includes(searchQuery.toLowerCase())) || []
 
   return (
     <div className="space-y-8 font-poppins">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h2 className="font-heading text-2xl font-bold tracking-tight flex items-center gap-2 text-emerald-950">
-            <Settings2 className="size-6 text-slate-600" />
-            Master Data Management
+            <Settings2 className="size-6 text-slate-600" /> Master Data Management
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Configure global dropdown options and lookup lists used across the application.
-          </p>
+          <p className="text-sm text-muted-foreground">Configure global dropdown options and lookup lists used across the application.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
-        {/* Navigation Sidebar */}
         <div className="space-y-6">
-          <Card className="border-emerald-100/50 bg-emerald-50/10 ">
+          <Card className="border-emerald-100/50 bg-emerald-50/10">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-emerald-800">Categories</CardTitle>
             </CardHeader>
             <CardContent className="px-2 pb-2 space-y-1">
               {MASTER_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
-                    activeCategory === cat.id 
-                      ? "bg-emerald-600 text-white  -emerald-100" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-700"
-                  )}
-                >
-                  <cat.icon className="size-4" />
-                  {cat.label}
+                <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                  className={cn("w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
+                    activeCategory === cat.id ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-50 hover:text-slate-700")}>
+                  <cat.icon className="size-4" /> {cat.label}
                 </button>
               ))}
             </CardContent>
           </Card>
-
-          <Card className="border-border/50 ">
+          <Card className="border-border/50">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Available Lists</CardTitle>
             </CardHeader>
             <CardContent className="px-2 pb-2 space-y-1">
               {currentLists.map((list) => (
-                <button
-                  key={list}
-                  onClick={() => setActiveList(list)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all",
-                    activeList === list 
-                      ? "bg-white border-2 border-emerald-500 text-slate-700 " 
-                      : "text-slate-600 hover:bg-slate-50 border-2 border-transparent"
-                  )}
-                >
+                <button key={list} onClick={() => setActiveList(list)}
+                  className={cn("w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all",
+                    activeList === list ? "bg-white border-2 border-emerald-500 text-slate-700" : "text-slate-600 hover:bg-slate-50 border-2 border-transparent")}>
                   {list}
-                  <Badge variant="secondary" className="bg-slate-50 text-slate-700 border-emerald-100 text-[10px]">
-                    {data[list]?.length || 0}
-                  </Badge>
+                  <Badge variant="secondary" className="bg-slate-50 text-slate-700 border-emerald-100 text-[10px]">{data[list]?.length || 0}</Badge>
                 </button>
               ))}
             </CardContent>
           </Card>
         </div>
 
-        {/* Content Area */}
         <div className="space-y-6">
-          <Card className="border-none  bg-white min-h-[600px] flex flex-col overflow-hidden">
+          <Card className="border-none bg-white min-h-[600px] flex flex-col overflow-hidden">
             <CardHeader className="border-b bg-slate-50/50 px-8 py-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -224,67 +152,40 @@ export function MasterDataManagement() {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search items..." 
-                      className="pl-9 w-[240px] h-9 rounded-full bg-white border-slate-200"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <Input placeholder="Search items..." className="pl-9 w-[240px] h-9 rounded-full bg-white border-slate-200" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                   </div>
                 </div>
               </div>
             </CardHeader>
-            
             <CardContent className="flex-1 p-8">
               <div className="space-y-8">
-                {/* Add New Item */}
-                <div className="flex gap-4 p-6 rounded-2xl bg-emerald-50/30 border border-emerald-100 ">
+                <div className="flex gap-4 p-6 rounded-2xl bg-emerald-50/30 border border-emerald-100">
                   <div className="flex-1 space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-widest text-emerald-800 ml-1">Add New Entry</Label>
-                    <Input 
-                      placeholder={`Enter new ${activeList.toLowerCase().replace(/s$/, '')}...`}
-                      value={newItem}
-                      onChange={(e) => setNewItem(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                      className="h-11 rounded-xl bg-white border-slate-200 focus:ring-emerald-500"
-                    />
+                    <Input placeholder={`Enter new ${activeList.toLowerCase().replace(/s$/, '')}...`} value={newItem} onChange={(e) => setNewItem(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAddItem()} className="h-11 rounded-xl bg-white border-slate-200 focus:ring-emerald-500" />
                   </div>
                   <div className="flex items-end">
-                    <Button 
-                      onClick={handleAddItem}
-                      className="h-11 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700  -emerald-100 font-bold"
-                    >
-                      <PlusIcon className="size-4 mr-2" />
-                      Add to List
+                    <Button onClick={handleAddItem} className="h-11 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold">
+                      <PlusIcon className="size-4 mr-2" /> Add to List
                     </Button>
                   </div>
                 </div>
-
-                {/* Items List */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Values</span>
                     <span className="text-[10px] font-bold text-slate-400 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Alpha Sort</span>
                   </div>
-                  
                   <ScrollArea className="h-[400px] pr-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {filteredItems.map((item) => (
-                          <div
-                            key={item}
-                            className="flex items-center justify-between p-4 rounded-xl border bg-white hover:border-slate-200 hover:bg-emerald-50/30 transition-all group"
-                          >
-                            <span className="text-sm font-bold text-slate-700">{item}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoveItem(item)}
-                              className="size-8 rounded-lg text-muted-foreground hover:text-slate-600 hover:bg-slate-50"
-                            >
-                              <Trash2Icon className="size-4" />
-                            </Button>
-                          </div>
-                        ))}
+                        <div key={item} className="flex items-center justify-between p-4 rounded-xl border bg-white hover:border-slate-200 hover:bg-emerald-50/30 transition-all group">
+                          <span className="text-sm font-bold text-slate-700">{item}</span>
+                          <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item)} className="size-8 rounded-lg text-muted-foreground hover:text-slate-600 hover:bg-slate-50">
+                            <Trash2Icon className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
                       {filteredItems.length === 0 && (
                         <div className="col-span-full py-20 flex flex-col items-center justify-center text-center">
                           <div className="size-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
@@ -299,15 +200,11 @@ export function MasterDataManagement() {
                 </div>
               </div>
             </CardContent>
-            
             <div className="p-6 border-t bg-slate-50/50 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                <History className="size-3" />
-                Last updated: Just now
+                <History className="size-3" /> Last updated: Just now
               </div>
-              <p className="text-[11px] font-medium text-slate-500 italic">
-                Changes will be reflected across all forms instantly.
-              </p>
+              <p className="text-[11px] font-medium text-slate-500 italic">Changes will be reflected across all forms instantly.</p>
             </div>
           </Card>
         </div>

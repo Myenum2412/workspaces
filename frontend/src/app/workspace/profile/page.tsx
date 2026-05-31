@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_BASE_URL } from "@/lib/api/config";
-import { profileApi } from "@/lib/api";
+import { profileApi } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import { useProfileSocket } from "@/hooks/use-profile-socket";
 

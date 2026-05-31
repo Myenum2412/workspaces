@@ -4,9 +4,7 @@ import redis from "../redis/connection.js";
 import { connectDB } from "../config/connection.js";
 import { UserStatus, UserStatusHistory } from "../models/index.js";
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
-const SUPER_ADMIN_EMAIL = "zoo@myenum.in";
+import { env, isSuperAdmin } from "../config/env.js";
 
 let io: Server | null = null;
 const onlineUsers = new Map<string, string>(); // socketId -> userId
@@ -69,7 +67,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(" ")[1];
     if (!token) return next(new Error("No token"));
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const decoded = jwt.verify(token, env.JWT_SECRET) as any;
       (socket as any).user = decoded;
       next();
     } catch {
