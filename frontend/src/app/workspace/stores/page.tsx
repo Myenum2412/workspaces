@@ -39,27 +39,11 @@ interface StoreApp {
   installed?: boolean;
 }
 
-const APP_CATALOG: StoreApp[] = [
-  {
-    id: "placeholder",
-    name: "Coming Soon",
-    description: "More apps coming to the store soon.",
-    longDescription: "Stay tuned for upcoming integrations.",
-    icon: <StoreIcon size={32} />,
-    category: "Productivity",
-    tags: ["Coming Soon"],
-    rating: 0,
-    installs: "0",
-    features: [],
-    color: "blue",
-  },
-];
-
-// ── Filter Options ──────────────────────────────────────────
-
+const APP_CATALOG: StoreApp[] = [];
 const CATEGORIES = ["All", "Communication", "Marketing", "Analytics", "Finance", "HR", "Productivity"];
 const USE_CASES = ["All", "Customer Support", "Sales", "Team Chat", "Notifications"];
 const PRICING = ["All", "Free", "Paid", "Freemium"];
+
 
 // ── Store App Card ──────────────────────────────────────────
 
