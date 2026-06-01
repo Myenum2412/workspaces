@@ -1,5 +1,8 @@
-# Cloudflare Pages
+# Cloudflare Pages — Next.js standalone output
 name = "workspaces-frontend"
-pages_build_output_dir = ".next"
+pages_build_output_dir = ".next/standalone"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
