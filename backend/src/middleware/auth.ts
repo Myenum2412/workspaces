@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
+import { getRedis, isRedisConnected } from "../redis/connection.js";
 import { AuthenticationError, AuthorizationError } from "../core/errors/AppError.js";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -25,36 +26,72 @@ export interface TokenPair {
 
 const ACCESS_TOKEN_EXPIRY = env.JWT_ACCESS_EXPIRY || "15m";
 const REFRESH_TOKEN_EXPIRY = env.JWT_REFRESH_EXPIRY || "30d";
+const REFRESH_TOKEN_EXPIRY_SECONDS = 30 * 24 * 60 * 60; // 30 days
+const ACCESS_TOKEN_COOKIE_MAX_AGE = 15 * 60 * 1000; // 15 min in ms
+const REFRESH_TOKEN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
 
-// ── Refresh Token Store (in production, use Redis) ────────────
+// ── Cookie helpers ─────────────────────────────────────────────
 
-interface RefreshTokenRecord {
-  userId: string;
-  email: string;
-  organizationId: string;
-  role: string;
-  deviceInfo?: string;
-  ipAddress?: string;
-  createdAt: string;
-  expiresAt: string;
-  revoked: boolean;
+export function setAuthCookies(res: Response, tokens: TokenPair): void {
+  const isSecure = env.COOKIE_SECURE || env.NODE_ENV === "production";
+  const sameSite = isSecure ? "strict" as const : "lax" as const;
+
+  res.cookie("access_token", tokens.accessToken, {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite,
+    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE,
+    path: "/",
+    ...(env.COOKIE_SECRET && { signed: true }),
+  });
+
+  res.cookie("refresh_token", tokens.refreshToken, {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite,
+    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE,
+    path: "/api/auth",
+    ...(env.COOKIE_SECRET && { signed: true }),
+  });
 }
 
-const refreshTokenStore = new Map<string, RefreshTokenRecord>();
+export function clearAuthCookies(res: Response): void {
+  res.clearCookie("access_token", { path: "/" });
+  res.clearCookie("refresh_token", { path: "/api/auth" });
+}
 
-/** Clean up expired tokens every hour */
-setInterval(() => {
-  const now = new Date();
-  for (const [token, record] of refreshTokenStore) {
-    if (new Date(record.expiresAt) < now || record.revoked) {
-      refreshTokenStore.delete(token);
-    }
+/** Extract access token from cookie or Authorization header */
+function extractAccessToken(req: Request): string | null {
+  // 1. Prefer httpOnly cookie
+  const cookieToken = req.cookies?.access_token;
+  if (cookieToken) return cookieToken;
+
+  // 2. Fallback: Authorization header (for API clients / Socket.IO)
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.split(" ")[1];
   }
-}, 60 * 60 * 1000);
+
+  return null;
+}
+
+/** Extract refresh token from cookie or request body */
+function extractRefreshToken(req: Request): string | null {
+  // 1. Prefer httpOnly cookie
+  const cookieToken = req.cookies?.refresh_token;
+  if (cookieToken) return cookieToken;
+
+  // 2. Fallback: request body
+  if (req.body?.refreshToken && typeof req.body.refreshToken === "string") {
+    return req.body.refreshToken;
+  }
+
+  return null;
+}
 
 // ── Token Functions ───────────────────────────────────────────
 
-/** Sign a short-lived access token (15 minutes) */
+/** Sign a short-lived access token */
 export function signAccessToken(payload: AuthPayload): string {
   return jwt.sign(payload, env.JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
@@ -62,28 +99,160 @@ export function signAccessToken(payload: AuthPayload): string {
   });
 }
 
-/** Sign a long-lived refresh token (30 days) */
+/** Sign a long-lived refresh token, store metadata in Redis */
 export function signRefreshToken(payload: AuthPayload, req?: Request): string {
   const tokenId = crypto.randomUUID();
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_COOKIE_MAX_AGE);
 
-  refreshTokenStore.set(tokenId, {
+  const record = {
     userId: payload.userId,
     email: payload.email,
     organizationId: payload.organizationId,
     role: payload.role,
-    deviceInfo: req?.headers["user-agent"] || undefined,
-    ipAddress: req?.ip || undefined,
+    deviceInfo: req?.headers["user-agent"] || null,
+    ipAddress: req?.ip || null,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
     revoked: false,
-  });
+  };
+
+  // Store in Redis if available, otherwise ephemeral in-memory (dev only)
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    r.setex(`refresh:${tokenId}`, REFRESH_TOKEN_EXPIRY_SECONDS, JSON.stringify(record)).catch((err: Error) => {
+      console.error("[Auth] Redis setex failed for refresh token:", err.message);
+    });
+  } else {
+    console.warn("[Auth] Redis unavailable — refresh tokens stored in-memory (dev only)");
+    fallbackTokenStore.set(tokenId, record);
+  }
 
   return jwt.sign({ ...payload, tokenId }, env.JWT_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
     jwtid: tokenId,
   });
+}
+
+/** Fallback in-memory store — only used when Redis is down */
+const fallbackTokenStore = new Map<string, Record<string, unknown>>();
+
+/** Verify and decode a refresh token */
+export async function verifyRefreshToken(token: string): Promise<{ payload: AuthPayload; tokenId: string }> {
+  const decoded = jwt.verify(token, env.JWT_SECRET) as AuthPayload & { tokenId: string };
+
+  let record: Record<string, unknown> | null = null;
+
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    const raw = await r.get(`refresh:${decoded.tokenId}`);
+    if (raw) {
+      record = JSON.parse(raw);
+    }
+  } else {
+    record = fallbackTokenStore.get(decoded.tokenId) || null;
+  }
+
+  if (!record) {
+    throw new AuthenticationError("Refresh token not found or expired");
+  }
+  if (record.revoked === true) {
+    throw new AuthenticationError("Refresh token has been revoked. Please login again.");
+  }
+
+  return {
+    payload: {
+      userId: record.userId as string,
+      email: record.email as string,
+      organizationId: record.organizationId as string,
+      role: record.role as string,
+    },
+    tokenId: decoded.tokenId,
+  };
+}
+
+/** Revoke a specific refresh token */
+export async function revokeRefreshToken(tokenId: string): Promise<void> {
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    await r.del(`refresh:${tokenId}`);
+  } else {
+    fallbackTokenStore.delete(tokenId);
+  }
+}
+
+/** Revoke all refresh tokens for a user */
+export async function revokeAllUserTokens(userId: string): Promise<number> {
+  // Redis approach: scan for user's tokens
+  let count = 0;
+
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    let cursor = "0";
+    do {
+      const [nextCursor, keys] = await r.scan(cursor, "MATCH", "refresh:*", "COUNT", 100);
+      cursor = nextCursor;
+      for (const key of keys) {
+        const raw = await r.get(key);
+        if (raw) {
+          const record = JSON.parse(raw);
+          if (record.userId === userId) {
+            await r.del(key);
+            count++;
+          }
+        }
+      }
+    } while (cursor !== "0");
+  } else {
+    for (const [tokenId, record] of fallbackTokenStore) {
+      if ((record as any).userId === userId) {
+        fallbackTokenStore.delete(tokenId);
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+/** Get active sessions for a user */
+export async function getUserSessions(userId: string): Promise<Array<{ tokenId: string; deviceInfo?: string; ipAddress?: string; createdAt: string }>> {
+  const sessions: Array<{ tokenId: string; deviceInfo?: string; ipAddress?: string; createdAt: string }> = [];
+
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    let cursor = "0";
+    do {
+      const [nextCursor, keys] = await r.scan(cursor, "MATCH", "refresh:*", "COUNT", 100);
+      cursor = nextCursor;
+      for (const key of keys) {
+        const raw = await r.get(key);
+        if (raw) {
+          const record = JSON.parse(raw);
+          if (record.userId === userId && !record.revoked) {
+            const tokenId = key.replace("refresh:", "");
+            sessions.push({
+              tokenId,
+              deviceInfo: record.deviceInfo || undefined,
+              ipAddress: record.ipAddress || undefined,
+              createdAt: record.createdAt,
+            });
+          }
+        }
+      }
+    } while (cursor !== "0");
+  } else {
+    for (const [tokenId, record] of fallbackTokenStore) {
+      if ((record as any).userId === userId && !(record as any).revoked) {
+        sessions.push({
+          tokenId,
+          deviceInfo: (record as any).deviceInfo || undefined,
+          ipAddress: (record as any).ipAddress || undefined,
+          createdAt: (record as any).createdAt,
+        });
+      }
+    }
+  }
+  return sessions;
 }
 
 /** Generate both access + refresh tokens */
@@ -94,77 +263,17 @@ export function signTokenPair(payload: AuthPayload, req?: Request): TokenPair {
   };
 }
 
-/** Verify and decode a refresh token */
-export function verifyRefreshToken(token: string): { payload: AuthPayload; tokenId: string } {
-  const decoded = jwt.verify(token, env.JWT_SECRET) as AuthPayload & { tokenId: string };
-  const record = refreshTokenStore.get(decoded.tokenId);
-
-  if (!record) {
-    throw new AuthenticationError("Refresh token not found or expired");
-  }
-  if (record.revoked) {
-    throw new AuthenticationError("Refresh token has been revoked. Please login again.");
-  }
-
-  return {
-    payload: {
-      userId: record.userId,
-      email: record.email,
-      organizationId: record.organizationId,
-      role: record.role,
-    },
-    tokenId: decoded.tokenId,
-  };
-}
-
-/** Revoke a specific refresh token */
-export function revokeRefreshToken(tokenId: string): void {
-  const record = refreshTokenStore.get(tokenId);
-  if (record) {
-    record.revoked = true;
-    refreshTokenStore.delete(tokenId);
-  }
-}
-
-/** Revoke all refresh tokens for a user */
-export function revokeAllUserTokens(userId: string): number {
-  let count = 0;
-  for (const [tokenId, record] of refreshTokenStore) {
-    if (record.userId === userId) {
-      refreshTokenStore.delete(tokenId);
-      count++;
-    }
-  }
-  return count;
-}
-
-/** Get active sessions for a user */
-export function getUserSessions(userId: string): Array<{ tokenId: string; deviceInfo?: string; ipAddress?: string; createdAt: string }> {
-  const sessions: Array<{ tokenId: string; deviceInfo?: string; ipAddress?: string; createdAt: string }> = [];
-  for (const [tokenId, record] of refreshTokenStore) {
-    if (record.userId === userId && !record.revoked) {
-      sessions.push({
-        tokenId,
-        deviceInfo: record.deviceInfo,
-        ipAddress: record.ipAddress,
-        createdAt: record.createdAt,
-      });
-    }
-  }
-  return sessions;
-}
-
 // ── Middleware ──────────────────────────────────────────────────
 
-/** Verify access token and attach user to request */
-export function authenticate(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
+/** Verify access token from cookie or header and attach user to request */
+export function authenticate(req: Request, _res: Response, next: NextFunction): void {
+  const token = extractAccessToken(req);
+
+  if (!token) {
     return next(new AuthenticationError("No token provided"));
   }
 
   try {
-    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, env.JWT_SECRET) as AuthPayload;
     (req as AuthRequest).user = decoded;
     next();
@@ -180,12 +289,11 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 }
 
 /** Optional auth — doesn't fail if no token, just doesn't set user */
-export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return next();
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const token = extractAccessToken(req);
+  if (!token) return next();
 
   try {
-    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, env.JWT_SECRET) as AuthPayload;
     (req as AuthRequest).user = decoded;
   } catch {
@@ -194,8 +302,8 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   next();
 }
 
-/** Require specific roles */
-export function requireRole(...allowedRoles: string[]) {
+/** Require specific roles (hierarchical) */
+export function requireRole(...allowedRoles: string[]): (req: Request, _res: Response, next: NextFunction) => void {
   const ROLE_HIERARCHY: Record<string, number> = {
     viewer: 0,
     member: 1,

@@ -3,9 +3,12 @@ import bcrypt from "bcryptjs";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { connectDB } from "../config/connection.js";
 import { env } from "../config/env.js";
 import { isSuperAdmin } from "../config/env.js";
+import { getRedis, isRedisConnected } from "../redis/connection.js";
+import { setCsrfCookie } from "../middleware/security.js";
 import {
   UserProfile,
   Organization,
@@ -21,6 +24,8 @@ import {
   revokeAllUserTokens,
   getUserSessions,
   AuthRequest,
+  setAuthCookies,
+  clearAuthCookies,
 } from "../middleware/auth.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { apiResponse } from "../core/utils/apiResponse.js";
@@ -38,63 +43,97 @@ import { getIO } from "../ws/server.js";
 
 const router = Router();
 
-// ── Account Lockout Store (use Redis in production) ──────────
+// ── Account Lockout Tracking (Redis) ──────────────────────────
+
+const LOCKOUT_PREFIX = "lockout:";
+const LOCKOUT_THRESHOLD = 5;
+const LOCKOUT_DURATION_SECONDS = 15 * 60; // 15 minutes
 
 interface LoginAttempt {
   count: number;
-  lastAttempt: Date;
-  lockedUntil: Date | null;
+  lastAttempt: string;
+  lockedUntil: string | null;
 }
 
-const loginAttempts = new Map<string, LoginAttempt>();
+async function getLoginAttempt(email: string): Promise<LoginAttempt | null> {
+  const key = `${LOCKOUT_PREFIX}${email.toLowerCase()}`;
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    const raw = await r.get(key);
+    return raw ? JSON.parse(raw) : null;
+  }
+  return fallbackLoginAttempts.get(key) || null;
+}
 
-// Clean up expired lockouts every 5 minutes
+async function setLoginAttempt(email: string, attempt: LoginAttempt): Promise<void> {
+  const key = `${LOCKOUT_PREFIX}${email.toLowerCase()}`;
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    await r.setex(key, LOCKOUT_DURATION_SECONDS, JSON.stringify(attempt));
+  } else {
+    fallbackLoginAttempts.set(key, attempt);
+  }
+}
+
+async function deleteLoginAttempt(email: string): Promise<void> {
+  const key = `${LOCKOUT_PREFIX}${email.toLowerCase()}`;
+  if (isRedisConnected()) {
+    const r = getRedis()!;
+    await r.del(key);
+  } else {
+    fallbackLoginAttempts.delete(key);
+  }
+}
+
+/** Fallback in-memory for dev without Redis */
+const fallbackLoginAttempts = new Map<string, LoginAttempt>();
+
+// Periodic cleanup for fallback store
 setInterval(() => {
   const now = new Date();
-  for (const [key, attempt] of loginAttempts) {
-    if (attempt.lockedUntil && attempt.lockedUntil < now) {
-      loginAttempts.delete(key);
+  for (const [key, attempt] of fallbackLoginAttempts) {
+    if (attempt.lockedUntil && new Date(attempt.lockedUntil) < now) {
+      fallbackLoginAttempts.delete(key);
     }
   }
 }, 5 * 60 * 1000);
 
-const LOCKOUT_THRESHOLD = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-
-function checkAccountLockout(email: string): void {
-  const key = email.toLowerCase();
-  const attempt = loginAttempts.get(key);
-
-  if (attempt?.lockedUntil && attempt.lockedUntil > new Date()) {
-    const remainingMin = Math.ceil((attempt.lockedUntil.getTime() - Date.now()) / 60000);
+async function checkAccountLockout(email: string): Promise<void> {
+  const attempt = await getLoginAttempt(email);
+  if (attempt?.lockedUntil && new Date(attempt.lockedUntil) > new Date()) {
+    const remainingMin = Math.ceil((new Date(attempt.lockedUntil).getTime() - Date.now()) / 60000);
     throw new AccountLockedError(
       `Account is locked due to too many failed attempts. Try again in ${remainingMin} minute(s).`
     );
   }
 }
 
-function recordFailedLogin(email: string): void {
+async function recordFailedLogin(email: string): Promise<void> {
   const key = email.toLowerCase();
-  const existing = loginAttempts.get(key);
+  const existing = await getLoginAttempt(key);
+  const now = new Date();
 
-  if (!existing || existing.lockedUntil) {
-    loginAttempts.set(key, { count: 1, lastAttempt: new Date(), lockedUntil: null });
+  if (!existing || (existing.lockedUntil && new Date(existing.lockedUntil) < now)) {
+    await setLoginAttempt(key, { count: 1, lastAttempt: now.toISOString(), lockedUntil: null });
     return;
   }
 
   existing.count += 1;
-  existing.lastAttempt = new Date();
+  existing.lastAttempt = now.toISOString();
 
   if (existing.count >= LOCKOUT_THRESHOLD) {
-    existing.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+    existing.lockedUntil = new Date(now.getTime() + LOCKOUT_DURATION_SECONDS * 1000).toISOString();
   }
+
+  await setLoginAttempt(key, existing);
 }
 
-function clearLoginAttempts(email: string): void {
-  loginAttempts.delete(email.toLowerCase());
+async function clearLoginAttempts(email: string): Promise<void> {
+  await deleteLoginAttempt(email.toLowerCase());
 }
 
-// ── Passport Google OAuth ─────────────────────────────────────
+// ── Passport Google OAuth ──────────────────────────────────────
+
 if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(
@@ -145,6 +184,7 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
 }
 
 // ── Google OAuth routes ───────────────────────────────────────
+
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 router.get(
@@ -156,16 +196,19 @@ router.get(
       { userId: user._id.toString(), email: user.email, organizationId: user.organizationId ?? "", role: "owner" },
       req
     );
-    res.redirect(`${env.FRONTEND_URL}/login?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
+    // Set httpOnly cookies
+    setAuthCookies(res, tokens);
+    res.redirect(`${env.FRONTEND_URL}/workspace`);
   }
 );
 
-// ── LinkedIn OAuth routes (placeholder) ───────────────────────
+// ── LinkedIn OAuth routes (placeholder) ────────────────────────
+
 router.get("/linkedin", (_req: Request, res: Response) => {
   apiResponse.success(res, null, 501);
 });
 
-// ── Register ──────────────────────────────────────────────────
+// ── Register ───────────────────────────────────────────────────
 
 router.post(
   "/register",
@@ -187,9 +230,7 @@ router.post(
     const userId = crypto.randomUUID();
     const orgId = crypto.randomUUID();
 
-    // Use transaction for multi-document creation
     const session = await UserProfile.startSession();
-    let result;
     try {
       await session.withTransaction(async () => {
         await Organization.create([{
@@ -228,6 +269,10 @@ router.post(
       req
     );
 
+    // Set httpOnly cookies
+    setAuthCookies(res, tokens);
+    setCsrfCookie(req, res);
+
     const loginUrl = `${env.FRONTEND_URL}/login`;
     sendSignupWelcomeEmail({
       to: normalizedEmail,
@@ -239,8 +284,6 @@ router.post(
     });
 
     apiResponse.created(res, {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
       password: tempPassword,
       user: { $id: userId, email: normalizedEmail, name: `${firstName} ${lastName}`, firstName, lastName },
       organization: { $id: orgId, name: companyName },
@@ -248,7 +291,7 @@ router.post(
   })
 );
 
-// ── Login ─────────────────────────────────────────────────────
+// ── Login ──────────────────────────────────────────────────────
 
 router.post(
   "/login",
@@ -259,28 +302,25 @@ router.post(
 
     await connectDB();
 
-    // Check account lockout
-    checkAccountLockout(normalizedEmail);
+    await checkAccountLockout(normalizedEmail);
 
     const profile = await UserProfile.findOne({ email: normalizedEmail }).lean() as any;
     if (!profile) {
-      recordFailedLogin(normalizedEmail);
+      await recordFailedLogin(normalizedEmail);
       throw new AuthenticationError("Invalid email or password");
     }
 
     const valid = await bcrypt.compare(password, profile.passwordHash ?? "");
     if (!valid) {
-      recordFailedLogin(normalizedEmail);
+      await recordFailedLogin(normalizedEmail);
       throw new AuthenticationError("Invalid email or password");
     }
 
-    // Clear failed login attempts on successful login
-    clearLoginAttempts(normalizedEmail);
+    await clearLoginAttempts(normalizedEmail);
 
     const member = await OrgMember.findOne({ userId: profile._id.toString() }).lean() as any;
     const userId = profile._id.toString();
 
-    // Update login info + activity log (non-blocking)
     const { ProfileService } = await import("../services/profile.js");
     ProfileService.updateLoginInfo(userId, req).catch(() => {});
     ProfileService.logActivity({ userId, action: "user_login", req }).catch(() => {});
@@ -295,11 +335,13 @@ router.post(
       req
     );
 
+    // Set httpOnly cookies
+    setAuthCookies(res, tokens);
+    setCsrfCookie(req, res);
+
     apiResponse.success(
       res,
       {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
         user: {
           $id: userId,
           email: profile.email,
@@ -318,80 +360,91 @@ router.post(
   })
 );
 
-// ── Refresh Token ─────────────────────────────────────────────
+// ── Refresh Token ──────────────────────────────────────────────
 
 router.post(
   "/refresh",
   catchAsync(async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
+    // Extract refresh token from cookie or body
+    const refreshToken = req.cookies?.refresh_token || req.body?.refreshToken;
+    if (!refreshToken || typeof refreshToken !== "string") {
       throw new AuthenticationError("Refresh token required");
     }
 
-    // Verify the refresh token
-    const { payload, tokenId } = verifyRefreshToken(refreshToken);
+    const { payload, tokenId } = await verifyRefreshToken(refreshToken);
+    await revokeRefreshToken(tokenId);
 
-    // Revoke the old refresh token (rotation)
-    revokeRefreshToken(tokenId);
-
-    // Issue new token pair
     const tokens = signTokenPair(payload, req);
+
+    // Set new httpOnly cookies
+    setAuthCookies(res, tokens);
 
     apiResponse.success(
       res,
-      {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      },
+      { message: "Token refreshed" },
       200,
       req.requestId
     );
   })
 );
 
-// ── Logout ────────────────────────────────────────────────────
+// ── Logout ─────────────────────────────────────────────────────
 
 router.post(
   "/logout",
   authenticate,
   catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
-    const { refreshToken, all } = req.body;
+    const { all } = req.body;
 
     if (all) {
-      // Revoke ALL refresh tokens for this user
-      revokeAllUserTokens(authReq.user!.userId);
-    } else if (refreshToken) {
-      try {
-        const { tokenId } = verifyRefreshToken(refreshToken);
-        revokeRefreshToken(tokenId);
-      } catch {
-        // Token might be expired — just continue with logout
+      await revokeAllUserTokens(authReq.user!.userId);
+    } else {
+      const refreshToken = req.cookies?.refresh_token || req.body?.refreshToken;
+      if (refreshToken && typeof refreshToken === "string") {
+        try {
+          const decoded = jwt.decode(refreshToken) as { tokenId?: string } | null;
+          if (decoded?.tokenId) {
+            await revokeRefreshToken(decoded.tokenId);
+          }
+        } catch {
+          // Token might be expired — continue with logout
+        }
       }
     }
 
-    // Log logout activity (non-blocking)
     const { ProfileService } = await import("../services/profile.js");
     ProfileService.logActivity({ userId: authReq.user!.userId, action: "user_logout", req }).catch(() => {});
+
+    // Clear httpOnly cookies
+    clearAuthCookies(res);
+    res.clearCookie("csrf_token", { path: "/" });
 
     apiResponse.success(res, null, 200, req.requestId);
   })
 );
 
-// ── Get Active Sessions ───────────────────────────────────────
+// ── Get CSRF Token ─────────────────────────────────────────────
+
+router.get("/csrf-token", (req: Request, res: Response) => {
+  setCsrfCookie(req, res);
+  apiResponse.success(res, { message: "CSRF token set" }, 200, req.requestId);
+});
+
+// ── Get Active Sessions ────────────────────────────────────────
 
 router.get(
   "/sessions",
   authenticate,
   catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
-    const sessions = getUserSessions(authReq.user!.userId);
+    const sessions = await getUserSessions(authReq.user!.userId);
 
     apiResponse.success(res, { sessions }, 200, req.requestId);
   })
 );
 
-// ── Get Me ────────────────────────────────────────────────────
+// ── Get Me ─────────────────────────────────────────────────────
 
 router.get(
   "/me",
@@ -423,6 +476,10 @@ router.get(
           firstName: profile.firstName,
           lastName: profile.lastName,
           name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
+          avatarUrl: profile.avatarUrl,
+          emailVerified: profile.emailVerified,
+          role: member?.role ?? "member",
+          organizationId: member?.organizationId ?? profile.organizationId ?? "",
         },
         organization: organization
           ? { $id: organization._id.toString(), name: organization.name }
@@ -437,7 +494,7 @@ router.get(
   })
 );
 
-// ── Change Password ───────────────────────────────────────────
+// ── Change Password ────────────────────────────────────────────
 
 router.post(
   "/change-password",
@@ -465,7 +522,7 @@ router.post(
   })
 );
 
-// ── Forgot Password (with hashed OTP) ────────────────────────
+// ── Forgot Password ────────────────────────────────────────────
 
 router.post(
   "/forgot-password",
@@ -477,13 +534,11 @@ router.post(
     await connectDB();
     const profile = await UserProfile.findOne({ email: normalizedEmail }) as any;
     if (!profile) {
-      // Always return success to prevent email enumeration
       apiResponse.success(res, null, 200, req.requestId);
       return;
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    // HASH the OTP before storing — prevents plaintext OTP exposure if DB is compromised
     profile.resetPasswordOTP = await bcrypt.hash(otp, 10);
     profile.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     await profile.save();
@@ -500,7 +555,7 @@ router.post(
   })
 );
 
-// ── Reset Password (verify hashed OTP) ────────────────────────
+// ── Reset Password ─────────────────────────────────────────────
 
 router.post(
   "/reset-password",
@@ -523,7 +578,6 @@ router.post(
       throw new AuthenticationError("OTP has expired. Please request a new one.");
     }
 
-    // Compare hashed OTP
     const otpValid = await bcrypt.compare(otp, profile.resetPasswordOTP);
     if (!otpValid) {
       throw new AuthenticationError("Invalid OTP");
@@ -534,14 +588,13 @@ router.post(
     profile.resetPasswordExpires = undefined;
     await profile.save();
 
-    // Revoke all existing sessions (security: password changed)
-    revokeAllUserTokens(profile._id.toString());
+    await revokeAllUserTokens(profile._id.toString());
 
     apiResponse.success(res, null, 200, req.requestId);
   })
 );
 
-// ── Verify Email ──────────────────────────────────────────────
+// ── Verify Email ───────────────────────────────────────────────
 
 router.post(
   "/verify",
@@ -569,7 +622,7 @@ router.post(
   })
 );
 
-// ── Email verifications (batch) ──────────────────────────────
+// ── Email verifications (batch) ────────────────────────────────
 
 router.post(
   "/verifications",
@@ -590,7 +643,7 @@ router.post(
   })
 );
 
-// ── User statuses (batch) ────────────────────────────────────
+// ── User statuses (batch) ─────────────────────────────────────
 
 router.post(
   "/statuses",
@@ -628,7 +681,7 @@ router.post(
   })
 );
 
-// ── Own status ────────────────────────────────────────────────
+// ── Own status ─────────────────────────────────────────────────
 
 router.get(
   "/status",
@@ -665,7 +718,7 @@ router.post(
   })
 );
 
-// ── Status history ────────────────────────────────────────────
+// ── Status history ─────────────────────────────────────────────
 
 router.get(
   "/status/history",
@@ -729,7 +782,7 @@ router.get(
   })
 );
 
-// ── Send verification OTP (hashed) ────────────────────────────
+// ── Send verification OTP ──────────────────────────────────────
 
 router.post(
   "/send-verification",
@@ -738,13 +791,11 @@ router.post(
     await connectDB();
     const profile = await UserProfile.findOne({ email }) as any;
     if (!profile) {
-      // Don't reveal if email exists
       apiResponse.success(res, null, 200, req.requestId);
       return;
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    // Hash OTP before storing
     profile.resetPasswordOTP = await bcrypt.hash(otp, 10);
     profile.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     await profile.save();

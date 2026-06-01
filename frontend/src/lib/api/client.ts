@@ -1,30 +1,19 @@
 /**
- * Shared API client — single fetch wrapper for all backend communication.
- * Handles auth headers, token refresh, error parsing, and JSON serialization.
- *
- * Replaces: src/lib/appwrite/client.ts, src/lib/appwrite/auth.ts, src/lib/api.ts
+ * Shared API client — cookie-based auth.
+ * Relies on httpOnly cookies set by the backend (no localStorage tokens).
+ * Sends credentials: 'include' for cross-origin cookie forwarding.
+ * Falls back to Authorization header for Socket.IO connections (can't send cookies via WS).
  */
 
 import { API_BASE_URL } from "./config";
 
-// ── Token helpers ──────────────────────────────────────────────
+// ── Token helpers (kept for Socket.IO auth only) ───────────────
 
 export function getToken(): string | null {
+  // Read from cookie for Socket.IO fallback
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("auth_token");
-}
-
-export function setToken(token: string): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("auth_token", token);
-  }
-}
-
-export function clearToken(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("auth_token");
-    document.cookie = "auth_token=; path=/; max-age=0; SameSite=Strict";
-  }
+  const match = document.cookie.match(/(?:^|; )access_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export function isTokenExpired(token: string): boolean {
@@ -35,6 +24,14 @@ export function isTokenExpired(token: string): boolean {
   } catch {
     return true;
   }
+}
+
+// ── CSRF Token helper ──────────────────────────────────────────
+
+function getCsrfToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 // ── Error type ─────────────────────────────────────────────────
@@ -52,36 +49,82 @@ export class ApiError extends Error {
   }
 }
 
-// ── Core fetch ─────────────────────────────────────────────────
+// ── Core fetch — cookie-based, no manual token attachment ──────
 
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getToken();
-
-  if (token && isTokenExpired(token)) {
-    clearToken();
-    if (typeof window !== "undefined") window.location.href = "/login";
-    throw new ApiError("Session expired", 401, "TOKEN_EXPIRED");
-  }
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  // For FormData (file uploads), let the browser set Content-Type with boundary
+  if (options.body instanceof FormData) {
+    delete headers["Content-Type"];
+  }
+
+  // Add CSRF token for state-changing requests
+  if (options.method && !["GET", "HEAD", "OPTIONS"].includes(options.method.toUpperCase())) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      headers["X-CSRF-Token"] = csrfToken;
+    }
+  }
+
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+    credentials: "include", // Send httpOnly cookies
+  });
 
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
+    // If 401, session expired — redirect to login
+    if (res.status === 401 && typeof window !== "undefined") {
+      // Try refresh first
+      if (!path.includes("/api/auth/refresh")) {
+        try {
+          const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (refreshRes.ok) {
+            // Retry original request with new cookies
+            const retryRes = await fetch(`${API_BASE_URL}${path}`, {
+              ...options,
+              headers,
+              credentials: "include",
+            });
+            if (retryRes.ok) return (await retryRes.json()) as T;
+            const retryJson = await retryRes.json().catch(() => null);
+            const errorMsg = typeof retryJson?.error === "string" ? retryJson.error : retryJson?.error?.message;
+            throw new ApiError(
+              errorMsg || retryJson?.message || `Request failed: ${retryRes.status}`,
+              retryRes.status,
+              retryJson?.error?.code || retryJson?.code || "API_ERROR",
+              retryJson?.error?.details || retryJson?.details
+            );
+          }
+        } catch (refreshErr) {
+          // Refresh failed — fall through to redirect
+        }
+      }
+      // All refresh attempts failed — redirect to login
+      if (typeof window !== "undefined") {
+        window.location.href = "/login?reason=session_expired";
+      }
+    }
+
+    const errorMsg = typeof json?.error === "string" ? json.error : json?.error?.message;
     throw new ApiError(
-      json?.error || json?.message || `Request failed: ${res.status}`,
+      errorMsg || json?.message || `Request failed: ${res.status}`,
       res.status,
-      json?.code || "API_ERROR",
-      json?.details
+      json?.error?.code || json?.code || "API_ERROR",
+      json?.error?.details || json?.details
     );
   }
 
@@ -105,18 +148,26 @@ export const api = {
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };
 
-// ── Named API modules (backward-compatible with old @/lib/api imports) ─
+// ── Auth API ──────────────────────────────────────────────────
 
 export const authApi = {
-  logout: () => {
+  logout: async () => {
     try {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth_token");
-        document.cookie = "auth_token=; path=/; max-age=0; SameSite=Strict";
-      }
-    } catch { /* noop */ }
+      await apiFetch("/api/auth/logout", { method: "POST", body: "{}" });
+    } catch { /* ignore */ }
   },
+  refresh: async () => {
+    return apiFetch("/api/auth/refresh", { method: "POST", body: "{}" });
+  },
+  getMe: () => api.get<{
+    success: boolean;
+    user: any;
+    organization: any;
+    membership: any;
+  }>("/api/auth/me"),
 };
+
+// ── Profile API ──────────────────────────────────────────────
 
 export const profileApi = {
   get: () => api.get<{ success: boolean; profile: any }>("/api/profile"),
@@ -124,11 +175,11 @@ export const profileApi = {
     api.patch<{ success: boolean; profile: any }>("/api/profile", data),
   getHistory: (page = 1, limit = 20) =>
     api.get<{ success: boolean; entries: any[]; total: number; page: number; limit: number; pages: number }>(
-      `/api/profile/history?page=${page}&limit=${limit}`,
+      `/api/profile/history?page=${page}&limit=${limit}`
     ),
   getActivity: (days?: number) =>
     api.get<{ success: boolean; activity: any[] }>(
-      `/api/profile/activity${days ? `?days=${days}` : ""}`,
+      `/api/profile/activity${days ? `?days=${days}` : ""}`
     ),
   export: () => api.get<any>("/api/profile/export"),
   adminListUsers: (params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }) => {
@@ -144,16 +195,22 @@ export const profileApi = {
   adminSetStatus: (userId: string, status: string, reason?: string) =>
     api.patch<{ success: boolean; profile: any }>(`/api/profile/admin/users/${userId}/status`, { status, reason }),
   uploadAvatar: async (file: File) => {
-    const token = getToken();
     const formData = new FormData();
     formData.append("file", file);
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE_URL}/api/upload/avatar`, { method: "POST", headers, body: formData });
-    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || "Upload failed"); }
-    return res.json();
+    const res = await fetch(`${API_BASE_URL}/api/upload/avatar`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Upload failed");
+    }
+    return res.json() as Promise<{ success: boolean; url: string; avatarUrl: string }>;
   },
 };
+
+// ── Contacts API ──────────────────────────────────────────────
 
 export const contactsApi = {
   list: (params?: { search?: string; isBlocked?: boolean; page?: number; limit?: number }) => {
@@ -171,6 +228,8 @@ export const contactsApi = {
   delete: (id: string) => api.delete<{ success: boolean }>(`/api/contacts/${id}`),
 };
 
+// ── Webhooks API ──────────────────────────────────────────────
+
 export const webhooksApi = {
   list: () => api.get<{ webhooks: any[] }>("/api/webhooks"),
   create: (data: { url: string; events?: string[]; secret?: string; headers?: Record<string, string>; retryCount?: number; sessionId?: string }) =>
@@ -180,6 +239,8 @@ export const webhooksApi = {
   delete: (id: string) => api.delete<{ success: boolean }>(`/api/webhooks/${id}`),
   test: (id: string) => api.post<{ success: boolean; statusCode?: number; error?: string }>(`/api/webhooks/${id}/test`, {}),
 };
+
+// ── Templates API ─────────────────────────────────────────────
 
 export const templatesApi = {
   list: (params?: { category?: string; search?: string; page?: number; limit?: number }) => {
@@ -196,6 +257,8 @@ export const templatesApi = {
   update: (id: string, data: any) => api.put<any>(`/api/templates/${id}`, data),
   delete: (id: string) => api.delete<{ success: boolean }>(`/api/templates/${id}`),
 };
+
+// ── Campaigns API ─────────────────────────────────────────────
 
 export const campaignsApi = {
   list: (params?: { status?: string; page?: number; limit?: number }) => {
@@ -216,15 +279,7 @@ export const campaignsApi = {
   stats: (id: string) => api.get<any>(`/api/campaigns/${id}/stats`),
 };
 
-export const automationApi = {
-  list: () => api.get<{ rules: any[] }>("/api/openwa/automation"),
-  get: (id: string) => api.get<any>(`/api/openwa/automation/${id}`),
-  create: (data: { name: string; description?: string; triggerType: string; triggerConfig?: any; conditions?: any[]; actions?: any[] }) =>
-    api.post<any>("/api/openwa/automation", data),
-  update: (id: string, data: any) => api.put<any>(`/api/openwa/automation/${id}`, data),
-  delete: (id: string) => api.delete<{ success: boolean }>(`/api/openwa/automation/${id}`),
-  toggle: (id: string) => api.post<any>(`/api/openwa/automation/${id}/toggle`, {}),
-};
+// ── Audit API ─────────────────────────────────────────────────
 
 export const auditApi = {
   list: (params?: { action?: string; severity?: string; page?: number; limit?: number }) => {
@@ -238,18 +293,28 @@ export const auditApi = {
   stats: () => api.get<any>("/api/audit/stats"),
 };
 
-export const labelsApi = {
-  list: () => api.get<{ labels: any[] }>("/api/openwa/labels"),
-  create: (data: { name: string; color?: string }) => api.post<any>("/api/openwa/labels", data),
-  update: (id: string, data: { name?: string; color?: string }) => api.put<any>(`/api/openwa/labels/${id}`, data),
-  delete: (id: string) => api.delete<{ success: boolean }>(`/api/openwa/labels/${id}`),
-};
+// ── Workspace API ─────────────────────────────────────────────
 
 export const workspaceApi = {
   getHrSettings: () => api.get<{ success: boolean; hrSettings: any }>("/api/workspace/hr-settings"),
   updateHrSettings: (data: any) => api.put<{ success: boolean; hrSettings: any }>("/api/workspace/hr-settings", data),
   getThemeSettings: () => api.get<{ success: boolean; themeSettings: any }>("/api/workspace/theme-settings"),
-  updateThemeSettings: (data: any) => api.put<{ success: boolean; themeSettings: any }>("/api/workspace/theme-settings", data),
+  updateThemeSettings: (data: any) =>
+    api.put<{ success: boolean; themeSettings: any }>("/api/workspace/theme-settings", data),
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_BASE_URL}/api/upload/image`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Upload failed");
+    }
+    return res.json() as Promise<{ success: boolean; url: string }>;
+  },
   getShifts: () => api.get<{ success: boolean; shifts: any[] }>("/api/workspace/shifts"),
   createShift: (data: any) => api.post<{ success: boolean; shift: any }>("/api/workspace/shifts", data),
   updateShift: (id: string, data: any) => api.put<{ success: boolean; shift: any }>(`/api/workspace/shifts/${id}`, data),

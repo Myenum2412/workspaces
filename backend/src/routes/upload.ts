@@ -1,11 +1,12 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import path from "path";
-import { connectDB } from "../config/connection.js";
-import { Organization } from "../models/index.js";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import crypto from "crypto";
+import { logAudit } from "../middleware/audit.js";
+import { catchAsync } from "../core/utils/catchAsync.js";
+import { apiResponse } from "../core/utils/apiResponse.js";
 
 const router = Router();
 
@@ -20,7 +21,6 @@ const s3 = new S3Client({
 
 const memoryStorage = multer.memoryStorage();
 
-// ── Image upload config ──────────────────────────────────────
 const imageUpload = multer({
   storage: memoryStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -31,7 +31,6 @@ const imageUpload = multer({
   },
 });
 
-// ── Document/file upload config ──────────────────────────────
 const ALLOWED_DOC_TYPES = [
   "application/pdf",
   "application/msword",
@@ -51,15 +50,13 @@ const fileUpload = multer({
   limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (ALLOWED_DOC_TYPES.includes(file.mimetype)) cb(null, true);
-    else cb(new Error(`File type not allowed: ${file.mimetype}. Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, CSV, TXT, ZIP, JSON`));
+    else cb(new Error(`File type not allowed: ${file.mimetype}`));
   },
 });
 
-// ── Generic upload helper ────────────────────────────────────
 async function uploadToR2(file: Express.Multer.File, folder: string): Promise<{ url: string; key: string }> {
   const ext = path.extname(file.originalname);
   const filename = `${folder}/${crypto.randomUUID()}${ext}`;
-
   await s3.send(new PutObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME,
     Key: filename,
@@ -67,106 +64,114 @@ async function uploadToR2(file: Express.Multer.File, folder: string): Promise<{ 
     ContentType: file.mimetype,
     ContentDisposition: `inline; filename="${file.originalname}"`,
   }));
-
-  return {
-    url: `${process.env.R2_PUBLIC_URL}/${filename}`,
-    key: filename,
-  };
+  return { url: `/api/upload/media/${filename}`, key: filename };
 }
 
-// ── Avatar upload ────────────────────────────────────────────
-router.post("/avatar", authenticate, imageUpload.single("file"), async (req: Request, res: Response) => {
-  try {
-    const authReq = req as AuthRequest;
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+function auditFileAction(req: Request, action: string, metadata: Record<string, unknown> = {}) {
+  const authReq = req as AuthRequest;
+  logAudit({
+    organizationId: authReq.user?.organizationId || "unknown",
+    action,
+    severity: "info",
+    userId: authReq.user?.userId || null,
+    userEmail: authReq.user?.email || null,
+    ipAddress: req.ip || null,
+    userAgent: req.get("user-agent") || null,
+    method: req.method,
+    path: req.originalUrl || req.path,
+    metadata,
+  }).catch(() => {/* silent */});
+}
 
-    const { url: avatarUrl } = await uploadToR2(req.file, "avatars");
-
-    await connectDB();
-    const member = await (await import("../models/index.js")).OrgMember.findOne({ userId: authReq.user!.userId }).lean() as any;
-    if (member?.organizationId) {
-      await Organization.findByIdAndUpdate(member.organizationId, { logoUrl: avatarUrl });
-    }
-
-    res.json({ success: true, url: avatarUrl, avatarUrl });
-  } catch (error: any) {
-    console.error("Avatar upload error:", error);
-    res.status(500).json({ error: error.message || "Upload failed" });
+// ── Serve media from R2 (Proxy) ───────────────────────────────
+router.get("/media/:folder/:filename", catchAsync(async (req: Request, res: Response) => {
+  const { folder, filename } = req.params;
+  if (!["avatars", "images", "files"].includes(folder)) {
+    return res.status(400).json({ error: "Invalid folder" });
   }
-});
+
+  const command = new GetObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME,
+    Key: `${folder}/${filename}`,
+  });
+
+  const response = await s3.send(command);
+  if (!response.Body) {
+    return res.status(404).json({ error: "File not found" });
+  }
+
+  res.setHeader("Content-Type", response.ContentType || "application/octet-stream");
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  if (response.ContentLength) {
+    res.setHeader("Content-Length", response.ContentLength);
+  }
+
+  // @ts-ignore — stream pipe
+  response.Body.pipe(res);
+}));
+
+// ── Avatar upload ────────────────────────────────────────────
+router.post("/avatar", authenticate, imageUpload.single("file"), catchAsync(async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+  const { url: avatarUrl } = await uploadToR2(req.file, "avatars");
+  const UserProfile = (await import("../models/index.js")).UserProfile;
+  await UserProfile.findOneAndUpdate({ userId: authReq.user!.userId }, { avatarUrl });
+
+  auditFileAction(req, "file_avatar_upload", { size: req.file.size, mimetype: req.file.mimetype });
+  apiResponse.success(res, { url: avatarUrl, avatarUrl });
+}));
 
 // ── Image upload ─────────────────────────────────────────────
-router.post("/image", authenticate, imageUpload.single("file"), async (req: Request, res: Response) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    const { url } = await uploadToR2(req.file, "images");
-    res.json({ success: true, url });
-  } catch (error: any) {
-    console.error("Image upload error:", error);
-    res.status(500).json({ error: error.message || "Upload failed" });
-  }
-});
+router.post("/image", authenticate, imageUpload.single("file"), catchAsync(async (req: Request, res: Response) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  const { url } = await uploadToR2(req.file, "images");
+
+  auditFileAction(req, "file_image_upload", { size: req.file.size, mimetype: req.file.mimetype });
+  apiResponse.success(res, { url });
+}));
 
 // ── Document/file upload ─────────────────────────────────────
-router.post("/file", authenticate, fileUpload.single("file"), async (req: Request, res: Response) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    const { url, key } = await uploadToR2(req.file, "files");
-    res.json({
-      success: true,
-      url,
-      key,
-      filename: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-    });
-  } catch (error: any) {
-    console.error("File upload error:", error);
-    res.status(500).json({ error: error.message || "Upload failed" });
-  }
-});
+router.post("/file", authenticate, fileUpload.single("file"), catchAsync(async (req: Request, res: Response) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  const { url, key } = await uploadToR2(req.file, "files");
+
+  auditFileAction(req, "file_upload", { key, size: req.file.size, mimetype: req.file.mimetype, filename: req.file.originalname });
+  apiResponse.success(res, { url, key, filename: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size });
+}));
 
 // ── Multiple files upload ────────────────────────────────────
-router.post("/files", authenticate, fileUpload.array("files", 10), async (req: Request, res: Response) => {
-  try {
-    const files = req.files as Express.Multer.File[];
-    if (!files || files.length === 0) return res.status(400).json({ error: "No files uploaded" });
+router.post("/files", authenticate, fileUpload.array("files", 10), catchAsync(async (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[];
+  if (!files || files.length === 0) return res.status(400).json({ error: "No files uploaded" });
 
-    const results = await Promise.all(
-      files.map(async (f) => {
-        const { url, key } = await uploadToR2(f, "files");
-        return { url, key, filename: f.originalname, mimetype: f.mimetype, size: f.size };
-      })
-    );
+  const results = await Promise.all(
+    files.map(async (f) => {
+      const { url, key } = await uploadToR2(f, "files");
+      return { url, key, filename: f.originalname, mimetype: f.mimetype, size: f.size };
+    })
+  );
 
-    res.json({ success: true, files: results, count: results.length });
-  } catch (error: any) {
-    console.error("Bulk file upload error:", error);
-    res.status(500).json({ error: error.message || "Upload failed" });
-  }
-});
+  auditFileAction(req, "file_bulk_upload", { count: results.length });
+  apiResponse.success(res, { files: results, count: results.length });
+}));
 
 // ── Delete file from R2 ──────────────────────────────────────
-router.delete("/file", authenticate, async (req: Request, res: Response) => {
-  try {
-    const { key } = req.body;
-    if (!key || typeof key !== "string") return res.status(400).json({ error: "File key required" });
-
-    // Only allow deleting files from our bucket
-    if (!key.match(/^(avatars|images|files)\//)) {
-      return res.status(400).json({ error: "Invalid file key" });
-    }
-
-    await s3.send(new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: key,
-    }));
-
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("File delete error:", error);
-    res.status(500).json({ error: error.message || "Delete failed" });
+router.delete("/file", authenticate, catchAsync(async (req: Request, res: Response) => {
+  const { key } = req.body;
+  if (!key || typeof key !== "string") return res.status(400).json({ error: "File key required" });
+  if (!key.match(/^(avatars|images|files)\//)) {
+    return res.status(400).json({ error: "Invalid file key" });
   }
-});
+
+  await s3.send(new DeleteObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME,
+    Key: key,
+  }));
+
+  auditFileAction(req, "file_delete", { key });
+  apiResponse.success(res, { success: true });
+}));
 
 export default router;

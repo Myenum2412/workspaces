@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -121,6 +122,7 @@ const PRESET_THEMES = [
 ]
 
 export function ThemeSettings() {
+  const queryClient = useQueryClient()
   const [settings, setSettings] = useState<ThemeSettings>(DEFAULT_THEME)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -163,6 +165,10 @@ export function ThemeSettings() {
     try {
       await workspaceApi.updateThemeSettings(settings)
       localStorage.setItem("theme-settings", JSON.stringify(settings))
+
+      // Update query cache instantly and invalidate for background refetch
+      queryClient.setQueryData(["theme-settings"], { success: true, themeSettings: settings })
+      queryClient.invalidateQueries({ queryKey: ["theme-settings"] })
 
       // Apply theme immediately
       applyTheme(settings)
@@ -225,26 +231,30 @@ export function ThemeSettings() {
     return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`
   }
 
-  function handleLogoUpload(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleLogoUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
 
     try {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const dataUrl = reader.result as string
-        setSettings((prev) => ({ ...prev, companyLogo: dataUrl }))
-        setLogoPreview(dataUrl)
-
-        // Auto-extract colors if enabled
-        if (settings.autoApplyFromLogo) {
-          extractColorsFromLogo(dataUrl)
-        }
+      setSaving(true)
+      
+      // Auto-extract colors locally to avoid CORS canvas taint
+      if (settings.autoApplyFromLogo) {
+        const localUrl = URL.createObjectURL(file)
+        extractColorsFromLogo(localUrl)
       }
-      reader.readAsDataURL(file)
+
+      // Upload to R2 via API
+      const res = await workspaceApi.uploadImage(file)
+      if (res.success && res.url) {
+        setSettings((prev) => ({ ...prev, companyLogo: res.url }))
+        setLogoPreview(res.url)
+      }
     } catch (error) {
       console.error("Error uploading logo:", error)
       alert("Failed to upload logo. Please try again.")
+    } finally {
+      setSaving(false)
     }
   }
 

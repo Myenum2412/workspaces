@@ -2,21 +2,23 @@
   "changes_this_session": [],
   "cwd": "/home/j0k3r/Desktop/workspaces",
   "duration_minutes": 0,
-  "ended_at": "2026-05-31T14:00:00Z",
+  "ended_at": "2026-06-01T09:26:23Z",
   "event_seq": 0,
   "fork_count": 0,
   "git": {
     "branch": "main",
-    "last_commit": "40f589f",
+    "last_commit": "aa3a80f",
     "uncommitted_changes": 0
   },
   "harness_mem": {
     "healthy": true,
-    "last_checked": "2026-05-31T13:59:49Z",
+    "last_checked": "2026-06-01T09:26:15Z",
     "last_error": ""
   },
   "intent": "literal",
   "last_event_id": "",
+  "last_message_hash": "fcbd03436fac159f",
+  "last_message_length": 42,
   "memory_logged": true,
   "orchestration": {
     "max_state_retries": 3,
@@ -33,10 +35,10 @@
   },
   "project_name": "workspaces",
   "prompt_seq": 1,
-  "resume_token": "resume-1780235989652447569",
-  "session_id": "session-1780235989652441427",
-  "started_at": "2026-05-31T13:59:49Z",
+  "resume_token": "resume-1780305975902577250",
+  "session_id": "session-1780305975902574265",
+  "started_at": "2026-06-01T09:26:15Z",
   "state": "stopped",
   "state_version": 1,
-  "updated_at": "2026-05-31T13:59:49Z"
+  "updated_at": "2026-06-01T09:26:15Z"
 }

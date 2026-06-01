@@ -56,7 +56,7 @@ export async function sendSignupWelcomeEmail(params: SignupWelcomeEmailParams) {
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] SIGNUP WELCOME → ${to} | name: ${name} | password: ${password} | login: ${loginUrl}`);
+    console.log(`[Email] SIGNUP WELCOME → ${to} | name: ${name} | login: ${loginUrl}`);
     return;
   }
 
@@ -80,7 +80,7 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] FORGOT PASSWORD → ${to} | otp: ${otp} | reset: ${resetUrl}`);
+    console.log(`[Email] FORGOT PASSWORD → ${to} | reset: ${resetUrl}`);
     return;
   }
 
@@ -98,7 +98,7 @@ export async function sendVerificationEmail(params: ForgotPasswordEmailParams) {
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] EMAIL VERIFICATION → ${to} | otp: ${otp} | reset: ${resetUrl}`);
+    console.log(`[Email] EMAIL VERIFICATION → ${to} | reset: ${resetUrl}`);
     return;
   }
 

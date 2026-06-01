@@ -2,7 +2,7 @@
 
 import { useEffect, useState, createContext, useContext, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { api, clearToken, getToken } from "@/lib/api/client";
+import { api, authApi } from "@/lib/api/client";
 import { OrgSidebar } from "./org-sidebar";
 import { toast } from "sonner";
 import { LogOut, Loader2 } from "lucide-react";
@@ -71,13 +71,9 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      const token = getToken();
-      if (token) {
-        await api.post("/api/auth/logout", { refreshToken: "" });
-      }
+      await authApi.logout();
     } catch { /* ignore */ }
 
-    clearToken();
     setSession(null);
     toast.success("Signed out");
     router.push("/login");

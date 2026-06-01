@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { authenticate, AuthRequest } from "../middleware/auth.js";
+import { authenticate, AuthRequest, requireRole } from "../middleware/auth.js";
 import { Client, OrgMember } from "../models/index.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { NotFoundError } from "../core/errors/AppError.js";
+import { validateBody } from "../middleware/validate.js";
+import { createClientSchema, updateClientSchema } from "../validators/entity.js";
 
 const router = Router();
 router.use(authenticate);
@@ -25,22 +27,33 @@ router.get("/:id", catchAsync(async (req, res) => {
   res.json({ success: true, client });
 }));
 
-router.post("/", catchAsync(async (req, res) => {
-  const oid = await orgId((req as AuthRequest).user!.userId);
-  const client = await Client.create({ ...req.body, organizationId: oid ?? "" });
-  res.status(201).json({ success: true, client });
-}));
+router.post("/",
+  requireRole("admin", "owner", "operator"),
+  validateBody(createClientSchema),
+  catchAsync(async (req, res) => {
+    const oid = await orgId((req as AuthRequest).user!.userId);
+    const client = await Client.create({ ...req.body, organizationId: oid ?? "" });
+    res.status(201).json({ success: true, client });
+  })
+);
 
-router.put("/:id", catchAsync(async (req, res) => {
-  const client = await Client.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
-  if (!client) throw new NotFoundError("Client");
-  res.json({ success: true, client });
-}));
+router.put("/:id",
+  requireRole("admin", "owner", "operator"),
+  validateBody(updateClientSchema),
+  catchAsync(async (req, res) => {
+    const client = await Client.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
+    if (!client) throw new NotFoundError("Client");
+    res.json({ success: true, client });
+  })
+);
 
-router.delete("/:id", catchAsync(async (req, res) => {
-  const client = await Client.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
-  if (!client) throw new NotFoundError("Client");
-  res.json({ success: true });
-}));
+router.delete("/:id",
+  requireRole("admin", "owner"),
+  catchAsync(async (req, res) => {
+    const client = await Client.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
+    if (!client) throw new NotFoundError("Client");
+    res.json({ success: true });
+  })
+);
 
 export default router;

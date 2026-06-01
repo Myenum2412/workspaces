@@ -13,10 +13,9 @@ export default function StaffDashboardPage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("auth_token")
       try {
         const res = await fetch(`${API_BASE_URL}/api/profile/me`, {
-          headers: { Authorization: `Bearer ${token}` }
+          credentials: "include",
         })
         if (res.ok) {
           const data = await res.json()

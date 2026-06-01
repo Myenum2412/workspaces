@@ -1,0 +1,36 @@
+
+> backend@1.0.0 build
+> tsc
+
+src/middleware/security.ts(68,5): error TS2322: Type 'Response<any, Record<string, any>>' is not assignable to type 'void'.
+src/routes/campaigns.ts(4,10): error TS2305: Module '"../models/index.js"' has no exported member 'Campaign'.
+src/routes/campaigns.ts(4,20): error TS2305: Module '"../models/index.js"' has no exported member 'MessageTemplate'.
+src/routes/campaigns.ts(4,37): error TS2305: Module '"../models/index.js"' has no exported member 'Contact'.
+src/routes/contacts.ts(4,10): error TS2305: Module '"../models/index.js"' has no exported member 'Contact'.
+src/routes/templates.ts(4,10): error TS2305: Module '"../models/index.js"' has no exported member 'MessageTemplate'.
+src/routes/webhooks.ts(4,10): error TS2305: Module '"../models/index.js"' has no exported member 'Webhook'.
+src/server.ts(28,28): error TS2307: Cannot find module './routes/whatsapp.js' or its corresponding type declarations.
+src/server.ts(45,33): error TS2307: Cannot find module './routes/openwa-sessions.js' or its corresponding type declarations.
+src/server.ts(46,33): error TS2307: Cannot find module './routes/openwa-messages.js' or its corresponding type declarations.
+src/server.ts(47,33): error TS2307: Cannot find module './routes/openwa-webhooks.js' or its corresponding type declarations.
+src/server.ts(48,33): error TS2307: Cannot find module './routes/openwa-contacts.js' or its corresponding type declarations.
+src/server.ts(49,31): error TS2307: Cannot find module './routes/openwa-groups.js' or its corresponding type declarations.
+src/server.ts(50,34): error TS2307: Cannot find module './routes/openwa-campaigns.js' or its corresponding type declarations.
+src/server.ts(51,36): error TS2307: Cannot find module './routes/openwa-automation.js' or its corresponding type declarations.
+src/server.ts(52,31): error TS2307: Cannot find module './routes/openwa-stats.js' or its corresponding type declarations.
+src/server.ts(53,31): error TS2307: Cannot find module './routes/openwa-labels.js' or its corresponding type declarations.
+src/server.ts(54,30): error TS2307: Cannot find module './routes/openwa-chats.js' or its corresponding type declarations.
+src/server.ts(55,34): error TS2307: Cannot find module './routes/openwa-templates.js' or its corresponding type declarations.
+src/services/search.ts(7,3): error TS2305: Module '"../models/index.js"' has no exported member 'Contact'.
+src/services/search.ts(7,12): error TS2305: Module '"../models/index.js"' has no exported member 'Group'.
+src/services/search.ts(7,19): error TS2305: Module '"../models/index.js"' has no exported member 'Message'.
+src/services/search.ts(7,28): error TS2305: Module '"../models/index.js"' has no exported member 'Campaign'.
+src/services/search.ts(7,38): error TS2305: Module '"../models/index.js"' has no exported member 'MessageTemplate'.
+src/services/search.ts(7,55): error TS2305: Module '"../models/index.js"' has no exported member 'Label'.
+src/services/search.ts(8,3): error TS2305: Module '"../models/index.js"' has no exported member 'Session'.
+src/services/search.ts(8,12): error TS2305: Module '"../models/index.js"' has no exported member 'WhatsappChat'.
+src/validators/entity.ts(13,17): error TS2554: Expected 2-3 arguments, but got 1.
+src/validators/entity.ts(14,20): error TS2554: Expected 2-3 arguments, but got 1.
+src/validators/entity.ts(169,21): error TS2554: Expected 2-3 arguments, but got 1.
+src/validators/entity.ts(211,14): error TS2554: Expected 2-3 arguments, but got 1.
+src/validators/entity.ts(220,14): error TS2554: Expected 2-3 arguments, but got 1.

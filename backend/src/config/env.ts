@@ -37,6 +37,10 @@ const envSchema = z.object({
 
   // Super-admin (comma-separated emails)
   SUPER_ADMIN_EMAILS: z.string().default(""),
+
+  // Cookie settings
+  COOKIE_SECRET: z.string().optional(),
+  COOKIE_SECURE: z.coerce.boolean().default(false),
 });
 
 // Parse and validate

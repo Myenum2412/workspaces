@@ -128,10 +128,8 @@ export default function ProfilePage() {
   const { data: sessionData } = useQuery({
     queryKey: ["profile-session"],
     queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return null;
       const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
       if (!res.ok) return null;
       return res.json();
@@ -189,11 +187,9 @@ export default function ProfilePage() {
   const { data: statusHistory } = useQuery({
     queryKey: ["status-history", statusTab],
     queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return null;
       const days = statusTab === "today" ? 1 : 7;
       const res = await fetch(`${API_BASE_URL}/api/auth/status/history?days=${days}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
       if (!res.ok) return null;
       return res.json();
@@ -449,7 +445,10 @@ export default function ProfilePage() {
                   <div className="relative group">
                     {avatarUrl || profile.avatarUrl ? (
                       <Avatar className="h-16 w-16 rounded-xl ring-1 ring-border">
-                        <AvatarImage src={`${API_BASE_URL}${avatarUrl || profile.avatarUrl}`} alt={profile.firstName} />
+                        <AvatarImage 
+                          src={(avatarUrl || profile.avatarUrl).startsWith("http") ? (avatarUrl || profile.avatarUrl) : `${API_BASE_URL}${avatarUrl || profile.avatarUrl}`} 
+                          alt={profile.firstName} 
+                        />
                         <AvatarFallback className="rounded-xl bg-emerald-100 text-emerald-800">
                           {initials}
                         </AvatarFallback>

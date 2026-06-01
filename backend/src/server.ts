@@ -5,6 +5,7 @@ import { env } from "./config/env.js";
 
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import passport from "passport";
 import path from "path";
 import fs from "fs";
@@ -12,9 +13,7 @@ import compression from "compression";
 import { createServer } from "http";
 import { connectDB } from "./config/connection.js";
 import { initSocketServer } from "./ws/server.js";
-import { whatsappService } from "./services/whatsapp.js";
-import { openwaSessions } from "./services/openwa-session.js";
-import { securityHeaders, sanitizeInput, mongoSanitizeMiddleware } from "./middleware/security.js";
+import { securityHeaders, sanitizeInput, mongoSanitizeMiddleware, validateCsrf } from "./middleware/security.js";
 import { requestIdMiddleware } from "./core/middleware/requestId.js";
 import { globalErrorHandler } from "./core/errors/handler.js";
 import { apiResponse } from "./core/utils/apiResponse.js";
@@ -24,11 +23,6 @@ import authRoutes from "./routes/auth.js";
 import inviteRoutes from "./routes/invites.js";
 import setupRoutes from "./routes/setup.js";
 import uploadRoutes from "./routes/upload.js";
-import whatsappRoutes from "./routes/whatsapp.js";
-import contactRoutes from "./routes/contacts.js";
-import webhookRoutes from "./routes/webhooks.js";
-import templateRoutes from "./routes/templates.js";
-import campaignRoutesOld from "./routes/campaigns.js";
 import { auditMiddleware } from "./middleware/audit.js";
 import profileRoutes from "./routes/profile.js";
 import workspaceRoutes from "./routes/workspace.js";
@@ -40,19 +34,6 @@ import teamRoutes from "./routes/team-routes.js";
 import clientRoutes from "./routes/client-routes.js";
 import branchRoutes from "./routes/branch-routes.js";
 import orgRoutes from "./routes/org-routes.js";
-
-// OpenWA migrated routes
-import openwaSessionRoutes from "./routes/openwa-sessions.js";
-import openwaMessageRoutes from "./routes/openwa-messages.js";
-import openwaWebhookRoutes from "./routes/openwa-webhooks.js";
-import openwaContactRoutes from "./routes/openwa-contacts.js";
-import openwaGroupRoutes from "./routes/openwa-groups.js";
-import openwaCampaignRoutes from "./routes/openwa-campaigns.js";
-import openwaAutomationRoutes from "./routes/openwa-automation.js";
-import openwaStatsRoutes from "./routes/openwa-stats.js";
-import openwaLabelRoutes from "./routes/openwa-labels.js";
-import openwaChatRoutes from "./routes/openwa-chats.js";
-import openwaTemplateRoutes from "./routes/openwa-templates.js";
 
 // Admin
 import adminRoutes from "./routes/admin.js";
@@ -79,7 +60,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Request-ID", "X-CSRF-Token"],
   exposedHeaders: ["X-Request-ID"],
   maxAge: 86400,
 }));
@@ -87,8 +68,10 @@ app.use(cors({
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(cookieParser());
 app.use(passport.initialize());
 app.use(sanitizeInput);
+app.use(validateCsrf);
 
 // ── Rate limiting ──────────────────────────────────────────
 import rateLimit from "express-rate-limit";
@@ -105,7 +88,14 @@ const apiLimiter = rateLimit({
   message: { success: false, error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down." } },
 });
 
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 30,
+  standardHeaders: true, legacyHeaders: false,
+  message: { success: false, error: { code: "RATE_LIMITED", message: "Too many upload attempts. Try again in 15 minutes." } },
+});
+
 app.use("/api/auth/", authLimiter);
+app.use("/api/upload/", uploadLimiter);
 app.use("/api/", apiLimiter);
 
 // ── Audit logging ──────────────────────────────────────────
@@ -131,30 +121,11 @@ app.use("/api/branches", branchRoutes);
 // Org routes: /api/organizations, /api/members, /api/invitations, /api/master-data
 app.use("/api", orgRoutes);
 
-// WhatsApp
-app.use("/api/whatsapp", whatsappRoutes);
-app.use("/api/contacts", contactRoutes);
-app.use("/api/webhooks", webhookRoutes);
-app.use("/api/templates", templateRoutes);
-app.use("/api/campaigns", campaignRoutesOld);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/setup", setupRoutes);
 
 // Admin
 app.use("/api/admin", adminRoutes);
-
-// OpenWA
-app.use("/api/openwa/sessions", openwaSessionRoutes);
-app.use("/api/openwa", openwaMessageRoutes);
-app.use("/api/openwa", openwaWebhookRoutes);
-app.use("/api/openwa", openwaContactRoutes);
-app.use("/api/openwa", openwaGroupRoutes);
-app.use("/api/openwa/campaigns", openwaCampaignRoutes);
-app.use("/api/openwa/automation", openwaAutomationRoutes);
-app.use("/api/openwa/stats", openwaStatsRoutes);
-app.use("/api/openwa", openwaLabelRoutes);
-app.use("/api/openwa/chats", openwaChatRoutes);
-app.use("/api/openwa/templates", openwaTemplateRoutes);
 
 // ── Static files ───────────────────────────────────────────
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -174,8 +145,6 @@ app.get("/api/health", async (_req, res) => {
 const httpServer = createServer(app);
 
 const io = initSocketServer(httpServer);
-whatsappService.setSocketIO(io);
-openwaSessions.setSocketIO(io);
 
 const uploadDirs = ["uploads", "uploads/avatars", "uploads/files", "uploads/temp"];
 for (const dir of uploadDirs) {
@@ -186,8 +155,7 @@ for (const dir of uploadDirs) {
 httpServer.listen(env.PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${env.PORT} [${env.NODE_ENV}]`);
   connectDB()
-    .then(() => { console.log("✅ MongoDB connected"); return openwaSessions.onStartup(); })
-    .then(() => console.log("✅ OpenWA session service initialized"))
+    .then(() => { console.log("✅ MongoDB connected"); })
     .catch((err) => { console.error("❌ Startup failed:", err); process.exit(1); });
 });
 
@@ -198,7 +166,6 @@ async function shutdown(signal: string) {
   shuttingDown = true;
   console.log(`\nReceived ${signal}. Shutting down gracefully...`);
   httpServer.close(() => console.log("HTTP server closed."));
-  await openwaSessions.onShutdown();
   try {
     const mongoose = await import("mongoose");
     await mongoose.disconnect();

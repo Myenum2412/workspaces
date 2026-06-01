@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { authenticate, AuthRequest } from "../middleware/auth.js";
+import { authenticate, AuthRequest, requireRole } from "../middleware/auth.js";
 import { Team, OrgMember } from "../models/index.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { NotFoundError } from "../core/errors/AppError.js";
+import { validateBody } from "../middleware/validate.js";
+import { createTeamSchema, updateTeamSchema } from "../validators/entity.js";
 
 const router = Router();
 router.use(authenticate);
@@ -25,22 +27,33 @@ router.get("/:id", catchAsync(async (req, res) => {
   res.json({ success: true, team });
 }));
 
-router.post("/", catchAsync(async (req, res) => {
-  const oid = await orgId((req as AuthRequest).user!.userId);
-  const team = await Team.create({ ...req.body, organizationId: oid ?? "" });
-  res.status(201).json({ success: true, team });
-}));
+router.post("/",
+  requireRole("admin", "owner", "operator"),
+  validateBody(createTeamSchema),
+  catchAsync(async (req, res) => {
+    const oid = await orgId((req as AuthRequest).user!.userId);
+    const team = await Team.create({ ...req.body, organizationId: oid ?? "" });
+    res.status(201).json({ success: true, team });
+  })
+);
 
-router.put("/:id", catchAsync(async (req, res) => {
-  const team = await Team.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
-  if (!team) throw new NotFoundError("Team");
-  res.json({ success: true, team });
-}));
+router.put("/:id",
+  requireRole("admin", "owner", "operator"),
+  validateBody(updateTeamSchema),
+  catchAsync(async (req, res) => {
+    const team = await Team.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
+    if (!team) throw new NotFoundError("Team");
+    res.json({ success: true, team });
+  })
+);
 
-router.delete("/:id", catchAsync(async (req, res) => {
-  const team = await Team.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
-  if (!team) throw new NotFoundError("Team");
-  res.json({ success: true });
-}));
+router.delete("/:id",
+  requireRole("admin", "owner"),
+  catchAsync(async (req, res) => {
+    const team = await Team.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
+    if (!team) throw new NotFoundError("Team");
+    res.json({ success: true });
+  })
+);
 
 export default router;

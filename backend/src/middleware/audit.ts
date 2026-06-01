@@ -3,18 +3,13 @@
  * Auto-logs API actions to MongoDB audit_logs collection.
  */
 import { Request, Response, NextFunction } from "express";
-import { AuditLog } from "../models/index.js";
+import { AuditLog } from "../models/audit-log.js";
 import { AuthRequest } from "./auth.js";
 
 const AUDIT_ACTIONS: Record<string, string> = {
   "POST /api/auth/login": "user_login",
   "POST /api/auth/register": "user_register",
   "POST /api/auth/logout": "user_logout",
-  "POST /api/whatsapp/connect": "wa_connect",
-  "POST /api/whatsapp/disconnect": "wa_disconnect",
-  "POST /api/whatsapp/send": "message_sent",
-  "POST /api/bulk": "bulk_job_created",
-  "POST /api/campaigns/:id/execute": "campaign_started",
 };
 
 function getAction(method: string, path: string): string | null {

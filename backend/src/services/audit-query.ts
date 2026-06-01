@@ -2,7 +2,7 @@
  * Audit log and activity log query service for admin panels.
  */
 import { connectDB } from "../config/connection.js";
-import { AuditLog, ActivityLog } from "../models/openwa.js";
+import { AuditLog, ActivityLog } from "../models/audit-log.js";
 
 export const AuditQueryService = {
   async getAuditLogs(params: {

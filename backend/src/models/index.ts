@@ -26,46 +26,6 @@ export {
   IUserStatusHistory,
 } from "./index-existing";
 
-// Re-export WhatsApp models
-export {
-  WhatsappInstance,
-  IWhatsappInstance,
-  WhatsappMessage,
-  IWhatsappMessage,
-  WhatsappChat,
-  IWhatsappChat,
-} from "./whatsapp";
-
-// Re-export OpenWA migrated models
-export {
-  Session,
-  ISession,
-  Message,
-  IMessage,
-  Webhook,
-  IWebhook,
-  Contact,
-  IContact,
-  Group,
-  IGroup,
-  ApiKey,
-  IApiKey,
-  AuditLog,
-  IAuditLog,
-  BatchJob,
-  IBatchJob,
-  MessageTemplate,
-  IMessageTemplate,
-  Campaign,
-  ICampaign,
-  AutomationRule,
-  IAutomationRule,
-  Label,
-  ILabel,
-  ActivityLog,
-  IActivityLog,
-} from "./openwa";
-
 // Re-export profile management models
 export {
   ProfileHistory,
@@ -82,3 +42,12 @@ export {
   Staff,
   IStaff
 } from "./staff";
+
+// Re-export audit models
+export {
+  AuditLog,
+  IAuditLog,
+  ActivityLog,
+  IActivityLog,
+} from "./audit-log";
+

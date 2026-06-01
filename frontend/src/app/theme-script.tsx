@@ -12,8 +12,12 @@ export default function ThemeScript() {
         if (stored) apply(JSON.parse(stored));
       } catch {}
 
-      // 2. Fetch the latest from backend
+      // 2. Fetch the latest from backend (only if logged in)
       try {
+        // Check if user is authenticated via cookie
+        const hasCookie = document.cookie.includes("access_token=");
+        if (!hasCookie) return;
+        
         const res = await workspaceApi.getThemeSettings();
         if (res.success && res.themeSettings && Object.keys(res.themeSettings).length > 0) {
           localStorage.setItem("theme-settings", JSON.stringify(res.themeSettings));

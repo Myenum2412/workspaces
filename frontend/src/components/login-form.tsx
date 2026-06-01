@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 import { API_BASE_URL } from "@/lib/api/config"
+import { authApi } from "@/lib/api/client"
 
 export function LoginForm({
   className,
@@ -37,12 +38,13 @@ export function LoginForm({
     if (params.get("reset") === "success") {
       setResetMessage("Password reset successfully! Sign in with your new password.")
     }
-    const token = params.get("token")
-    if (token) {
-      localStorage.setItem("auth_token", token)
-      router.push("/workspace")
-      router.refresh()
+    if (params.get("reason") === "session_expired") {
+      setErrorMessage("Session expired. Please sign in again.")
     }
+    // Clear any legacy localStorage token
+    try {
+      localStorage.removeItem("auth_token")
+    } catch { /* ignore */ }
   }, [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -51,26 +53,38 @@ export function LoginForm({
     setErrorMessage("")
 
     try {
+      // Fetch CSRF token first
+      await fetch(`${API_BASE_URL}/api/auth/csrf-token`, { credentials: "include" })
+      const csrfMatch = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
+      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : ""
+
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken 
+        },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       })
       const json = await res.json()
 
       if (!res.ok) {
-        setErrorMessage(json.error || "Invalid email or password")
+        setErrorMessage(json.error?.message || "Invalid email or password")
         return
       }
 
-      if (json.token) {
-        localStorage.setItem("auth_token", json.token)
-        document.cookie = `auth_token=${json.token}; path=/; max-age=86400; SameSite=Strict`
-      }
+      // Cookies set by server — no localStorage needed
 
-      if (json.user?.role === "staff") {
-        router.push("/staff/dashboard")
-      } else {
+      // Fetch user to determine redirect
+      try {
+        const me = await authApi.getMe()
+        if (me.user?.role === "staff") {
+          router.push("/staff/dashboard")
+        } else {
+          router.push("/workspace")
+        }
+      } catch {
         router.push("/workspace")
       }
       router.refresh()
@@ -111,7 +125,6 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
-      {/* Sign In */}
       <div className="flex flex-col items-center gap-1 text-center">
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm text-balance text-muted-foreground">
@@ -136,7 +149,7 @@ export function LoginForm({
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder=""
             required
             className="bg-background"
             value={email}

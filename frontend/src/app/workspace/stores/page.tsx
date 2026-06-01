@@ -1,13 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   SearchIcon, X, CheckCircle2, Plus,
-  MessageCircle, QrCode, Shield, Zap, Users, Globe, Star,
-  Check, Loader2, ExternalLink, StoreIcon, ArrowRight,
+  Shield, Zap, Users, Globe, Star,
+  Check, Loader2, ExternalLink, StoreIcon, ArrowRight, MessageCircle, QrCode,
 } from "lucide-react";
-import WhatsappIcon from "@/components/icons/WhatsappIcon";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +21,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-
-import { whatsappService, type WhatsappInstance } from "@/lib/whatsapp/service";
 
 // ── App Catalog ─────────────────────────────────────────────
 
@@ -45,27 +41,17 @@ interface StoreApp {
 
 const APP_CATALOG: StoreApp[] = [
   {
-    id: "whatsapp-business",
-    name: "WhatsApp Business",
-    description: "Connect your WhatsApp Business account to communicate with customers directly from your workspace.",
-    longDescription:
-      "The WhatsApp Business integration allows you to manage customer conversations, send messages, receive replies, and track all communication within your workspace. Supports QR code connection, real-time messaging, chat history, and multi-device support.",
-    icon: <WhatsappIcon size={32} />,
-    category: "Communication",
-    tags: ["WhatsApp", "Messaging", "Customer Support", "Real-time"],
-    rating: 4.8,
-    installs: "10K+",
-    features: [
-      "QR code connection — scan to link your WhatsApp",
-      "Real-time messaging with customers",
-      "Chat history & message search",
-      "Connection status monitoring",
-      "Auto-reconnect on disconnect",
-      "Workspace-isolated sessions",
-      "Role-based access (owner/admin/staff)",
-      "Message delivery status tracking",
-    ],
-    color: "emerald",
+    id: "placeholder",
+    name: "Coming Soon",
+    description: "More apps coming to the store soon.",
+    longDescription: "Stay tuned for upcoming integrations.",
+    icon: <StoreIcon size={32} />,
+    category: "Productivity",
+    tags: ["Coming Soon"],
+    rating: 0,
+    installs: "0",
+    features: [],
+    color: "blue",
   },
 ];
 
@@ -227,17 +213,9 @@ function AppDetailDialog({
           <Separator />
 
           <div className="flex items-center gap-3">
-            {installed ? (
-              <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2" asChild>
-                <a href="/workspace/whatsapp">
-                  <MessageCircle className="h-4 w-4" /> Open WhatsApp
-                </a>
-              </Button>
-            ) : (
-              <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2" onClick={onInstall}>
-                <Plus className="h-4 w-4" /> Install WhatsApp
-              </Button>
-            )}
+            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2" onClick={onInstall}>
+              <Plus className="h-4 w-4" /> Install
+            </Button>
             <Button variant="outline" onClick={onClose}>Close</Button>
           </div>
         </div>
@@ -249,19 +227,10 @@ function AppDetailDialog({
 // ── Main Page ───────────────────────────────────────────────
 
 export default function StoresPage() {
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("All");
   const [selectedApp, setSelectedApp] = React.useState<StoreApp | null>(null);
   const [showDetail, setShowDetail] = React.useState(false);
-
-  const { data: waInstances = [] } = useQuery({
-    queryKey: ["whatsapp-instances"],
-    queryFn: () => whatsappService.getInstances(),
-    refetchInterval: 15000,
-  });
-
-  const installedInstance = (waInstances[0] || null) as WhatsappInstance | null;
 
   const filteredApps = APP_CATALOG.filter((app) => {
     const matchesSearch =
@@ -273,26 +242,12 @@ export default function StoresPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleInstall = async (appId: string) => {
-    if (appId === "whatsapp-business") {
-      if (installedInstance) {
-        toast.error("WhatsApp is already installed");
-        return;
-      }
-      try {
-        await whatsappService.createInstance("WhatsApp");
-        queryClient.invalidateQueries({ queryKey: ["whatsapp-instances"] });
-        toast.success("WhatsApp installed successfully!");
-      } catch (error: any) {
-        toast.error(error.message || "Failed to install");
-      }
-    }
+  const handleInstall = async (_appId: string) => {
+    toast.info("App installation coming soon");
   };
 
-  const handleOpenApp = (app: StoreApp) => {
-    if (app.id === "whatsapp-business") {
-      window.location.href = "/workspace/whatsapp";
-    }
+  const handleOpenApp = (_app: StoreApp) => {
+    // placeholder
   };
 
   return (
@@ -358,7 +313,7 @@ export default function StoresPage() {
               <StoreAppCard
                 key={app.id}
                 app={app}
-                installed={app.id === "whatsapp-business" && !!installedInstance}
+                installed={app.id === "placeholder"}
                 onInstall={() => handleInstall(app.id)}
                 onOpen={() => handleOpenApp(app)}
               />
@@ -373,7 +328,7 @@ export default function StoresPage() {
           app={selectedApp}
           open={showDetail}
           onClose={() => { setShowDetail(false); setSelectedApp(null); }}
-          installed={selectedApp.id === "whatsapp-business" && !!installedInstance}
+          installed={selectedApp.id === "placeholder"}
           onInstall={() => {
             handleInstall(selectedApp.id);
             setShowDetail(false);

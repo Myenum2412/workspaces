@@ -84,13 +84,10 @@ export function StaffTablePage() {
     queryFn: async () => {
       const emails = data.map((s: Staff) => s.email).filter(Boolean)
       if (emails.length === 0) return {}
-      const token = localStorage.getItem("auth_token")
       const res = await fetch(`${API_BASE_URL}/api/auth/verifications`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ emails })
       })
       if (!res.ok) return {}
@@ -105,13 +102,10 @@ export function StaffTablePage() {
     queryFn: async () => {
       const userIds = data.map((s: Staff) => s.userId).filter(Boolean)
       if (userIds.length === 0) return {}
-      const token = localStorage.getItem("auth_token")
       const res = await fetch(`${API_BASE_URL}/api/auth/statuses`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ userIds })
       })
       if (!res.ok) return {}
@@ -126,11 +120,11 @@ export function StaffTablePage() {
     
     async function initSocket() {
       try {
-        const token = localStorage.getItem("auth_token")
-        if (!token) return
-        
+        const hasCookie = document.cookie.includes("access_token=")
+        if (!hasCookie) return
+
         const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         })
         if (!res.ok) return
         

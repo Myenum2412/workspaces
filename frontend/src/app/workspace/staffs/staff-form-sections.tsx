@@ -64,12 +64,9 @@ export function ProfileImageUpload({
         const formData = new FormData()
         formData.append("file", file)
         
-        const token = localStorage.getItem("auth_token")
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/api/upload/image`, {
           method: "POST",
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
+          credentials: "include",
           body: formData
         })
         

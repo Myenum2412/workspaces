@@ -4,8 +4,6 @@
 import { connectDB } from "../config/connection.js";
 import {
   UserProfile, Organization, Client, Task, Team, Branch,
-  Contact, Group, Message, Campaign, MessageTemplate, Label,
-  Session, WhatsappChat,
 } from "../models/index.js";
 
 interface SearchResult {
@@ -31,76 +29,6 @@ export async function globalSearch(
   const results: SearchResult[] = [];
   const searchable: Array<{ type: string; fn: () => Promise<SearchResult[]> }> = [
     {
-      type: "contact",
-      fn: async () => {
-        const docs = await Contact.find({ organizationId, $or: [{ name: regex }, { phone: regex }, { pushName: regex }] }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "contact",
-          entityId: d._id,
-          title: d.name || d.pushName || d.phone || "Unknown",
-          subtitle: d.phone,
-          matchedField: d.name?.toLowerCase().includes(q.toLowerCase()) ? "name" : "phone",
-          score: d.name?.toLowerCase() === q.toLowerCase() ? 10 : 5,
-        }));
-      },
-    },
-    {
-      type: "chat",
-      fn: async () => {
-        const docs = await WhatsappChat.find({ organizationId, name: regex }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "chat",
-          entityId: d._id,
-          title: d.name || d.jid,
-          subtitle: d.jid,
-          matchedField: "name",
-          score: 8,
-        }));
-      },
-    },
-    {
-      type: "message",
-      fn: async () => {
-        const docs = await Message.find({ organizationId, body: regex }).sort({ createdAt: -1 }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "message",
-          entityId: d._id,
-          title: (d.body || "").substring(0, 100),
-          subtitle: d.chatId,
-          matchedField: "body",
-          score: 3,
-        }));
-      },
-    },
-    {
-      type: "campaign",
-      fn: async () => {
-        const docs = await Campaign.find({ organizationId, name: regex }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "campaign",
-          entityId: d._id,
-          title: d.name,
-          subtitle: d.status,
-          matchedField: "name",
-          score: 9,
-        }));
-      },
-    },
-    {
-      type: "template",
-      fn: async () => {
-        const docs = await MessageTemplate.find({ organizationId, $or: [{ name: regex }, { body: regex }] }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "template",
-          entityId: d._id,
-          title: d.name,
-          subtitle: d.category,
-          matchedField: "name",
-          score: 7,
-        }));
-      },
-    },
-    {
       type: "user",
       fn: async () => {
         const docs = await UserProfile.find({ organizationId, $or: [{ firstName: regex }, { lastName: regex }, { email: regex }] }).limit(limit).lean();
@@ -111,34 +39,6 @@ export async function globalSearch(
           subtitle: d.email,
           matchedField: "name",
           score: 6,
-        }));
-      },
-    },
-    {
-      type: "group",
-      fn: async () => {
-        const docs = await Group.find({ organizationId, name: regex }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "group",
-          entityId: d._id,
-          title: d.name,
-          subtitle: `${d.participants?.length || 0} participants`,
-          matchedField: "name",
-          score: 8,
-        }));
-      },
-    },
-    {
-      type: "session",
-      fn: async () => {
-        const docs = await Session.find({ organizationId, name: regex }).limit(limit).lean();
-        return docs.map((d: any) => ({
-          entityType: "session",
-          entityId: d._id,
-          title: d.name,
-          subtitle: d.status,
-          matchedField: "name",
-          score: 7,
         }));
       },
     },

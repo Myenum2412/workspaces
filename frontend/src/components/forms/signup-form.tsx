@@ -16,10 +16,12 @@ const COMPANY_RANGES = ["1-10", "11-50", "51-200", "201-1000", "1000+"]
 
 interface RegisterResponse {
   success: boolean
-  token?: string
-  password?: string
-  user?: any
-  organization?: any
+  data?: {
+    accessToken?: string
+    password?: string
+    user?: any
+    organization?: any
+  }
 }
 
 export function SignupForm() {
@@ -34,21 +36,18 @@ export function SignupForm() {
   const [countdown, setCountdown] = useState(10)
   const [registeredPassword, setRegisteredPassword] = useState("")
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
   const mutation = useMutation({
     mutationFn: async (data: { firstName: string; lastName: string; companyName: string; companyRange: string; email: string }) => {
-      return apiFetch<RegisterResponse>(`${API_BASE_URL}/api/auth/register`, {
+      return apiFetch<RegisterResponse>(`/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, category: "Other" }),
       })
     },
-    onSuccess: (data) => {
-      if (data.token) {
-        localStorage.setItem("auth_token", data.token)
-      }
-      if (data.password) {
-        setRegisteredPassword(data.password)
+    onSuccess: (res) => {
+      // Cookies set by server — no localStorage needed
+      if (res.data?.password) {
+        setRegisteredPassword(res.data.password)
       }
     },
   })
@@ -216,7 +215,7 @@ export function SignupForm() {
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder=""
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

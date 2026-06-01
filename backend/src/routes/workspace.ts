@@ -69,6 +69,8 @@ router.get("/theme-settings", async (req: Request, res: Response) => {
   }
 });
 
+import { getIO } from "../ws/server.js";
+
 // PUT /api/workspace/theme-settings
 router.put("/theme-settings", async (req: Request, res: Response) => {
   try {
@@ -88,6 +90,12 @@ router.put("/theme-settings", async (req: Request, res: Response) => {
       { $set: { themeSettings: req.body } },
       { new: true }
     );
+
+    // Emit event to all users in this organization to trigger real-time refresh
+    const io = getIO();
+    if (io) {
+      io.to(`org:${member.organizationId}`).emit("branding_updated", org?.themeSettings);
+    }
 
     res.json({ success: true, themeSettings: org?.themeSettings || {} });
   } catch (error: any) {

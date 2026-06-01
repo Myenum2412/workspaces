@@ -53,6 +53,31 @@ async function pushSlice(historyId: string, fromStatus: string, startedAt: Date,
   }
 }
 
+// ── WS Connection Rate Limiting ──────────────────────────────
+const wsConnectionCounts = new Map<string, { count: number; resetAt: number }>();
+const WS_MAX_CONNECTIONS = 10; // per IP per window
+const WS_WINDOW_MS = 60 * 1000; // 1 minute
+
+function wsRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = wsConnectionCounts.get(ip);
+  if (!record || now > record.resetAt) {
+    wsConnectionCounts.set(ip, { count: 1, resetAt: now + WS_WINDOW_MS });
+    return true;
+  }
+  if (record.count >= WS_MAX_CONNECTIONS) return false;
+  record.count++;
+  return true;
+}
+
+// Periodic cleanup
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of wsConnectionCounts) {
+    if (now > record.resetAt) wsConnectionCounts.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
 export function initSocketServer(httpServer: HTTPServer) {
   if (io) return io;
 
@@ -63,8 +88,27 @@ export function initSocketServer(httpServer: HTTPServer) {
     },
   });
 
+  // Connection rate limit middleware (before auth)
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(" ")[1];
+    const ip = socket.handshake.address || "unknown";
+    if (!wsRateLimit(ip)) {
+      console.warn(`[WS] Rate limited: ${ip}`);
+      return next(new Error("Too many connection attempts. Try again later."));
+    }
+    next();
+  });
+
+  io.use((socket, next) => {
+    // 1. Try auth.token (from socket.io auth option)
+    let token = socket.handshake.auth.token
+      || socket.handshake.headers.authorization?.split(" ")[1];
+
+    // 2. Try cookie (httpOnly access_token)
+    if (!token && socket.handshake.headers.cookie) {
+      const match = socket.handshake.headers.cookie.match(/(?:^|; )access_token=([^;]*)/);
+      if (match) token = decodeURIComponent(match[1]);
+    }
+
     if (!token) return next(new Error("No token"));
     try {
       const decoded = jwt.verify(token, env.JWT_SECRET) as any;
@@ -178,10 +222,6 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
     });
 
-    socket.on("whatsapp:subscribe", (orgId: string) => {
-      if (user?.organizationId === orgId || (user?.email && isSuperAdmin(user.email))) socket.join(`org:${orgId}`);
-    });
-    socket.on("whatsapp:unsubscribe", (orgId: string) => { socket.leave(`org:${orgId}`); });
     socket.on("subscribe", (ch: string) => { socket.join(ch); });
     socket.on("unsubscribe", (ch: string) => { socket.leave(ch); });
 

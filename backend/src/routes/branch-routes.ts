@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { authenticate, AuthRequest } from "../middleware/auth.js";
+import { authenticate, AuthRequest, requireRole } from "../middleware/auth.js";
 import { Branch, OrgMember } from "../models/index.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { NotFoundError } from "../core/errors/AppError.js";
+import { validateBody } from "../middleware/validate.js";
+import { createBranchSchema, updateBranchSchema } from "../validators/entity.js";
 
 const router = Router();
 router.use(authenticate);
@@ -25,22 +27,33 @@ router.get("/:id", catchAsync(async (req, res) => {
   res.json({ success: true, branch });
 }));
 
-router.post("/", catchAsync(async (req, res) => {
-  const oid = await orgId((req as AuthRequest).user!.userId);
-  const branch = await Branch.create({ ...req.body, organizationId: oid ?? "" });
-  res.status(201).json({ success: true, branch });
-}));
+router.post("/",
+  requireRole("admin", "owner"),
+  validateBody(createBranchSchema),
+  catchAsync(async (req, res) => {
+    const oid = await orgId((req as AuthRequest).user!.userId);
+    const branch = await Branch.create({ ...req.body, organizationId: oid ?? "" });
+    res.status(201).json({ success: true, branch });
+  })
+);
 
-router.put("/:id", catchAsync(async (req, res) => {
-  const branch = await Branch.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
-  if (!branch) throw new NotFoundError("Branch");
-  res.json({ success: true, branch });
-}));
+router.put("/:id",
+  requireRole("admin", "owner"),
+  validateBody(updateBranchSchema),
+  catchAsync(async (req, res) => {
+    const branch = await Branch.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
+    if (!branch) throw new NotFoundError("Branch");
+    res.json({ success: true, branch });
+  })
+);
 
-router.delete("/:id", catchAsync(async (req, res) => {
-  const branch = await Branch.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
-  if (!branch) throw new NotFoundError("Branch");
-  res.json({ success: true });
-}));
+router.delete("/:id",
+  requireRole("admin", "owner"),
+  catchAsync(async (req, res) => {
+    const branch = await Branch.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
+    if (!branch) throw new NotFoundError("Branch");
+    res.json({ success: true });
+  })
+);
 
 export default router;

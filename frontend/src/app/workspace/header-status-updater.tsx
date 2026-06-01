@@ -31,12 +31,11 @@ export function HeaderStatusUpdater() {
 
   // Persist status to DB via REST
   const persistStatus = React.useCallback(async (newStatus: string) => {
-    const token = localStorage.getItem("auth_token")
-    if (!token) return
     try {
       await fetch(`${API_BASE_URL}/api/auth/status`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ status: newStatus }),
       })
     } catch (err) {
@@ -48,13 +47,13 @@ export function HeaderStatusUpdater() {
     let destroyed = false
 
     async function init() {
-      const token = localStorage.getItem("auth_token")
-      if (!token || destroyed) return
+      const hasCookie = document.cookie.includes("access_token=")
+      if (!hasCookie || destroyed) return
 
       try {
         // Fetch user
         const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         })
         if (!res.ok || destroyed) return
         const data = await res.json()
@@ -63,6 +62,11 @@ export function HeaderStatusUpdater() {
         const uid = data.user.$id
         userIdRef.current = uid
 
+        // Read token from cookie for Socket.IO auth
+        const match = document.cookie.match(/(?:^|; )access_token=([^;]*)/);
+        const cookieToken = match ? decodeURIComponent(match[1]) : null;
+        if (!cookieToken || destroyed) return;
+
         // Always start as Online on fresh login — user can change manually
         const savedStatus = "Online"
         if (destroyed) return
@@ -70,7 +74,7 @@ export function HeaderStatusUpdater() {
 
         // Connect socket
         const s = io(API_BASE_URL, {
-          auth: { token },
+          auth: { token: cookieToken },
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionAttempts: 10,

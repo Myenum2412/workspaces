@@ -19,10 +19,8 @@ export default function MyTasksPage() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const token = localStorage.getItem("auth_token")
-        if (!token) return
         const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         })
         if (!res.ok) return
         const data = await res.json()

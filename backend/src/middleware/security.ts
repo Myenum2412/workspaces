@@ -1,12 +1,14 @@
 /**
  * Security middleware — helmet headers, input sanitization, RBAC.
  */
+import crypto from "crypto";
 import { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
 import { AuthRequest } from "./auth.js";
 import { isSuperAdmin } from "../config/env.js";
 import { AuthorizationError } from "../core/errors/AppError.js";
+import { env } from "../config/env.js";
 
 // ── Helmet ────────────────────────────────────────────────────
 
@@ -31,6 +33,49 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
     noSniff: true,
     xssFilter: true,
   })(_req, res, next);
+}
+
+// ── CSRF Protection ───────────────────────────────────────────
+
+const CSRF_COOKIE_NAME = "csrf_token";
+const CSRF_HEADER_NAME = "x-csrf-token";
+
+/** Set CSRF cookie (httpOnly=false so JS can read it for SPA) */
+export function setCsrfCookie(req: Request, res: Response): void {
+  const token = crypto.randomUUID();
+  res.cookie(CSRF_COOKIE_NAME, token, {
+    httpOnly: false,  // JS must read this to send back in header
+    secure: env.NODE_ENV === "production",
+    sameSite: env.NODE_ENV === "production" ? "strict" : "lax",
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    path: "/",
+  });
+  // Also set as req body for convenience
+  (req as any)._csrfToken = token;
+}
+
+/** Validate CSRF token for state-changing requests */
+export function validateCsrf(req: Request, res: Response, next: NextFunction): void {
+  // Skip for safe methods
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    return next();
+  }
+
+  const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
+  const headerToken = req.headers[CSRF_HEADER_NAME] as string | undefined;
+
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    res.status(403).json({
+      success: false,
+      error: {
+        code: "CSRF_VIOLATION",
+        message: "CSRF token missing or invalid. Include X-CSRF-Token header.",
+      },
+    });
+    return;
+  }
+
+  next();
 }
 
 // ── Input sanitization ────────────────────────────────────────

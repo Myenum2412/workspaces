@@ -1,50 +1,34 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value
-  const url = request.nextUrl.pathname
+  // Check for access_token cookie presence (httpOnly cookie set by backend)
+  const hasAccessToken = request.cookies.has("access_token");
+  const url = request.nextUrl.pathname;
 
   // 1. Unauthenticated users cannot access protected routes
-  if (!token && (url.startsWith('/workspace') || url.startsWith('/staff'))) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (!hasAccessToken && (url.startsWith("/workspace") || url.startsWith("/staff") || url.startsWith("/org-menu"))) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 2. Decode token payload (basic JWT decoding without verification for edge routing)
-  let role = 'member'
-  if (token) {
-    try {
-      const payloadBase64 = token.split('.')[1]
-      if (payloadBase64) {
-        const payload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')))
-        role = payload.role || 'member'
-      }
-    } catch (e) {
-      console.warn("Failed to decode token in middleware")
-    }
+  // 2. Redirect authenticated users away from /login
+  if (hasAccessToken && url === "/login") {
+    // Role-based redirect is handled client-side after /api/auth/me fetch
+    // Default to /workspace since server will redirect non-staff via API if needed
+    return NextResponse.redirect(new URL("/workspace", request.url));
   }
 
-  // 3. RBAC Enforcements
-  // Staff cannot access Workspace (Admin) areas
-  if (role === 'staff' && url.startsWith('/workspace')) {
-    return NextResponse.redirect(new URL('/staff/dashboard', request.url))
-  }
+  // 3. NOTE: Role-based route protection (staff vs workspace) is enforced
+  // server-side in each API route via the `authenticate` middleware on the backend.
+  // Client-side role checks are UX-only; the backend is the authority.
+  // Attempting to access /workspace as "staff" returns 403 from API.
+  // The org-menu admin check is handled client-side in org-menu/layout.tsx
+  // after fetching /api/auth/me — acceptable because backend APIs enforce
+  // actual permissions regardless of client-side routing.
 
-  // Admin/Managers can't access Staff Dashboard natively (optional: maybe they can, but let's redirect them back to workspace if they try)
-  // if (role !== 'staff' && url.startsWith('/staff/dashboard')) {
-  //   return NextResponse.redirect(new URL('/workspace', request.url))
-  // }
-
-  // 4. Redirect authenticated users away from /login
-  if (token && url === '/login') {
-    return NextResponse.redirect(
-      new URL(role === 'staff' ? '/staff/dashboard' : '/workspace', request.url)
-    )
-  }
-
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/workspace/:path*', '/staff/:path*', '/login'],
-}
+  matcher: ["/workspace/:path*", "/staff/:path*", "/org-menu/:path*", "/login"],
+};

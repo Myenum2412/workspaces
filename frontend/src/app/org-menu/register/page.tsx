@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { api, setToken } from "@/lib/api/client";
+import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 
 export default function OrgRegisterPage() {
@@ -49,7 +49,7 @@ export default function OrgRegisterPage() {
         designation: designation || undefined,
       });
 
-      if (result.accessToken) setToken(result.accessToken);
+      // Cookies set by server automatically
       toast.success("Account created! Welcome.");
       router.push("/workspace");
     } catch (error) {
@@ -105,7 +105,7 @@ export default function OrgRegisterPage() {
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input id="email" type="email" placeholder="you@company.com" className="pl-10" value={form.email} onChange={(e) => update("email", e.target.value)} required />
+                      <Input id="email" type="email" placeholder="" className="pl-10" value={form.email} onChange={(e) => update("email", e.target.value)} required />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
