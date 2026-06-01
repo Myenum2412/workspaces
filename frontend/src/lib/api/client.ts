@@ -320,3 +320,97 @@ export const workspaceApi = {
   updateShift: (id: string, data: any) => api.put<{ success: boolean; shift: any }>(`/api/workspace/shifts/${id}`, data),
   deleteShift: (id: string) => api.delete<{ success: boolean }>(`/api/workspace/shifts/${id}`),
 };
+
+// ── Branding API ────────────────────────────────────────────
+
+export interface BrandingColors {
+  primary: string;
+  primaryHover: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  accent: string;
+  accentForeground: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  border: string;
+  muted: string;
+  mutedForeground: string;
+  ring: string;
+  sidebar: string;
+  sidebarForeground: string;
+  sidebarPrimary: string;
+  sidebarPrimaryForeground: string;
+  sidebarAccent: string;
+  sidebarAccentForeground: string;
+}
+
+export interface BrandingConfig {
+  organizationId: string;
+  colors: BrandingColors;
+  darkModeColors: Partial<BrandingColors>;
+  typography: { fontFamily: string; headingFont: string; monoFont: string; baseFontSize: number };
+  logo: { url: string; width: number; height: number; darkModeUrl: string };
+  favicon: string;
+  mode: "light" | "dark" | "system";
+  presetName: string;
+  version: number;
+  updatedBy: string;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+export interface BrandingHistoryEntry {
+  _id: string;
+  organizationId: string;
+  version: number;
+  changes: Array<{ field: string; oldValue: string; newValue: string }>;
+  snapshot: Record<string, any>;
+  updatedBy: string;
+  updatedByName: string;
+  rollbackFrom: number | null;
+  createdAt: string;
+}
+
+export const brandingApi = {
+  get: () => api.get<{ success: boolean; branding: BrandingConfig; isDefault: boolean }>("/api/branding"),
+
+  update: (data: Partial<BrandingConfig>) =>
+    api.put<{ success: boolean; branding: BrandingConfig; version: number }>("/api/branding", data),
+
+  getHistory: (page = 1, limit = 20) =>
+    api.get<{
+      success: boolean;
+      history: BrandingHistoryEntry[];
+      pagination: { page: number; limit: number; total: number; pages: number };
+    }>(`/api/branding/history?page=${page}&limit=${limit}`),
+
+  rollback: (version: number) =>
+    api.post<{ success: boolean; branding: BrandingConfig; version: number }>("/api/branding/rollback", { version }),
+
+  validate: (colors: Record<string, string>) =>
+    api.post<{
+      success: boolean;
+      validation: Record<string, { valid: boolean; contrastAA: boolean; contrastAAA: boolean; ratio: number; message: string }>;
+    }>("/api/branding/validate", { colors }),
+
+  reset: () =>
+    api.post<{ success: boolean; branding: BrandingConfig; version: number }>("/api/branding/reset", {}),
+
+  uploadLogo: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_BASE_URL}/api/upload/image`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Upload failed");
+    }
+    return res.json() as Promise<{ success: boolean; url: string }>;
+  },
+};

@@ -35,12 +35,12 @@ export default function StaffDashboardPage() {
       </div>
 
       {profile && (
-        <Card className="bg-white border-emerald-100 overflow-hidden">
+        <Card className="bg-white border-primary/20 overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-24 w-24 border-4 border-emerald-50">
                 <AvatarImage src={profile.avatarUrl} />
-                <AvatarFallback className="text-2xl bg-emerald-100 text-emerald-900 font-bold">
+                <AvatarFallback className="text-2xl bg-primary/10 text-emerald-900 font-bold">
                   {profile.firstName?.[0]}{profile.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
@@ -49,7 +49,7 @@ export default function StaffDashboardPage() {
                   <h3 className="text-2xl font-bold text-slate-900">
                     {profile.firstName} {profile.lastName}
                   </h3>
-                  <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-none uppercase tracking-widest text-[10px]">
+                  <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-none uppercase tracking-widest text-[10px]">
                     {profile.status || "Active"}
                   </Badge>
                 </div>
@@ -77,7 +77,7 @@ export default function StaffDashboardPage() {
         <Card className="border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Assigned Tasks</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+            <ClipboardCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>

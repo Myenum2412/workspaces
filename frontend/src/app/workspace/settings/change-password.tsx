@@ -109,7 +109,7 @@ export function ChangePassword() {
               <p className="text-xs text-destructive">Passwords do not match</p>
             )}
           </div>
-          <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/80">
             {isSubmitting ? "Changing..." : "Change password"}
           </Button>
         </form>

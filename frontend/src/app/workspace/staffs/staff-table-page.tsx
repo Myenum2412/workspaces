@@ -58,14 +58,14 @@ function getStatusClasses(status: string | null) {
   switch (status) {
     case "active":
     case "Active":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "inactive":
     case "Inactive":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "On Leave":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     default:
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
   }
 }
 
@@ -303,12 +303,12 @@ export function StaffTablePage() {
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-background  mt-6">
-      <div className="border-b bg-emerald-50/70 p-6">
+      <div className="border-b bg-primary/10 p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="shrink-0 space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-emerald-950">Staff Records</h2>
-              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-100 px-2 text-xs font-bold text-slate-900">
+              <h2 className="text-xl font-bold text-primary">Staff Records</h2>
+              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">
                 {total}
               </span>
             </div>
@@ -326,16 +326,16 @@ export function StaffTablePage() {
                 setPage(1)
               }}
               placeholder="Search by name, email..."
-              className="h-12 bg-background pl-12  focus-visible:ring-emerald-500"
+              className="h-12 bg-background pl-12  focus-visible:ring-primary"
             />
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
             <Tabs value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setPage(1); }}>
-              <TabsList className="bg-emerald-100/50">
-                <TabsTrigger value="Active" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Active Staff</TabsTrigger>
-                <TabsTrigger value="Inactive" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Deactivated</TabsTrigger>
-                <TabsTrigger value="All" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">All Staff</TabsTrigger>
+              <TabsList className="bg-primary/10">
+                <TabsTrigger value="Active" className="data-[state=active]:bg-primary data-[state=active]:text-white">Active Staff</TabsTrigger>
+                <TabsTrigger value="Inactive" className="data-[state=active]:bg-primary data-[state=active]:text-white">Deactivated</TabsTrigger>
+                <TabsTrigger value="All" className="data-[state=active]:bg-primary data-[state=active]:text-white">All Staff</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -344,7 +344,7 @@ export function StaffTablePage() {
               variant="outline"
               size="icon"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+              className="border-slate-200 bg-background text-primary hover:bg-primary/10"
             >
               <ChevronDownIcon className={cn("size-4 transition-transform duration-300", isExpanded ? "rotate-0" : "-rotate-90")} />
             </Button>
@@ -354,7 +354,7 @@ export function StaffTablePage() {
                 variant="outline"
                 size="icon"
                 onClick={() => refetch()}
-                className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+                className="border-slate-200 bg-background text-primary hover:bg-primary/10"
               >
                 <RefreshCw className={cn("size-4", isLoading && "animate-spin")} />
               </Button>
@@ -376,13 +376,13 @@ export function StaffTablePage() {
               bgSelection: "bg-red-900",
               textSelectionBtn: "text-red-100 hover:bg-red-800",
             } : {
-              bgLight: "bg-emerald-50/70",
-              bgHover: "hover:bg-emerald-50/70",
-              rowHover: "hover:bg-emerald-50/30",
-              textDark: "text-emerald-950",
-              border: "border-emerald-100",
+              bgLight: "bg-primary/10",
+              bgHover: "hover:bg-primary/10",
+              rowHover: "hover:bg-primary/5",
+              textDark: "text-primary",
+              border: "border-primary/10",
               bgSelection: "bg-emerald-900",
-              textSelectionBtn: "text-emerald-100 hover:bg-emerald-800",
+              textSelectionBtn: "text-primary-foreground hover:bg-emerald-800",
             };
             return (
               <>
@@ -470,7 +470,7 @@ export function StaffTablePage() {
                         const isVerified = vData.emailVerified;
                         return isVerified ? (
                           <Badge 
-                            className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200" 
+                            className="bg-primary/10 text-primary border-emerald-200 hover:bg-primary/20" 
                             title={vData.verifiedAt ? `Verified at: ${new Date(vData.verifiedAt).toLocaleString()}` : "Verified"}
                           >
                             Verified
@@ -486,7 +486,7 @@ export function StaffTablePage() {
                       {(() => {
                         const currentStatus = userStatuses[staff.userId] || (onlineUsers.has(staff.userId) ? "Online" : "Offline");
                         let dotClass = "bg-slate-300";
-                        if (currentStatus === "Online") dotClass = "bg-emerald-500 animate-pulse";
+                        if (currentStatus === "Online") dotClass = "bg-primary animate-pulse";
                         else if (currentStatus === "Leave") dotClass = "bg-red-500";
                         else if (currentStatus !== "Offline") dotClass = "bg-amber-500";
                         return (
@@ -524,7 +524,7 @@ export function StaffTablePage() {
                               deactivateMutation.mutate(staff.id)
                             }}>Deactivate</DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem className="text-emerald-600 font-bold" onClick={() => {
+                            <DropdownMenuItem className="text-primary font-bold" onClick={() => {
                               reactivateMutation.mutate(staff.id)
                             }}>Re-activate</DropdownMenuItem>
                           )}

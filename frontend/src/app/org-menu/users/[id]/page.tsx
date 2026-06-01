@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils"
 
 function getStatusColor(status: string | null | undefined) {
   switch (status) {
-    case "Active": return "bg-emerald-500"
+    case "Active": return "bg-primary"
     case "Inactive": return "bg-slate-400"
     case "On Leave": return "bg-amber-500"
     case "Deleted": return "bg-red-500"
@@ -147,13 +147,13 @@ export default function StaffProfilePage() {
                 <XIcon className="mr-2 size-4" />
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button size="sm" onClick={handleSave} className="bg-primary hover:bg-primary/80">
                 <SaveIcon className="mr-2 size-4" />
                 Save Changes
               </Button>
             </>
           ) : (
-            <Button size="sm" onClick={() => setIsEditing(true)} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button size="sm" onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/80">
               <PencilIcon className="mr-2 size-4" />
               Edit Profile
             </Button>
@@ -162,13 +162,13 @@ export default function StaffProfilePage() {
       </div>
 
       {/* Profile Header */}
-      <Card className="overflow-hidden border-emerald-100">
+      <Card className="overflow-hidden border-primary/10">
         <div className="h-32 bg-emerald-600" />
         <CardContent className="relative pb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-10">
             <Avatar className="size-24 border-4 border-white shadow-lg">
               {user.avatar ? <AvatarImage src={user.avatar} /> : null}
-              <AvatarFallback className="bg-emerald-50 text-emerald-700 text-2xl font-bold">
+              <AvatarFallback className="bg-primary/5 text-primary text-2xl font-bold">
                 {user.firstName?.[0] ?? ""}{user.lastName?.[0] ?? ""}
               </AvatarFallback>
             </Avatar>
@@ -205,7 +205,7 @@ export default function StaffProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <BriefcaseIcon className="size-4 text-emerald-600" />
+                <BriefcaseIcon className="size-4 text-primary" />
                 Professional Information
               </CardTitle>
             </CardHeader>
@@ -223,7 +223,7 @@ export default function StaffProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <MailIcon className="size-4 text-emerald-600" />
+                <MailIcon className="size-4 text-primary" />
                 Contact Information
               </CardTitle>
             </CardHeader>
@@ -239,7 +239,7 @@ export default function StaffProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <MapPinIcon className="size-4 text-emerald-600" />
+                <MapPinIcon className="size-4 text-primary" />
                 Address
               </CardTitle>
             </CardHeader>
@@ -267,7 +267,7 @@ export default function StaffProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <CalendarIcon className="size-4 text-emerald-600" />
+                <CalendarIcon className="size-4 text-primary" />
                 Personal Details
               </CardTitle>
             </CardHeader>
@@ -283,7 +283,7 @@ export default function StaffProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Building2 className="size-4 text-emerald-600" />
+                <Building2 className="size-4 text-primary" />
                 Government IDs
               </CardTitle>
             </CardHeader>
@@ -318,7 +318,7 @@ export default function StaffProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <Clock className="size-4 text-emerald-600" />
+                <Clock className="size-4 text-primary" />
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase">Active Hours</p>
                   <p className="text-sm font-bold">{user.activeHours}</p>

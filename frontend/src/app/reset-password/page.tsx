@@ -46,7 +46,7 @@ function ResetPasswordForm() {
     return (
       <div className="flex flex-col gap-4 text-center">
         <p className="text-destructive font-medium">Invalid or missing reset link.</p>
-        <Link href="/forgot-password" className="text-sm text-emerald-600 underline">
+        <Link href="/forgot-password" className="text-sm text-primary underline">
           Request a new reset link
         </Link>
       </div>
@@ -118,7 +118,7 @@ function ResetPasswordForm() {
           <p className="text-sm text-destructive text-center">{(mutation.error as Error).message}</p>
         )}
         {mutation.isSuccess && (
-          <p className="text-sm text-emerald-600 text-center">Password reset successfully! Redirecting...</p>
+          <p className="text-sm text-primary text-center">Password reset successfully! Redirecting...</p>
         )}
       </form>
     </div>
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
       <div className="relative hidden overflow-hidden bg-slate-950 lg:block">
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <div className="max-w-md space-y-4">
-            <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
+            <p className="text-sm uppercase tracking-[0.3em] text-primary/80">
               Secure Reset
             </p>
             <h2 className="font-heading text-5xl leading-tight font-semibold">

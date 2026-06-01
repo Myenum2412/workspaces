@@ -32,7 +32,7 @@ export default function MyTaskPage() {
 
         <CardContent className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Overview
@@ -40,7 +40,7 @@ export default function MyTaskPage() {
                 <Activity className="h-5 w-5 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-emerald-950">Active</div>
+                <div className="text-3xl font-bold text-primary">Active</div>
                 <div className="flex items-center gap-1 text-xs text-slate-700">
                   <Activity className="h-3 w-3" />
                   <span className="font-medium">System Status</span>
@@ -49,7 +49,7 @@ export default function MyTaskPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Tasks
@@ -57,7 +57,7 @@ export default function MyTaskPage() {
                 <ClipboardCheck className="h-5 w-5 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-emerald-950">{totalTasks}</div>
+                <div className="text-3xl font-bold text-primary">{totalTasks}</div>
                 <div className="flex items-center gap-1 text-xs text-slate-700">
                   <TrendingUp className="h-3 w-3" />
                   <span className="font-medium">{completedTasks} completed</span>
@@ -66,7 +66,7 @@ export default function MyTaskPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Pending Tasks
@@ -74,7 +74,7 @@ export default function MyTaskPage() {
                 <Users className="h-5 w-5 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-emerald-950">{pendingTasks}</div>
+                <div className="text-3xl font-bold text-primary">{pendingTasks}</div>
                 <div className="flex items-center gap-1 text-xs text-slate-700">
                   <Activity className="h-3 w-3" />
                   <span className="font-medium">In Progress</span>
@@ -83,7 +83,7 @@ export default function MyTaskPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   High Priority
@@ -91,7 +91,7 @@ export default function MyTaskPage() {
                 <TrendingUp className="h-5 w-5 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-emerald-950">{highPriorityTasks}</div>
+                <div className="text-3xl font-bold text-primary">{highPriorityTasks}</div>
                 <div className="flex items-center gap-1 text-xs text-slate-700">
                   <Activity className="h-3 w-3" />
                   <span className="font-medium">Urgent</span>

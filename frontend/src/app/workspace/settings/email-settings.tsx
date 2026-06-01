@@ -231,7 +231,7 @@ export function EmailSettings() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={saveSettings} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={saveSettings} disabled={saving} className="bg-primary hover:bg-primary/80">
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>

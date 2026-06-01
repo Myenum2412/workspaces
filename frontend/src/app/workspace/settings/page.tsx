@@ -93,7 +93,7 @@ export default function SettingsPage() {
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="data-[state=active]:bg-transparent data-[state=active]: data-[state=active]:border-emerald-600 border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-slate-700 flex items-center gap-2 transition-all"
+                className="data-[state=active]:bg-transparent data-[state=active]: data-[state=active]:border-primary border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-slate-700 flex items-center gap-2 transition-all"
               >
                 <tab.icon className="size-4" />
                 {tab.label}
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                         localStorage.setItem("employeeIdPrefix", workspaceId)
                         toast.success('Employee ID Prefix successfully updated!')
                       }} 
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                      className="bg-primary hover:bg-primary/80 text-white"
                     >
                       Update ID
                     </Button>
@@ -196,7 +196,7 @@ export default function SettingsPage() {
 
                             return (
                               <TableRow key={index} className="hover:bg-slate-50/50">
-                                <TableCell className="font-medium text-emerald-700">{id}</TableCell>
+                                <TableCell className="font-medium text-primary">{id}</TableCell>
                                 <TableCell className="text-slate-600">{reason}</TableCell>
                                 <TableCell className="text-slate-500 text-sm">{date}</TableCell>
                                 <TableCell>
@@ -409,7 +409,7 @@ export default function SettingsPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-2">
-              <Button onClick={handleHrSave} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button onClick={handleHrSave} className="bg-primary hover:bg-primary/80">
                 Save HR Settings
               </Button>
               <Button variant="outline">

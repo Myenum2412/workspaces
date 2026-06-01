@@ -76,7 +76,7 @@ export function UserDetailModal({ user, open, onOpenChange, title, initialEditMo
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 rounded-xl">
-                <AvatarFallback className="rounded-xl bg-emerald-100 text-emerald-800 text-lg font-bold">
+                <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-lg font-bold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -99,7 +99,7 @@ export function UserDetailModal({ user, open, onOpenChange, title, initialEditMo
                   <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={saving}>
                     <X className="mr-1.5 size-3.5" /> Cancel
                   </Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                  <Button size="sm" onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/80">
                     <Save className="mr-1.5 size-3.5" /> {saving ? "Saving..." : "Save"}
                   </Button>
                 </>

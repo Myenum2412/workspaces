@@ -35,6 +35,9 @@ import clientRoutes from "./routes/client-routes.js";
 import branchRoutes from "./routes/branch-routes.js";
 import orgRoutes from "./routes/org-routes.js";
 
+// Branding
+import brandingRoutes from "./routes/branding.js";
+
 // Admin
 import adminRoutes from "./routes/admin.js";
 import { checkHealth } from "./services/health.js";
@@ -123,6 +126,9 @@ app.use("/api", orgRoutes);
 
 app.use("/api/upload", uploadRoutes);
 app.use("/api/setup", setupRoutes);
+
+// Branding
+app.use("/api/branding", brandingRoutes);
 
 // Admin
 app.use("/api/admin", adminRoutes);

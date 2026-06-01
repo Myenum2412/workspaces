@@ -42,7 +42,7 @@ export default function StaffsPage() {
         <CardContent className="space-y-6">
           {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Staff
@@ -50,12 +50,12 @@ export default function StaffsPage() {
                 <Users className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">{stats.totalStaff}</div>
+                <div className="text-2xl font-bold text-primary">{stats.totalStaff}</div>
                 <p className="text-xs text-slate-700 mt-1">All registered members</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Active Now
@@ -63,12 +63,12 @@ export default function StaffsPage() {
                 <UserCheck className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">{stats.activeNow}</div>
+                <div className="text-2xl font-bold text-primary">{stats.activeNow}</div>
                 <p className="text-xs text-slate-700 mt-1">Currently working</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   On Leave
@@ -76,12 +76,12 @@ export default function StaffsPage() {
                 <UserX className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">{stats.onLeave}</div>
+                <div className="text-2xl font-bold text-primary">{stats.onLeave}</div>
                 <p className="text-xs text-slate-700 mt-1">Away today</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Assigned Tasks
@@ -89,7 +89,7 @@ export default function StaffsPage() {
                 <Briefcase className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">{stats.assignedTasks}</div>
+                <div className="text-2xl font-bold text-primary">{stats.assignedTasks}</div>
                 <p className="text-xs text-slate-700 mt-1">Across all staff</p>
               </CardContent>
             </Card>

@@ -64,7 +64,10 @@ async function uploadToR2(file: Express.Multer.File, folder: string): Promise<{ 
     ContentType: file.mimetype,
     ContentDisposition: `inline; filename="${file.originalname}"`,
   }));
-  return { url: `/api/upload/media/${filename}`, key: filename };
+  
+  const baseUrl = process.env.R2_PUBLIC_URL;
+  const url = baseUrl ? `${baseUrl.replace(/\/$/, "")}/${filename}` : `/api/upload/media/${filename}`;
+  return { url, key: filename };
 }
 
 function auditFileAction(req: Request, action: string, metadata: Record<string, unknown> = {}) {

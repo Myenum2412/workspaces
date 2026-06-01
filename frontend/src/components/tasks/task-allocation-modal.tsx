@@ -198,7 +198,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ",
                     saveAsTemplate
-                      ? "bg-emerald-100 text-emerald-700 border border-emerald-300 ring-2 ring-emerald-500/10"
+                      ? "bg-primary/10 text-primary border border-primary/30 ring-2 ring-primary/10"
                       : "text-muted-foreground hover:bg-muted border border-transparent"
                   )}
                 >
@@ -428,7 +428,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button variant="outline" onClick={() => setQuickAddOpen({ ...quickAddOpen, open: false })}>Cancel</Button>
-          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => {
+          <Button className="bg-primary hover:bg-primary/80 text-white" onClick={() => {
             toast.success(`${quickAddOpen.type === 'staff' ? 'Staff member' : 'Team'} added successfully`)
             setQuickAddOpen({ ...quickAddOpen, open: false })
           }}>

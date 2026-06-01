@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Active Members</CardTitle>
-            <UserCheck className="h-4 w-4 text-emerald-500" />
+            <UserCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? "—" : stats.activeMembers}</div>
@@ -156,7 +156,7 @@ export default function DashboardPage() {
               {recentMembers.map((member) => (
                 <div key={member.id} className="flex items-center justify-between py-3 border-b last:border-0">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700">
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {(member.firstName?.[0] ?? "?")}{(member.lastName?.[0] ?? "")}
                     </div>
                     <div>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 capitalize">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary capitalize">
                       {member.role}
                     </span>
                     <p className="text-xs text-slate-400 mt-1">

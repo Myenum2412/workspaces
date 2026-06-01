@@ -44,7 +44,7 @@ export default function ProjectDetailPage() {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <p className="text-sm text-zinc-500">{error || "Project not found"}</p>
-        <Link href="/workspace" className="text-sm text-emerald-600 hover:underline">
+        <Link href="/workspace" className="text-sm text-primary hover:underline">
           ← Back to Workspace
         </Link>
       </div>

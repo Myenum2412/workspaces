@@ -101,7 +101,7 @@ export function MasterDataManagement() {
     <div className="space-y-8 font-poppins">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="font-heading text-2xl font-bold tracking-tight flex items-center gap-2 text-emerald-950">
+          <h2 className="font-heading text-2xl font-bold tracking-tight flex items-center gap-2 text-primary">
             <Settings2 className="size-6 text-slate-600" /> Master Data Management
           </h2>
           <p className="text-sm text-muted-foreground">Configure global dropdown options and lookup lists used across the application.</p>
@@ -110,7 +110,7 @@ export function MasterDataManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
         <div className="space-y-6">
-          <Card className="border-emerald-100/50 bg-emerald-50/10">
+          <Card className="border-primary/10/50 bg-emerald-50/10">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm font-bold uppercase tracking-wider text-emerald-800">Categories</CardTitle>
             </CardHeader>
@@ -118,7 +118,7 @@ export function MasterDataManagement() {
               {MASTER_CATEGORIES.map((cat) => (
                 <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                   className={cn("w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
-                    activeCategory === cat.id ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-50 hover:text-slate-700")}>
+                    activeCategory === cat.id ? "bg-bg-primary text-primary-foreground" : "text-slate-600 hover:bg-slate-50 hover:text-slate-700")}>
                   <cat.icon className="size-4" /> {cat.label}
                 </button>
               ))}
@@ -134,7 +134,7 @@ export function MasterDataManagement() {
                   className={cn("w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all",
                     activeList === list ? "bg-white border-2 border-emerald-500 text-slate-700" : "text-slate-600 hover:bg-slate-50 border-2 border-transparent")}>
                   {list}
-                  <Badge variant="secondary" className="bg-slate-50 text-slate-700 border-emerald-100 text-[10px]">{data[list]?.length || 0}</Badge>
+                  <Badge variant="secondary" className="bg-slate-50 text-slate-700 border-primary/20 text-[10px]">{data[list]?.length || 0}</Badge>
                 </button>
               ))}
             </CardContent>
@@ -159,14 +159,14 @@ export function MasterDataManagement() {
             </CardHeader>
             <CardContent className="flex-1 p-8">
               <div className="space-y-8">
-                <div className="flex gap-4 p-6 rounded-2xl bg-emerald-50/30 border border-emerald-100">
+                <div className="flex gap-4 p-6 rounded-2xl bg-primary/5 border border-primary/10">
                   <div className="flex-1 space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-emerald-800 ml-1">Add New Entry</Label>
+                    <Label className="text-xs font-bold uppercase tracking-widest text-primary ml-1">Add New Entry</Label>
                     <Input placeholder={`Enter new ${activeList.toLowerCase().replace(/s$/, '')}...`} value={newItem} onChange={(e) => setNewItem(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleAddItem()} className="h-11 rounded-xl bg-white border-slate-200 focus:ring-emerald-500" />
                   </div>
                   <div className="flex items-end">
-                    <Button onClick={handleAddItem} className="h-11 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold">
+                    <Button onClick={handleAddItem} className="h-11 px-8 rounded-xl bg-primary hover:bg-primary/80 font-bold">
                       <PlusIcon className="size-4 mr-2" /> Add to List
                     </Button>
                   </div>
@@ -174,12 +174,12 @@ export function MasterDataManagement() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Values</span>
-                    <span className="text-[10px] font-bold text-slate-400 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Alpha Sort</span>
+                    <span className="text-[10px] font-bold text-slate-400 bg-primary/10 px-2 py-0.5 rounded-full uppercase">Alpha Sort</span>
                   </div>
                   <ScrollArea className="h-[400px] pr-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {filteredItems.map((item) => (
-                        <div key={item} className="flex items-center justify-between p-4 rounded-xl border bg-white hover:border-slate-200 hover:bg-emerald-50/30 transition-all group">
+                        <div key={item} className="flex items-center justify-between p-4 rounded-xl border bg-white hover:border-slate-200 hover:bg-primary/5 transition-all group">
                           <span className="text-sm font-bold text-slate-700">{item}</span>
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item)} className="size-8 rounded-lg text-muted-foreground hover:text-slate-600 hover:bg-slate-50">
                             <Trash2Icon className="size-4" />
@@ -188,7 +188,7 @@ export function MasterDataManagement() {
                       ))}
                       {filteredItems.length === 0 && (
                         <div className="col-span-full py-20 flex flex-col items-center justify-center text-center">
-                          <div className="size-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                          <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                             <SearchIcon className="size-8 text-slate-300" />
                           </div>
                           <p className="text-slate-500 font-bold">No items found</p>

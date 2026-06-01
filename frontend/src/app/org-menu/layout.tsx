@@ -113,7 +113,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
   if (loading || !initialized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-50">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-50">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -146,7 +146,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
                   </p>
                   <p className="text-xs text-slate-500">{session.user.email}</p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                   {(session.user.firstName?.[0] ?? "?")}
                   {(session.user.lastName?.[0] ?? "")}
                 </div>

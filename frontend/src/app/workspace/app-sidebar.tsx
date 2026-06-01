@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { API_BASE_URL } from "@/lib/api/config";
 import { profileApi, workspaceApi } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
+import { useBrandingStore } from "@/lib/branding/store";
 
 
 // ── Main AppSidebar ─────────────────────────────────────────
@@ -49,8 +50,10 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           setSocket(newSocket);
           newSocket.on("connect", () => { newSocket.emit("identify", userId); setIsWorkspaceActive(true); });
           newSocket.on("presence_update", ({ userId: uid, online }: any) => { if (uid === userId) setIsWorkspaceActive(online); });
-          newSocket.on("branding_updated", () => {
-            queryClient.invalidateQueries({ queryKey: ["theme-settings"] });
+          newSocket.on("branding_updated", (data: any) => {
+            if (data?.branding) {
+              useBrandingStore.getState().syncFromWs(data.branding);
+            }
           });
           const heartbeatInterval = setInterval(() => newSocket.emit("heartbeat"), 15000);
           return () => { clearInterval(heartbeatInterval); newSocket.disconnect(); };
@@ -103,7 +106,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:p-0">
               <Link href="/workspace">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10 shrink-0 overflow-hidden">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10 shrink-0 overflow-hidden">
                   {displayAvatar ? (
                     <img 
                       src={displayAvatar.startsWith("http") ? displayAvatar : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`} 

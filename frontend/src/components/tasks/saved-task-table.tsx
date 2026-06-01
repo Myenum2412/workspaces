@@ -40,7 +40,7 @@ function getPriorityClasses(priority: string) {
     case "medium":
       return "bg-amber-50 text-amber-700 ring-amber-600/20"
     case "low":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+      return "bg-primary/5 text-primary ring-primary/20"
     default:
       return "bg-slate-50 text-slate-700 ring-slate-600/20"
   }
@@ -85,7 +85,7 @@ export function SavedTaskTable() {
   return (
     <div className="space-y-4">
       {selectedIds.size > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-900 p-4 text-white ">
+        <div className="mb-4 flex items-center justify-between rounded-xl bg-primary p-4 text-white ">
           <span className="text-sm font-medium">
             {selectedIds.size} tasks selected
           </span>
@@ -93,7 +93,7 @@ export function SavedTaskTable() {
             variant="ghost"
             size="sm"
             onClick={() => setSelectedIds(new Set())}
-            className="text-emerald-100 hover:bg-emerald-800 hover:text-white"
+            className="text-primary-foreground hover:bg-primary/80 hover:text-white"
           >
             Clear selection
           </Button>
@@ -111,10 +111,10 @@ export function SavedTaskTable() {
           </p>
         </div>
       ) : (
-        <div className="w-full overflow-x-auto rounded-xl border bg-background/70 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
+        <div className="w-full overflow-x-auto rounded-xl border bg-background/70 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           <Table className="w-full min-w-max table-auto">
             <TableHeader>
-              <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
+              <TableRow className="bg-primary/10 hover:bg-primary/10">
                 <TableHead className="w-[50px] px-2 py-3 text-center sm:px-4 sm:py-4">
                   <Checkbox
                     checked={
@@ -125,34 +125,34 @@ export function SavedTaskTable() {
                     aria-label="Select all tasks"
                   />
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   <div className="flex items-center justify-center gap-2">
                     <HashIcon className="size-4" />
                     ID
                   </div>
                 </TableHead>
-                <TableHead className="px-3 py-3 text-left font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-left font-semibold text-primary sm:px-4 sm:py-4">
                   Title
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   Category
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   Assignment
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   Priority
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   Est. Time
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   <div className="flex items-center justify-center gap-2">
                     <CalendarIcon className="size-4" />
                     Created At
                   </div>
                 </TableHead>
-                <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                   Actions
                 </TableHead>
               </TableRow>
@@ -162,8 +162,8 @@ export function SavedTaskTable() {
                 <TableRow
                   key={task.id}
                   className={cn(
-                    "transition-colors hover:bg-emerald-50/30 cursor-pointer",
-                    selectedIds.has(task.id) && "bg-emerald-50/50"
+                    "transition-colors hover:bg-primary/5 cursor-pointer",
+                    selectedIds.has(task.id) && "bg-primary/5"
                   )}
                   onClick={() => handleViewTask(task)}
                 >
@@ -174,7 +174,7 @@ export function SavedTaskTable() {
                       aria-label={`Select ${task.id}`}
                     />
                   </TableCell>
-                  <TableCell className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                  <TableCell className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                     {task.id}
                   </TableCell>
                   <TableCell className="max-w-xs px-3 py-3 sm:px-4 sm:py-4">
@@ -204,13 +204,13 @@ export function SavedTaskTable() {
                   <TableCell className="px-3 py-3 text-center sm:px-4 sm:py-4 text-sm">
                     {task.estimatedTime}
                   </TableCell>
-                  <TableCell className="px-3 py-3 text-center font-medium text-emerald-800 sm:px-4 sm:py-4 text-sm">
+                  <TableCell className="px-3 py-3 text-center font-medium text-primary sm:px-4 sm:py-4 text-sm">
                     {task.createdAt}
                   </TableCell>
                   <TableCell className="px-3 py-3 text-center sm:px-4 sm:py-4" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-emerald-100">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
                           <MoreHorizontalIcon className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

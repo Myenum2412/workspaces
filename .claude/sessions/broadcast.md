@@ -1,6 +1,0 @@
-
-## 2026-06-01T09:51:34Z [f0bd3c66-e70]
-📁 `/home/j0k3r/Desktop/workspaces/frontend/src/lib/api/client.ts` が変更されました: パターン 'api/' にマッチ
-
-## 2026-06-01T09:51:38Z [f0bd3c66-e70]
-📁 `/home/j0k3r/Desktop/workspaces/frontend/src/lib/api/client.ts` が変更されました: パターン 'api/' にマッチ

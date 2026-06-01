@@ -64,7 +64,7 @@ export default function OrgRegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-white">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-600 text-white mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-bg-primary text-primary-foreground mb-4">
             <Building2 className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Create your organization</h1>
@@ -73,14 +73,14 @@ export default function OrgRegisterPage() {
 
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-500"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? "bg-bg-primary text-primary-foreground" : "bg-slate-200 text-slate-500"}`}>
               {step > 1 ? <CheckCircle className="w-4 h-4" /> : "1"}
             </div>
             <span className="text-sm font-medium text-slate-700">Account</span>
           </div>
           <div className="w-12 h-px bg-slate-200" />
           <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 2 ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-500"}`}>2</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 2 ? "bg-bg-primary text-primary-foreground" : "bg-slate-200 text-slate-500"}`}>2</div>
             <span className="text-sm font-medium text-slate-700">Organization</span>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function OrgRegisterPage() {
                       </div>
                     </div>
                   </div>
-                  <Button type="button" className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={handleNext}>
+                  <Button type="button" className="w-full bg-primary hover:bg-primary/80" onClick={handleNext}>
                     Continue <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </>
@@ -155,7 +155,7 @@ export default function OrgRegisterPage() {
                   </div>
                   <div className="flex gap-3 pt-2">
                     <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-                    <Button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
+                    <Button type="submit" className="flex-1 bg-primary hover:bg-primary/80" disabled={isLoading}>
                       {isLoading ? "Creating..." : "Create Organization"}
                     </Button>
                   </div>
@@ -164,7 +164,7 @@ export default function OrgRegisterPage() {
             </form>
             <div className="mt-6 text-center text-sm text-slate-500">
               Already have an account?{" "}
-              <Link href="/login" className="text-emerald-600 font-medium hover:underline">Sign in</Link>
+              <Link href="/login" className="text-primary font-medium hover:underline">Sign in</Link>
             </div>
           </CardContent>
         </Card>

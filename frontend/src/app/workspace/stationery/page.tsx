@@ -17,7 +17,7 @@ export default function StationeryPage() {
         <CardContent className="space-y-6">
           {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Items
@@ -25,12 +25,12 @@ export default function StationeryPage() {
                 <Package className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">48</div>
+                <div className="text-2xl font-bold text-primary">48</div>
                 <p className="text-xs text-slate-700 mt-1">In inventory</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Pending Requests
@@ -38,12 +38,12 @@ export default function StationeryPage() {
                 <ClipboardList className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">5</div>
+                <div className="text-2xl font-bold text-primary">5</div>
                 <p className="text-xs text-slate-700 mt-1">Awaiting approval</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Low Stock
@@ -51,12 +51,12 @@ export default function StationeryPage() {
                 <AlertTriangle className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">3</div>
+                <div className="text-2xl font-bold text-primary">3</div>
                 <p className="text-xs text-slate-700 mt-1">Items need reorder</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Monthly Usage
@@ -64,7 +64,7 @@ export default function StationeryPage() {
                 <TrendingUp className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">+12%</div>
+                <div className="text-2xl font-bold text-primary">+12%</div>
                 <p className="text-xs text-slate-700 mt-1">From last month</p>
               </CardContent>
             </Card>

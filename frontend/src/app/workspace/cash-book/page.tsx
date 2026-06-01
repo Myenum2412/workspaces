@@ -23,7 +23,7 @@ export default function CashBookPage() {
         <CardContent className="space-y-6">
           {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Cash Book
@@ -31,12 +31,12 @@ export default function CashBookPage() {
                 <DollarSign className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">Active</div>
+                <div className="text-2xl font-bold text-primary">Active</div>
                 <p className="text-xs text-slate-700 mt-1">Recording transactions</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Receipts
@@ -44,12 +44,12 @@ export default function CashBookPage() {
                 <Receipt className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">24</div>
+                <div className="text-2xl font-bold text-primary">24</div>
                 <p className="text-xs text-slate-700 mt-1">This month</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Cash In Hand
@@ -57,12 +57,12 @@ export default function CashBookPage() {
                 <Wallet className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">$5.2K</div>
+                <div className="text-2xl font-bold text-primary">$5.2K</div>
                 <p className="text-xs text-slate-700 mt-1">Available balance</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Pending Verification
@@ -70,7 +70,7 @@ export default function CashBookPage() {
                 <TrendingUp className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">3</div>
+                <div className="text-2xl font-bold text-primary">3</div>
                 <p className="text-xs text-slate-700 mt-1">Awaiting review</p>
               </CardContent>
             </Card>

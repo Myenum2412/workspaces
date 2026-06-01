@@ -96,7 +96,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald-600 hover:bg-emerald-700">
+        <Button className="bg-primary hover:bg-primary/80">
           <PlusIcon className="mr-2 h-4 w-4" /> Add Member
         </Button>
       </DialogTrigger>
@@ -155,7 +155,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
+            <Button type="submit" className="bg-primary hover:bg-primary/80" disabled={isLoading}>
               {isLoading ? "Sending..." : "Send Invitation"}
             </Button>
           </div>

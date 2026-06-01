@@ -38,7 +38,7 @@ export default function MyStaffLayout({ children }: { children: ReactNode }) {
     <div className="min-h-svh bg-zinc-50 text-zinc-950">
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r bg-white lg:block">
         <div className="flex h-16 items-center gap-3 border-b px-6">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-600 text-white overflow-hidden shrink-0">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-bg-primary text-primary-foreground overflow-hidden shrink-0">
             {displayAvatar ? (
               <img 
                 src={displayAvatar.startsWith("http") ? displayAvatar : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`} 
@@ -68,7 +68,7 @@ export default function MyStaffLayout({ children }: { children: ReactNode }) {
                 href={item.href}
                 className={cn(
                   "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-950",
-                  isActive && "bg-emerald-50 text-emerald-700"
+                  isActive && "bg-primary/5 text-primary"
                 )}
               >
                 <Icon className="size-4" />
@@ -99,7 +99,7 @@ export default function MyStaffLayout({ children }: { children: ReactNode }) {
                     href={item.href}
                     className={cn(
                       "whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-zinc-600",
-                      isActive && "bg-emerald-50 text-emerald-700"
+                      isActive && "bg-primary/5 text-primary"
                     )}
                   >
                     {item.label}

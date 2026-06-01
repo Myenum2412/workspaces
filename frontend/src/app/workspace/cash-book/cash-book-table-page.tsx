@@ -60,15 +60,15 @@ function getStatusClasses(status: string) {
   switch (status) {
     case "Cleared":
     case "Verified":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Hold":
     case "Pending":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Open":
     case "Unverified":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     default:
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
   }
 }
 
@@ -167,14 +167,14 @@ export function CashBookTablePage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border bg-background ">
-        <div className="border-b bg-emerald-50/70 p-6">
+        <div className="border-b bg-primary/10 p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="shrink-0 space-y-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-emerald-950">
+                <h2 className="text-xl font-bold text-primary">
                   Cash Book Table
                 </h2>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-100 px-2 text-xs font-bold text-slate-900">
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">
                   {total}
                 </span>
               </div>
@@ -192,7 +192,7 @@ export function CashBookTablePage() {
                   setPage(1)
                 }}
                 placeholder="Search by voucher, staff, branch..."
-                className="h-12 bg-background pl-12  focus-visible:ring-emerald-500"
+                className="h-12 bg-background pl-12  focus-visible:ring-primary"
               />
             </div>
 
@@ -201,7 +201,7 @@ export function CashBookTablePage() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+                    className="border-slate-200 bg-background text-primary hover:bg-primary/10"
                   >
                     <FilterIcon className="mr-2 size-4" />
                     Filter: {filterStatus}
@@ -230,7 +230,7 @@ export function CashBookTablePage() {
                 size="icon"
                 onClick={() => setIsExpanded((value) => !value)}
                 aria-label={isExpanded ? "Collapse cash book table" : "Expand cash book table"}
-                className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+                className="border-slate-200 bg-background text-primary hover:bg-primary/10"
               >
                 <ChevronDownIcon
                   className={cn(
@@ -246,7 +246,7 @@ export function CashBookTablePage() {
         {isExpanded ? (
           <div className="p-6">
             {selectedIds.size > 0 && (
-              <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-900 p-4 text-white ">
+              <div className="mb-4 flex items-center justify-between rounded-xl bg-primary p-4 text-white ">
                 <span className="text-sm font-medium">
                   {selectedIds.size} entries selected
                 </span>
@@ -254,7 +254,7 @@ export function CashBookTablePage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedIds(new Set())}
-                  className="text-emerald-100 hover:bg-emerald-800 hover:text-white"
+                  className="text-primary-foreground hover:bg-primary/80 hover:text-white"
                 >
                   Clear selection
                 </Button>
@@ -276,7 +276,7 @@ export function CashBookTablePage() {
                 <div className="overflow-hidden rounded-xl border bg-background/70">
                   <Table className="w-full min-w-max table-auto">
                     <TableHeader>
-                      <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
+                      <TableRow className="bg-primary/10 hover:bg-primary/10">
                         <TableHead className="w-[50px] px-4 py-4 text-center">
                           <Checkbox
                             checked={
@@ -288,7 +288,7 @@ export function CashBookTablePage() {
                           />
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("sno")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -297,7 +297,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("date")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -307,7 +307,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("voucher")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -316,7 +316,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("description")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -325,7 +325,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("staff")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -334,7 +334,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("branch")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -343,7 +343,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("billStatus")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -352,7 +352,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("verification")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -361,7 +361,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("category")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -370,7 +370,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("cashOut")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -379,7 +379,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("cashIn")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -388,7 +388,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("prevBalance")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -397,7 +397,7 @@ export function CashBookTablePage() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                          className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                           onClick={() => handleSort("balance")}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -405,7 +405,7 @@ export function CashBookTablePage() {
                             <SortIcon columnKey="balance" />
                           </div>
                         </TableHead>
-                        <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">
+                        <TableHead className="px-4 py-4 text-center font-semibold text-primary">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -415,7 +415,7 @@ export function CashBookTablePage() {
                         <TableRow
                           key={row.sno}
                           className={cn(
-                            "cursor-pointer transition-colors hover:bg-emerald-50/30",
+                            "cursor-pointer transition-colors hover:bg-primary/5",
                             selectedIds.has(row.sno) && "bg-slate-50/50"
                           )}
                         >
@@ -429,7 +429,7 @@ export function CashBookTablePage() {
                               aria-label={`Select ${row.sno}`}
                             />
                           </TableCell>
-                          <TableCell className="px-4 py-4 text-center font-semibold text-emerald-950">
+                          <TableCell className="px-4 py-4 text-center font-semibold text-primary">
                             {row.sno}
                           </TableCell>
                           <TableCell className="px-4 py-4 text-center font-medium text-emerald-800">

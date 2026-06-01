@@ -18,7 +18,7 @@ export default function DeploymentsPage() {
           <div key={job.name} className="rounded-lg border bg-white p-5 ">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/5 text-primary">
                   {job.status === "scheduled" ? (
                     <ClockIcon className="size-5" />
                   ) : job.status === "manual" ? (
@@ -42,7 +42,7 @@ export default function DeploymentsPage() {
 
       <div className="rounded-lg border bg-white p-5 ">
         <div className="mb-4 flex items-center gap-2">
-          <BoxesIcon className="size-5 text-emerald-600" />
+          <BoxesIcon className="size-5 text-primary" />
           <h3 className="font-semibold">Release Notes</h3>
         </div>
         <div className="space-y-2 text-sm text-zinc-700">

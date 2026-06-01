@@ -54,15 +54,15 @@ const pageSizeOptions = [5, 10, 20, 50]
 function getStatusClasses(status: string | null | undefined) {
   switch (status) {
     case "Active":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Inactive":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "On Leave":
       return "bg-amber-50 text-amber-700 border-amber-200"
     case "Deleted":
       return "bg-red-50 text-red-700 border-red-200"
     default:
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
   }
 }
 
@@ -155,12 +155,12 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-background mt-6">
-      <div className="border-b bg-emerald-50/70 p-6">
+      <div className="border-b bg-primary/10 p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="shrink-0 space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-emerald-950">User Records</h2>
-              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-100 px-2 text-xs font-bold text-slate-900">
+              <h2 className="text-xl font-bold text-primary">User Records</h2>
+              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">
                 {total}
               </span>
             </div>
@@ -178,14 +178,14 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
                 setPage(1)
               }}
               placeholder="Search by name, email..."
-              className="h-12 bg-background pl-12 focus-visible:ring-emerald-500"
+              className="h-12 bg-background pl-12 focus-visible:ring-primary"
             />
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100">
+                <Button variant="outline" className="border-slate-200 bg-background text-primary hover:bg-primary/10">
                   <FilterIcon className="mr-2 size-4" />
                   Status: {filterStatus}
                 </Button>
@@ -206,7 +206,7 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
               variant="outline"
               size="icon"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+              className="border-slate-200 bg-background text-primary hover:bg-primary/10"
             >
               <ChevronDownIcon className={cn("size-4 transition-transform duration-300", isExpanded ? "rotate-0" : "-rotate-90")} />
             </Button>
@@ -216,7 +216,7 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
                 variant="outline"
                 size="icon"
                 onClick={() => onRefetch()}
-                className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+                className="border-slate-200 bg-background text-primary hover:bg-primary/10"
               >
                 <RefreshCw className={cn("size-4")} />
               </Button>
@@ -239,34 +239,34 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
           <div className="overflow-hidden rounded-xl border bg-background/70">
             <Table>
               <TableHeader>
-                <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
+                <TableRow className="bg-primary/10 hover:bg-primary/10">
                   <TableHead className="w-[50px] px-4 py-4 text-center">
                     <Checkbox
                       checked={paginatedRows.length > 0 && selectedIds.size === paginatedRows.length}
                       onChange={toggleAll}
                     />
                   </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950">User</TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("empId")}>
+                  <TableHead className="px-4 py-4 font-semibold text-primary">User</TableHead>
+                  <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("empId")}>
                     <div className="flex items-center gap-2">ID <SortIcon columnKey="empId" /></div>
                   </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("designation")}>
+                  <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("designation")}>
                     <div className="flex items-center gap-2">Role <SortIcon columnKey="designation" /></div>
                   </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("category")}>
+                  <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("category")}>
                     <div className="flex items-center gap-2">Category <SortIcon columnKey="category" /></div>
                   </TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-emerald-950">Contact</TableHead>
-                  <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Status</TableHead>
-                  <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Activity</TableHead>
-                  <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Actions</TableHead>
+                  <TableHead className="px-4 py-4 font-semibold text-primary">Contact</TableHead>
+                  <TableHead className="px-4 py-4 text-center font-semibold text-primary">Status</TableHead>
+                  <TableHead className="px-4 py-4 text-center font-semibold text-primary">Activity</TableHead>
+                  <TableHead className="px-4 py-4 text-center font-semibold text-primary">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedRows.map((user) => (
                   <TableRow
                     key={user.id}
-                    className={cn("cursor-pointer transition-colors hover:bg-emerald-50/30", selectedIds.has(user.id) && "bg-slate-50/50")}
+                    className={cn("cursor-pointer transition-colors hover:bg-primary/5", selectedIds.has(user.id) && "bg-slate-50/50")}
                     onClick={() => router.push(`/org-menu/users/${user.id}`)}
                   >
                     <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
@@ -274,14 +274,14 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
                     </TableCell>
                     <TableCell className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="size-10 border-2 border-emerald-100">
+                        <Avatar className="size-10 border-2 border-primary/10">
                           {user.avatar ? <AvatarImage src={user.avatar} /> : null}
                           <AvatarFallback className="bg-slate-50 text-slate-700 font-bold">
                             {user.firstName?.[0] ?? ""}{user.lastName?.[0] ?? ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-bold text-emerald-950">{user.firstName} {user.lastName}</span>
+                          <span className="font-bold text-primary">{user.firstName} {user.lastName}</span>
                           <span className="text-xs text-muted-foreground">@{user.nickname}</span>
                         </div>
                       </div>
@@ -294,7 +294,7 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-4">
-                      <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                      <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                         {user?.["category"] ?? "—"}
                       </span>
                     </TableCell>
@@ -325,7 +325,7 @@ function UserTable({ users, onRefetch }: { users: User[]; onRefetch: () => void 
                     <TableCell className="px-4 py-4">
                       <div className="flex flex-col gap-1 items-center">
                         <div className="flex items-center gap-1.5 text-xs">
-                          <Clock className="size-3 text-emerald-600" />
+                          <Clock className="size-3 text-primary" />
                           <span className="font-medium text-slate-700">{user?.["activeHours"] ?? "—"}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs">
@@ -553,7 +553,7 @@ function DeletedRecordsTable({ users, onRefetch }: { users: User[]; onRefetch: (
                             size="sm"
                             onClick={() => handleReactivate(user)}
                             disabled={reactivatingId === user.id}
-                            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                            className="border-emerald-200 text-primary hover:bg-primary/5 hover:text-emerald-800"
                           >
                             <RotateCcw className={cn("mr-1.5 size-3.5", reactivatingId === user.id && "animate-spin")} />
                             {reactivatingId === user.id ? "Reactivating..." : "Reactivate"}

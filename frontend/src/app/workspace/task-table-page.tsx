@@ -50,32 +50,32 @@ function getStatusClasses(status: string) {
   switch (status) {
     case "Closed":
     case "Verified":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Hold":
     case "Pending":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Open":
     case "Unverified":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Recurring":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     case "Paused":
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
     default:
-      return "bg-slate-50 text-slate-700 border-emerald-100"
+      return "bg-slate-50 text-slate-700 border-primary/10"
   }
 }
 
 function getPriorityClasses(priority: string) {
   switch (priority) {
     case "High":
-      return "bg-slate-50 text-slate-700 ring-emerald-600/20"
+      return "bg-slate-50 text-slate-700 ring-primary/20"
     case "Medium":
-      return "bg-slate-50 text-slate-700 ring-emerald-600/20"
+      return "bg-slate-50 text-slate-700 ring-primary/20"
     case "Low":
-      return "bg-slate-50 text-slate-700 ring-emerald-600/20"
+      return "bg-slate-50 text-slate-700 ring-primary/20"
     default:
-      return "bg-slate-50 text-slate-700 ring-emerald-600/20"
+      return "bg-slate-50 text-slate-700 ring-primary/20"
   }
 }
 
@@ -239,7 +239,7 @@ export function TaskTablePage({
         <Button 
           onClick={() => window.location.reload()} 
           variant="outline" 
-          className="mt-6 border-slate-300 hover:bg-emerald-100"
+          className="mt-6 border-slate-300 hover:bg-primary/10"
         >
           Try Again
         </Button>
@@ -261,14 +261,14 @@ export function TaskTablePage({
       ) : null}
 
       <div className="w-full overflow-hidden rounded-2xl border bg-background ">
-        <div className="border-b bg-emerald-50/70 px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
+        <div className="border-b bg-primary/10 px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
           <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between relative min-h-[3rem]">
             <div className="shrink-0 space-y-1 lg:w-1/4">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-emerald-950">
+                <h2 className="text-xl font-bold text-primary">
                   {tableTitle}
                 </h2>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-100 px-2 text-xs font-bold text-slate-900">
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">
                   {isLoading ? "..." : total}
                 </span>
               </div>
@@ -305,7 +305,7 @@ export function TaskTablePage({
                   variant={viewMode === 'table' ? "secondary" : "ghost"} 
                   size="sm" 
                   onClick={() => setViewMode('table')}
-                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'table' ? "bg-emerald-600 text-white hover:bg-emerald-700 " : "text-slate-900 hover:bg-emerald-100")}
+                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'table' ? "bg-bg-primary text-primary-foreground hover:bg-primary/80 " : "text-slate-900 hover:bg-primary/10")}
                 >
                   <ListIcon className="size-3.5 mr-1.5" />
                   <span className="text-[11px] font-bold uppercase tracking-wider">Table</span>
@@ -314,7 +314,7 @@ export function TaskTablePage({
                   variant={viewMode === 'kanban' ? "secondary" : "ghost"} 
                   size="sm" 
                   onClick={() => setViewMode('kanban')}
-                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'kanban' ? "bg-emerald-600 text-white hover:bg-emerald-700 " : "text-slate-900 hover:bg-emerald-100")}
+                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'kanban' ? "bg-bg-primary text-primary-foreground hover:bg-primary/80 " : "text-slate-900 hover:bg-primary/10")}
                 >
                   <LayoutGridIcon className="size-3.5 mr-1.5" />
                   <span className="text-[11px] font-bold uppercase tracking-wider">Kanban</span>
@@ -323,7 +323,7 @@ export function TaskTablePage({
                   variant={viewMode === 'calendar' ? "secondary" : "ghost"} 
                   size="sm" 
                   onClick={() => setViewMode('calendar')}
-                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'calendar' ? "bg-emerald-600 text-white hover:bg-emerald-700 " : "text-slate-900 hover:bg-emerald-100")}
+                  className={cn("h-7 px-3 rounded-md transition-all", viewMode === 'calendar' ? "bg-bg-primary text-primary-foreground hover:bg-primary/80 " : "text-slate-900 hover:bg-primary/10")}
                 >
                   <CalendarIcon className="size-3.5 mr-1.5" />
                   <span className="text-[11px] font-bold uppercase tracking-wider">Calendar</span>
@@ -353,7 +353,7 @@ export function TaskTablePage({
         {isExpanded ? (
           <div className="px-2 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
             {selectedIds.size > 0 && (
-              <div className="animate-in fade-in slide-in-from-top-4 mb-4 flex items-center justify-between rounded-xl bg-emerald-900 p-4 text-white ">
+              <div className="animate-in fade-in slide-in-from-top-4 mb-4 flex items-center justify-between rounded-xl bg-primary p-4 text-white ">
                 <span className="text-sm font-medium">
                   {selectedIds.size} tasks selected
                 </span>
@@ -361,7 +361,7 @@ export function TaskTablePage({
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedIds(new Set())}
-                  className="text-emerald-100 hover:bg-emerald-800 hover:text-white"
+                  className="text-primary-foreground hover:bg-primary/80 hover:text-white"
                 >
                   Clear selection
                 </Button>
@@ -370,18 +370,18 @@ export function TaskTablePage({
 
             {isLoading ? (
               <div className="space-y-4 py-8">
-                <div className="h-10 w-full animate-pulse rounded-lg bg-emerald-100/50" />
-                <div className="h-64 w-full animate-pulse rounded-xl bg-emerald-50/30" />
+                <div className="h-10 w-full animate-pulse rounded-lg bg-primary/10" />
+                <div className="h-64 w-full animate-pulse rounded-xl bg-primary/5" />
               </div>
             ) : (
               <div className="space-y-4">
                 {viewMode === 'table' ? (
                   <>
                     {/* Desktop Table View */}
-                    <div className="w-full overflow-auto rounded-xl border bg-background/70 max-h-[calc(100vh-22rem)] scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
+                    <div className="w-full overflow-auto rounded-xl border bg-background/70 max-h-[calc(100vh-22rem)] scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
                       <Table className="w-full min-w-max table-auto">
                         <TableHeader className="sticky top-0 z-10">
-                          <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
+                          <TableRow className="bg-primary/10 hover:bg-primary/10">
                             <TableHead className="w-[50px] px-2 py-3 text-center sm:px-4 sm:py-4">
                               <Checkbox
                                 checked={
@@ -392,45 +392,45 @@ export function TaskTablePage({
                                 aria-label="Select all tasks"
                               />
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 <HashIcon className="size-4" />
                                 Task #
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Task
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Assigned To
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Delegated By
                               </div>
                             </TableHead>
 
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Status
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Priority
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 <CalendarIcon className="size-4" />
                                 Due Date
                               </div>
                             </TableHead>
-                            <TableHead className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                            <TableHead className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                               <div className="flex items-center justify-center gap-2">
                                 Actions
                               </div>
@@ -454,7 +454,7 @@ export function TaskTablePage({
                             <TableRow
                               key={task.taskNo}
                               className={cn(
-                                "transition-colors hover:bg-emerald-50/30",
+                                "transition-colors hover:bg-primary/5",
                                 selectedIds.has(task.taskNo) && "bg-slate-50/50"
                               )}
                             >
@@ -465,7 +465,7 @@ export function TaskTablePage({
                                   aria-label={`Select ${task.taskNo}`}
                                 />
                               </TableCell>
-                              <TableCell className="px-3 py-3 text-center font-semibold text-emerald-950 sm:px-4 sm:py-4">
+                              <TableCell className="px-3 py-3 text-center font-semibold text-primary sm:px-4 sm:py-4">
                                 {task.taskNo}
                               </TableCell>
                               <TableCell className="max-w-sm px-3 py-3 sm:px-4 sm:py-4">
@@ -498,13 +498,13 @@ export function TaskTablePage({
                                   {task.priority}
                                 </span>
                               </TableCell>
-                              <TableCell className="px-3 py-3 text-center font-medium text-emerald-800 sm:px-4 sm:py-4">
+                              <TableCell className="px-3 py-3 text-center font-medium text-primary sm:px-4 sm:py-4">
                                 {task.dueDate}
                               </TableCell>
                               <TableCell className="px-3 py-3 text-center sm:px-4 sm:py-4">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-emerald-100">
+                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
                                       <MoreHorizontalIcon className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>

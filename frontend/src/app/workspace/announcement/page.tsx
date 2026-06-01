@@ -17,7 +17,7 @@ export default function AnnouncementPage() {
         <CardContent className="space-y-6">
           {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Announcements
@@ -25,12 +25,12 @@ export default function AnnouncementPage() {
                 <Megaphone className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">24</div>
+                <div className="text-2xl font-bold text-primary">24</div>
                 <p className="text-xs text-slate-700 mt-1">All time</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Active Notices
@@ -38,12 +38,12 @@ export default function AnnouncementPage() {
                 <Bell className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">5</div>
+                <div className="text-2xl font-bold text-primary">5</div>
                 <p className="text-xs text-slate-700 mt-1">Currently visible</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Scheduled
@@ -51,12 +51,12 @@ export default function AnnouncementPage() {
                 <Calendar className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">3</div>
+                <div className="text-2xl font-bold text-primary">3</div>
                 <p className="text-xs text-slate-700 mt-1">Upcoming posts</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Reach
@@ -64,7 +64,7 @@ export default function AnnouncementPage() {
                 <Users className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">100%</div>
+                <div className="text-2xl font-bold text-primary">100%</div>
                 <p className="text-xs text-slate-700 mt-1">Workspace coverage</p>
               </CardContent>
             </Card>

@@ -18,17 +18,17 @@ export default function DataPage() {
 
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="rounded-lg border bg-white p-5 ">
-          <GaugeIcon className="mb-4 size-5 text-emerald-600" />
+          <GaugeIcon className="mb-4 size-5 text-primary" />
           <p className="text-sm font-medium text-zinc-600">Read Pattern</p>
           <p className="mt-2 text-2xl font-semibold">Indexed filters</p>
         </div>
         <div className="rounded-lg border bg-white p-5 ">
-          <KeyIcon className="mb-4 size-5 text-emerald-600" />
+          <KeyIcon className="mb-4 size-5 text-primary" />
           <p className="text-sm font-medium text-zinc-600">Access Pattern</p>
           <p className="mt-2 text-2xl font-semibold">Row permissions</p>
         </div>
         <div className="rounded-lg border bg-white p-5 ">
-          <ListFilterIcon className="mb-4 size-5 text-emerald-600" />
+          <ListFilterIcon className="mb-4 size-5 text-primary" />
           <p className="text-sm font-medium text-zinc-600">Payload Pattern</p>
           <p className="mt-2 text-2xl font-semibold">Bounded lists</p>
         </div>
@@ -36,7 +36,7 @@ export default function DataPage() {
 
       <div className="overflow-hidden rounded-lg border bg-white ">
         <div className="flex items-center gap-2 border-b px-5 py-4">
-          <DatabaseIcon className="size-5 text-emerald-600" />
+          <DatabaseIcon className="size-5 text-primary" />
           <h3 className="font-semibold">Collections</h3>
         </div>
         <div className="divide-y">

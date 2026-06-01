@@ -200,7 +200,7 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-16 rounded-full bg-muted overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-emerald-500"
+                              className="h-full rounded-full bg-primary"
                               style={{ width: `${p.profileCompletion ?? 0}%` }}
                             />
                           </div>
@@ -219,7 +219,7 @@ export default function AdminUsersPage() {
                               onClick={() => handleOpenStatusDialog(p, "active")}
                               title="Activate"
                             >
-                              <ShieldCheckIcon className="h-4 w-4 text-emerald-600" />
+                              <ShieldCheckIcon className="h-4 w-4 text-primary" />
                             </Button>
                           )}
                           {p.status === "active" && (

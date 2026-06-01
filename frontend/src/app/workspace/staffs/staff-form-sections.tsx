@@ -90,7 +90,7 @@ export function ProfileImageUpload({
   return (
     <div className="flex flex-col items-center gap-4 py-6">
       <div className="relative group">
-        <Avatar className="size-32 border-2 border-emerald-100 ring-4 ring-emerald-50/50  overflow-hidden">
+        <Avatar className="size-32 border-2 border-primary/20 ring-4 ring-emerald-50/50  overflow-hidden">
           <AvatarImage src={preview || ""} className="object-cover" />
           <AvatarFallback className="bg-slate-50 text-slate-700 text-2xl font-bold">
             {preview ? "" : "AM"}
@@ -163,7 +163,7 @@ export function SelectWithAdd({
               type="button"
               variant="outline"
               size="icon-sm"
-              className="shrink-0 h-8 w-8 border-emerald-100 bg-slate-50/50 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800"
+              className="shrink-0 h-8 w-8 border-primary/20 bg-slate-50/50 text-slate-700 hover:bg-primary/10 hover:text-emerald-800"
             >
               <PlusIcon className="size-4" />
             </Button>
@@ -183,7 +183,7 @@ export function SelectWithAdd({
                   onChange={(e) => setNewValue(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAdd()}
                 />
-                <Button onClick={handleAdd} className="bg-emerald-600 shrink-0">
+                <Button onClick={handleAdd} className="bg-primary shrink-0">
                   Add
                 </Button>
               </div>

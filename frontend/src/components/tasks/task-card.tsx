@@ -16,10 +16,10 @@ export function TaskCard({ task, getStatusClasses, getPriorityClasses }: TaskCar
     <div className="rounded-xl border bg-card p-4  transition-all hover: lg:hidden">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="space-y-1">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+          <span className="text-xs font-bold text-primary uppercase tracking-wider">
             {task.taskNo}
           </span>
-          <h3 className="font-semibold leading-tight text-emerald-950">
+          <h3 className="font-semibold leading-tight text-primary">
             {task.task}
           </h3>
         </div>
@@ -38,7 +38,7 @@ export function TaskCard({ task, getStatusClasses, getPriorityClasses }: TaskCar
           <UserIcon className="size-3.5" />
           <span>{task.assignedTo}</span>
         </div>
-        <div className="flex items-center gap-2 text-emerald-700 font-medium">
+        <div className="flex items-center gap-2 text-primary font-medium">
           <CalendarIcon className="size-3.5" />
           <span>{task.dueDate}</span>
         </div>
@@ -55,7 +55,7 @@ export function TaskCard({ task, getStatusClasses, getPriorityClasses }: TaskCar
         </span>
         
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <CheckCircle2Icon className="size-3.5 text-emerald-500" />
+          <CheckCircle2Icon className="size-3.5 text-primary" />
           <span>{task.finalStatus}</span>
         </div>
       </div>

@@ -31,7 +31,7 @@ export default function OrgSettingsPage() {
     <section className="space-y-6">
       <Card className="border bg-white">
         <CardHeader>
-          <CardTitle className="text-3xl font-semibold tracking-tight text-emerald-950">
+          <CardTitle className="text-3xl font-semibold tracking-tight text-primary">
             Organization Settings
           </CardTitle>
           <CardDescription>
@@ -53,7 +53,7 @@ export default function OrgSettingsPage() {
                   <TabsTrigger
                     key={tab.id}
                     value={tab.id}
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-emerald-600 border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-slate-700 flex items-center gap-2 transition-all"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-primary border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-slate-700 flex items-center gap-2 transition-all"
                   >
                     <tab.icon className="size-4" />
                     {tab.label}

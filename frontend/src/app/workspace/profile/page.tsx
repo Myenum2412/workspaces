@@ -348,7 +348,7 @@ export default function ProfilePage() {
   const handleCancel = () => { setIsEditing(false); setFormData(profile); };
 
   const statusColor: Record<string, string> = {
-    Online: "bg-emerald-500", "Lunch Break": "bg-amber-500", "In a Meeting": "bg-blue-500",
+    Online: "bg-primary", "Lunch Break": "bg-amber-500", "In a Meeting": "bg-blue-500",
     Away: "bg-orange-500", Offline: "bg-slate-300", Leave: "bg-red-500",
   };
 
@@ -379,10 +379,10 @@ export default function ProfilePage() {
           {otpSuccess ? (
             <div className="flex flex-col items-center gap-4 py-6">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                <Check className="h-8 w-8 text-emerald-600" />
+                <Check className="h-8 w-8 text-primary" />
               </div>
               <div className="text-center">
-                <p className="text-lg font-semibold text-emerald-700">Email Verified!</p>
+                <p className="text-lg font-semibold text-primary">Email Verified!</p>
                 <p className="text-sm text-muted-foreground">{userEmail} is now verified.</p>
               </div>
               <Button onClick={() => setShowOtpDialog(false)}>Done</Button>
@@ -399,7 +399,7 @@ export default function ProfilePage() {
               </div>
               <Button onClick={() => verifyOtpMutation.mutate()}
                 disabled={verifyOtpMutation.isPending || otpValue.length < 6}
-                className="w-full bg-emerald-600 hover:bg-emerald-700">
+                className="w-full bg-primary hover:bg-primary/80">
                 {verifyOtpMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</> : "Verify Email"}
               </Button>
               <div className="text-center">
@@ -449,12 +449,12 @@ export default function ProfilePage() {
                           src={(avatarUrl || profile.avatarUrl).startsWith("http") ? (avatarUrl || profile.avatarUrl) : `${API_BASE_URL}${avatarUrl || profile.avatarUrl}`} 
                           alt={profile.firstName} 
                         />
-                        <AvatarFallback className="rounded-xl bg-emerald-100 text-emerald-800">
+                        <AvatarFallback className="rounded-xl bg-primary/10 text-emerald-800">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-600">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 text-primary">
                         <Camera className="h-6 w-6" />
                       </div>
                     )}
@@ -496,7 +496,7 @@ export default function ProfilePage() {
 
             <CardContent className="space-y-6">
               {/* Profile Completion */}
-              <Card className="border-emerald-100">
+              <Card className="border-primary/10">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-2">
                     <div>
@@ -505,7 +505,7 @@ export default function ProfilePage() {
                         Fill all fields to reach 100%
                       </p>
                     </div>
-                    <span className="text-2xl font-bold text-emerald-700">{completion}%</span>
+                    <span className="text-2xl font-bold text-primary">{completion}%</span>
                   </div>
                   <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
                     <div
@@ -528,45 +528,45 @@ export default function ProfilePage() {
 
               {/* Stats */}
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Card className="overflow-hidden border-emerald-100 bg-card">
+                <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-700">Account Status</CardTitle>
                     <ShieldCheckIcon className="h-4 w-4 text-slate-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-emerald-950 capitalize">{profileRaw?.status ?? "active"}</div>
+                    <div className="text-2xl font-bold text-primary capitalize">{profileRaw?.status ?? "active"}</div>
                     <p className="text-xs text-slate-700 mt-1 font-medium">Created {formatDate(profileRaw?.createdAt)}</p>
                   </CardContent>
                 </Card>
-                <Card className="overflow-hidden border-emerald-100 bg-card">
+                <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-700">Last Login</CardTitle>
                     <Clock className="h-4 w-4 text-slate-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-emerald-950">{formatDate(profileRaw?.lastLogin)}</div>
+                    <div className="text-2xl font-bold text-primary">{formatDate(profileRaw?.lastLogin)}</div>
                     <p className="text-xs text-slate-700 mt-1 font-medium">{profileRaw?.loginCount ?? 0} total logins</p>
                   </CardContent>
                 </Card>
-                <Card className="overflow-hidden border-emerald-100 bg-card">
+                <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-700">Email Status</CardTitle>
                     <MailIcon className="h-4 w-4 text-slate-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-emerald-950">
+                    <div className="text-2xl font-bold text-primary">
                       {(isEmailVerified || otpSuccess) ? "Verified" : "Not verified"}
                     </div>
                     <p className="text-xs text-slate-700 mt-1 font-medium">{userEmail || "No email"}</p>
                   </CardContent>
                 </Card>
-                <Card className="overflow-hidden border-emerald-100 bg-card">
+                <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-700">Profile Version</CardTitle>
                     <History className="h-4 w-4 text-slate-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-emerald-950">v{profileRaw?.profileVersion ?? 1}</div>
+                    <div className="text-2xl font-bold text-primary">v{profileRaw?.profileVersion ?? 1}</div>
                     <p className="text-xs text-slate-700 mt-1 font-medium">Updated {formatDate(profileRaw?.updatedAt)}</p>
                   </CardContent>
                 </Card>
@@ -662,7 +662,7 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="flex gap-2 pt-4">
-                        <Button onClick={handleSave} disabled={saveMutation.isPending} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button onClick={handleSave} disabled={saveMutation.isPending} className="bg-primary hover:bg-primary/80">
                           {saveMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Changes"}
                         </Button>
                         <Button onClick={handleCancel} variant="outline">Cancel</Button>
@@ -869,7 +869,7 @@ export default function ProfilePage() {
                           <div className="text-muted-foreground">→</div>
                           <div className="text-center shrink-0">
                             <p className="text-lg font-bold leading-none">
-                              {session.logout ? end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : <span className="text-emerald-600">now</span>}
+                              {session.logout ? end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : <span className="text-primary">now</span>}
                             </p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">{session.logout ? end.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) : "active"}</p>
                           </div>

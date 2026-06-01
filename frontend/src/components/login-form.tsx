@@ -1,97 +1,108 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { cn } from "@/lib/utils"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-import { API_BASE_URL } from "@/lib/api/config"
-import { authApi } from "@/lib/api/client"
+import { API_BASE_URL } from "@/lib/api/config";
+import { authApi, brandingApi } from "@/lib/api/client";
 
 export function LoginForm({
   className,
 }: { className?: string }) {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("")
-  const [registeredMessage, setRegisteredMessage] = useState("")
-  const [resetMessage, setResetMessage] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [registeredMessage, setRegisteredMessage] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [branding, setBranding] = useState<{ logo?: string } | null>(null);
 
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null)
+  // Load branding for login page
+  useEffect(() => {
+    brandingApi.get().then((res: any) => {
+      if (res.success && res.branding) {
+        setBranding({ logo: res.branding.logo?.url });
+        const colors = res.branding.colors;
+        if (colors && typeof document !== "undefined") {
+          const root = document.documentElement;
+          root.style.setProperty("--primary", colors.primary);
+          root.style.setProperty("--primary-foreground", colors.primaryForeground);
+          root.style.setProperty("--ring", colors.primary);
+        }
+      }
+    }).catch(() => { /* ignore */ });
+  }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.search);
     if (params.get("registered") === "true") {
-      setRegisteredMessage("Account created! Check your email for the password.")
+      setRegisteredMessage("Account created! Check your email for the password.");
     }
     if (params.get("reset") === "success") {
-      setResetMessage("Password reset successfully! Sign in with your new password.")
+      setResetMessage("Password reset successfully! Sign in with your new password.");
     }
     if (params.get("reason") === "session_expired") {
-      setErrorMessage("Session expired. Please sign in again.")
+      setErrorMessage("Session expired. Please sign in again.");
     }
-    // Clear any legacy localStorage token
     try {
-      localStorage.removeItem("auth_token")
+      localStorage.removeItem("auth_token");
     } catch { /* ignore */ }
-  }, [])
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsSubmitting(true)
-    setErrorMessage("")
+    event.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage("");
 
     try {
-      // Fetch CSRF token first
-      await fetch(`${API_BASE_URL}/api/auth/csrf-token`, { credentials: "include" })
-      const csrfMatch = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
-      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : ""
+      await fetch(`${API_BASE_URL}/api/auth/csrf-token`, { credentials: "include" });
+      const csrfMatch = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
+      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : "";
 
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken 
+          "X-CSRF-Token": csrfToken,
         },
         credentials: "include",
         body: JSON.stringify({ email, password }),
-      })
-      const json = await res.json()
+      });
+      const json = await res.json();
 
       if (!res.ok) {
-        setErrorMessage(json.error?.message || "Invalid email or password")
-        return
+        setErrorMessage(json.error?.message || "Invalid email or password");
+        return;
       }
 
-      // Cookies set by server — no localStorage needed
-
-      // Fetch user to determine redirect
       try {
-        const me = await authApi.getMe()
+        const me = await authApi.getMe();
         if (me.user?.role === "staff") {
-          router.push("/staff/dashboard")
+          router.push("/staff/dashboard");
         } else {
-          router.push("/workspace")
+          router.push("/workspace");
         }
       } catch {
-        router.push("/workspace")
+        router.push("/workspace");
       }
-      router.refresh()
+      router.refresh();
     } catch {
-      setErrorMessage("Login failed")
+      setErrorMessage("Login failed");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -105,9 +116,9 @@ export function LoginForm({
           </p>
         </div>
 
-        <div className="rounded-lg border border-emerald-500/20 bg-emerald-50 p-4 text-center dark:bg-emerald-950/20">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
           <p className="text-xs text-muted-foreground mb-1">Your auto-generated password</p>
-          <p className="text-lg font-mono font-bold tracking-wider text-emerald-700 dark:text-emerald-400 select-all">
+          <p className="text-lg font-mono font-bold tracking-wider text-primary select-all">
             {generatedPassword}
           </p>
         </div>
@@ -120,12 +131,15 @@ export function LoginForm({
           <Button className="w-full">Go to Sign In</Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
       <div className="flex flex-col items-center gap-1 text-center">
+        {branding?.logo ? (
+          <img src={branding.logo} alt="Logo" className="h-12 mb-2 object-contain" />
+        ) : null}
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm text-balance text-muted-foreground">
           Sign in to manage your tasks, teams, and workspace.
@@ -133,12 +147,12 @@ export function LoginForm({
       </div>
 
       {registeredMessage ? (
-        <FieldDescription className="rounded-lg border border-emerald-500/20 bg-emerald-50 px-3 py-2 text-center text-emerald-700">
+        <FieldDescription className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-center text-primary">
           {registeredMessage}
         </FieldDescription>
       ) : null}
       {resetMessage ? (
-        <FieldDescription className="rounded-lg border border-emerald-500/20 bg-emerald-50 px-3 py-2 text-center text-emerald-700">
+        <FieldDescription className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-center text-primary">
           {resetMessage}
         </FieldDescription>
       ) : null}
@@ -219,5 +233,5 @@ export function LoginForm({
         </Link>
       </div>
     </div>
-  )
+  );
 }

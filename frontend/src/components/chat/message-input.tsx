@@ -37,7 +37,7 @@ export function MessageInput({ onSend, disabled }: {
       <Button
         type="submit"
         size="sm"
-        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+        className="bg-primary hover:bg-primary/80 text-white"
         disabled={disabled || !content.trim()}
       >
         <Send className="size-4" />

@@ -24,10 +24,10 @@ export function ChatParticipants({ participants, currentUserId }: {
           <div
             key={p.id}
             className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
-              p.id === currentUserId ? "bg-emerald-50 text-emerald-700" : "text-zinc-700"
+              p.id === currentUserId ? "bg-primary/5 text-primary" : "text-zinc-700"
             }`}
           >
-            <div className="size-2 rounded-full bg-emerald-500" />
+            <div className="size-2 rounded-full bg-primary" />
             <span>{p.name} {p.id === currentUserId ? "(You)" : ""}</span>
           </div>
         ))}

@@ -45,7 +45,7 @@ export function DataTableToolbar({
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search tasks..."
-          className="h-9 bg-background/50 pl-9  focus-visible:ring-emerald-500 border-emerald-200/50 w-full"
+          className="h-9 bg-background/50 pl-9  focus-visible:ring-primary border-primary/20 w-full"
         />
       </div>
     )
@@ -59,7 +59,7 @@ export function DataTableToolbar({
             <Button
               variant="outline"
               size="sm"
-              className="h-9 border-emerald-200/50 bg-background/50 text-emerald-950 hover:bg-emerald-100/50"
+              className="h-9 border-primary/20 bg-background/50 text-primary hover:bg-primary/10"
             >
               <FilterIcon className="mr-2 size-3.5" />
               <span className="text-xs font-medium">Filter: {filterStatus}</span>
@@ -87,7 +87,7 @@ export function DataTableToolbar({
           size="icon"
           onClick={onToggleExpand}
           aria-label={isExpanded ? "Collapse task table" : "Expand task table"}
-          className="h-9 w-9 border-emerald-200/50 bg-background/50 text-emerald-950 hover:bg-emerald-100/50"
+          className="h-9 w-9 border-primary/20 bg-background/50 text-primary hover:bg-primary/10"
         >
           <ChevronDownIcon
             className={cn(
@@ -109,7 +109,7 @@ export function DataTableToolbar({
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search tasks..."
-            className="h-9 bg-background/50 pl-9  focus-visible:ring-emerald-500 border-emerald-200/50"
+            className="h-9 bg-background/50 pl-9  focus-visible:ring-primary border-primary/20"
           />
         </div>
       </div>
@@ -120,7 +120,7 @@ export function DataTableToolbar({
             <Button
               variant="outline"
               size="sm"
-              className="h-9 border-emerald-200/50 bg-background/50 text-emerald-950 hover:bg-emerald-100/50"
+              className="h-9 border-primary/20 bg-background/50 text-primary hover:bg-primary/10"
             >
               <FilterIcon className="mr-2 size-3.5" />
               <span className="text-xs font-medium">Filter: {filterStatus}</span>
@@ -148,7 +148,7 @@ export function DataTableToolbar({
           size="icon"
           onClick={onToggleExpand}
           aria-label={isExpanded ? "Collapse task table" : "Expand task table"}
-          className="h-9 w-9 border-emerald-200/50 bg-background/50 text-emerald-950 hover:bg-emerald-100/50"
+          className="h-9 w-9 border-primary/20 bg-background/50 text-primary hover:bg-primary/10"
         >
           <ChevronDownIcon
             className={cn(

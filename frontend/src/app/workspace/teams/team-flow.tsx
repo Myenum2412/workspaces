@@ -53,8 +53,8 @@ const TeamMemberNodeComponent = ({
   data,
 }: NodeProps<TeamMemberNode>) => {
   const statusColors = {
-    active: "bg-emerald-500",
-    away: "bg-emerald-500",
+    active: "bg-primary",
+    away: "bg-primary",
     offline: "bg-slate-300",
   }
 
@@ -254,7 +254,7 @@ export function TeamFlow() {
         <Panel position="top-right" className="flex gap-2">
           <Button 
             size="sm" 
-            className="bg-emerald-600 hover:bg-emerald-700 "
+            className="bg-primary hover:bg-primary/80 "
             onClick={() => setIsAddingMember(true)}
           >
             <UserPlusIcon className="mr-2 size-4" />
@@ -305,7 +305,7 @@ export function TeamFlow() {
                 {availableUsers.map((user) => (
                   <div 
                     key={user.id} 
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-emerald-50/30 transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-primary/5 transition-colors group"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="size-10 border ">
@@ -321,7 +321,7 @@ export function TeamFlow() {
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="size-8 p-0 border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all"
+                      className="size-8 p-0 border-primary/20 hover:bg-primary hover:text-white transition-all"
                       onClick={() => handleAddUserToFlow(user)}
                     >
                       <CheckIcon className="size-4" />

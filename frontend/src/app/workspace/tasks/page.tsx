@@ -41,19 +41,19 @@ export default function TasksPage() {
       value: stats.todayTask,
       description: "Due today",
       icon: CalendarDays,
-      className: "border-emerald-100 bg-card",
-      titleClassName: "text-emerald-700",
-      valueClassName: "text-emerald-950",
-      iconClassName: "text-emerald-600",
+      className: "border-primary/20 bg-card",
+      titleClassName: "text-primary",
+      valueClassName: "text-primary",
+      iconClassName: "text-primary",
     },
     {
       title: "In Progress Task",
       value: stats.inProgressTask,
       description: "Currently in progress",
       icon: ClipboardCheck,
-      className: "border-emerald-100 bg-card",
+      className: "border-primary/20 bg-card",
       titleClassName: "text-slate-700",
-      valueClassName: "text-emerald-950",
+      valueClassName: "text-primary",
       iconClassName: "text-slate-600",
     },
     {
@@ -61,9 +61,9 @@ export default function TasksPage() {
       value: stats.teamTask,
       description: "Assigned to teams",
       icon: Users,
-      className: "border-emerald-100 bg-card",
+      className: "border-primary/20 bg-card",
       titleClassName: "text-slate-700",
-      valueClassName: "text-emerald-950",
+      valueClassName: "text-primary",
       iconClassName: "text-slate-600",
     },
     {
@@ -71,9 +71,9 @@ export default function TasksPage() {
       value: stats.pendingTask,
       description: "Waiting to start",
       icon: Clock,
-      className: "border-emerald-100 bg-card",
+      className: "border-primary/20 bg-card",
       titleClassName: "text-slate-700",
-      valueClassName: "text-emerald-950",
+      valueClassName: "text-primary",
       iconClassName: "text-slate-600",
     },
     {
@@ -81,9 +81,9 @@ export default function TasksPage() {
       value: stats.postponedTask,
       description: "Paused or on hold",
       icon: Layers,
-      className: "border-emerald-100 bg-card",
+      className: "border-primary/20 bg-card",
       titleClassName: "text-slate-700",
-      valueClassName: "text-emerald-950",
+      valueClassName: "text-primary",
       iconClassName: "text-slate-600",
     },
     {
@@ -91,9 +91,9 @@ export default function TasksPage() {
       value: stats.repeatedTask,
       description: "Recurring tasks",
       icon: RefreshCw,
-      className: "border-emerald-100 bg-card",
+      className: "border-primary/20 bg-card",
       titleClassName: "text-slate-700",
-      valueClassName: "text-emerald-950",
+      valueClassName: "text-primary",
       iconClassName: "text-slate-600",
     },
     {
@@ -122,7 +122,7 @@ export default function TasksPage() {
             </div>
             <Button
               onClick={() => setIsDialogOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white "
+              className="bg-primary hover:bg-primary/80 text-white "
             >
               <UserPlusIcon className="mr-2 size-4" />
               Allocate Task

@@ -86,7 +86,7 @@ export const AllocationModeSelector = ({
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ",
           saveAsTemplate 
-            ? "bg-emerald-100 text-emerald-700 border border-emerald-300 ring-2 ring-emerald-500/10" 
+            ? "bg-primary/10 text-primary border border-primary/30 ring-2 ring-primary/10" 
             : "text-muted-foreground hover:bg-muted border border-transparent"
         )}
       >
@@ -157,7 +157,7 @@ export const StaffSelector = ({
           <SelectValue placeholder="Select staff" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="quick-add" className="text-emerald-600 font-semibold border-b border-dashed mb-1">
+          <SelectItem value="quick-add" className="text-primary font-semibold border-b border-dashed mb-1">
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               <span>Quick Add Staff</span>
@@ -185,7 +185,7 @@ export const StaffSelector = ({
         type="button" 
         size="icon" 
         variant="outline" 
-        className="h-9 w-9 shrink-0 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+        className="h-9 w-9 shrink-0 border-emerald-200 text-primary hover:bg-primary/5 hover:text-primary"
         onClick={() => onSelect('quick-add')}
       >
         <Plus className="h-4 w-4" />
@@ -259,7 +259,7 @@ export const TeamSelector = ({
           <SelectValue placeholder="Select teams to assign" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="quick-add" className="text-emerald-600 font-semibold border-b border-dashed mb-1">
+          <SelectItem value="quick-add" className="text-primary font-semibold border-b border-dashed mb-1">
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               <span>Quick Add Team</span>
@@ -289,7 +289,7 @@ export const TeamSelector = ({
         type="button" 
         size="icon" 
         variant="outline" 
-        className="h-9 w-9 shrink-0 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+        className="h-9 w-9 shrink-0 border-emerald-200 text-primary hover:bg-primary/5 hover:text-primary"
         onClick={() => onSelect('quick-add')}
       >
         <Plus className="h-4 w-4" />
@@ -482,7 +482,7 @@ export const PrioritySelector = ({
         <SelectValue placeholder="Select priority" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="quick-add" className="text-emerald-600 font-semibold border-b border-dashed mb-1">
+        <SelectItem value="quick-add" className="text-primary font-semibold border-b border-dashed mb-1">
           <div className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             <span>Quick Add Priority</span>
@@ -499,7 +499,7 @@ export const PrioritySelector = ({
       type="button" 
       size="icon" 
       variant="outline" 
-      className="h-9 w-9 shrink-0 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+      className="h-9 w-9 shrink-0 border-emerald-200 text-primary hover:bg-primary/5 hover:text-primary"
       onClick={() => onSelect('quick-add')}
     >
       <Plus className="h-4 w-4" />

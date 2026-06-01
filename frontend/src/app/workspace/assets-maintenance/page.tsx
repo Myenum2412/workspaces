@@ -17,7 +17,7 @@ export default function AssetsMaintenancePage() {
         <CardContent className="space-y-6">
           {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Assets
@@ -25,12 +25,12 @@ export default function AssetsMaintenancePage() {
                 <Wrench className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">45</div>
+                <div className="text-2xl font-bold text-primary">45</div>
                 <p className="text-xs text-slate-700 mt-1">Registered assets</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Maintenance Required
@@ -38,12 +38,12 @@ export default function AssetsMaintenancePage() {
                 <AlertTriangle className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">6</div>
+                <div className="text-2xl font-bold text-primary">6</div>
                 <p className="text-xs text-slate-700 mt-1">Needs attention</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Scheduled
@@ -51,12 +51,12 @@ export default function AssetsMaintenancePage() {
                 <Calendar className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">12</div>
+                <div className="text-2xl font-bold text-primary">12</div>
                 <p className="text-xs text-slate-700 mt-1">Upcoming tasks</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-emerald-100 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Completed
@@ -64,7 +64,7 @@ export default function AssetsMaintenancePage() {
                 <CheckCircle className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-950">89</div>
+                <div className="text-2xl font-bold text-primary">89</div>
                 <p className="text-xs text-slate-700 mt-1">This quarter</p>
               </CardContent>
             </Card>

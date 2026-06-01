@@ -36,7 +36,7 @@ export default function StaffChatPage() {
             <div className="divide-y">
               {chatRooms.map((room) => (
                 <button key={room.id} onClick={() => setSelectedChatId(room.id)}
-                  className={`w-full text-left p-3 hover:bg-zinc-50 transition-colors ${selectedChatId === room.id ? "bg-emerald-50 border-r-2 border-emerald-600" : ""}`}>
+                  className={`w-full text-left p-3 hover:bg-zinc-50 transition-colors ${selectedChatId === room.id ? "bg-primary/5 border-r-2 border-emerald-600" : ""}`}>
                   <div className="flex items-center gap-2">
                     {room.entityType === "task" ? <FileText className="size-4 text-zinc-500" /> : <FolderKanban className="size-4 text-zinc-500" />}
                     <span className="text-sm font-medium truncate">{room.entityName || room.entityId}</span>

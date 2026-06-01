@@ -120,14 +120,14 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
   return (
     <div className="overflow-hidden rounded-2xl border bg-background ">
       {/* Table Header Design matching my-task */}
-      <div className="border-b bg-emerald-50/70 p-6">
+      <div className="border-b bg-primary/10 p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="shrink-0 space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-emerald-950">
+              <h2 className="text-xl font-bold text-primary">
                 Team Directory
               </h2>
-              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-100 px-2 text-xs font-bold text-slate-900">
+              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">
                 {total}
               </span>
             </div>
@@ -145,7 +145,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                 setPage(1)
               }}
               placeholder="Search by team name or head..."
-              className="h-12 bg-background pl-12  focus-visible:ring-emerald-500"
+              className="h-12 bg-background pl-12  focus-visible:ring-primary"
             />
           </div>
 
@@ -154,7 +154,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+                  className="border-slate-200 bg-background text-primary hover:bg-primary/10"
                 >
                   <FilterIcon className="mr-2 size-4" />
                   Filter: {filterStatus}
@@ -182,7 +182,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
               variant="outline"
               size="icon"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100"
+              className="border-slate-200 bg-background text-primary hover:bg-primary/10"
             >
               <ChevronDownIcon
                 className={cn(
@@ -206,9 +206,9 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
               <div className="overflow-hidden rounded-xl border bg-background/70">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
+                    <TableRow className="bg-primary/10 hover:bg-primary/10">
                       <TableHead
-                        className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                        className="px-4 py-4 font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                         onClick={() => handleSort("name")}
                       >
                         <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                         </div>
                       </TableHead>
                       <TableHead
-                        className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                        className="px-4 py-4 font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                         onClick={() => handleSort("head")}
                       >
                         <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                         </div>
                       </TableHead>
                       <TableHead
-                        className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                        className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                         onClick={() => handleSort("members")}
                       >
                         <div className="flex items-center justify-center gap-2">
@@ -235,7 +235,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                         </div>
                       </TableHead>
                       <TableHead
-                        className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                        className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                         onClick={() => handleSort("projects")}
                       >
                         <div className="flex items-center justify-center gap-2">
@@ -244,7 +244,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                         </div>
                       </TableHead>
                       <TableHead
-                        className="px-4 py-4 text-center font-semibold text-emerald-950 cursor-pointer hover:bg-emerald-100/50 transition-colors group"
+                        className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                         onClick={() => handleSort("status")}
                       >
                         <div className="flex items-center justify-center gap-2">
@@ -252,19 +252,19 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                           <SortIcon columnKey="status" />
                         </div>
                       </TableHead>
-                      <TableHead className="px-4 py-4 text-right font-semibold text-emerald-950 text-right">Actions</TableHead>
+                      <TableHead className="px-4 py-4 text-right font-semibold text-primary text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedTeams.map((team) => (
                       <TableRow
                         key={team.id}
-                        className="cursor-pointer transition-colors hover:bg-emerald-50/30"
+                        className="cursor-pointer transition-colors hover:bg-primary/5"
                         onClick={() => onTeamClick(team)}
                       >
                         <TableCell className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-lg bg-emerald-100 flex items-center justify-center text-slate-700 font-bold text-xs">
+                            <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-slate-700 font-bold text-xs">
                               {team.name[0]}
                             </div>
                             <span className="font-medium">{team.name}</span>
@@ -288,7 +288,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                             variant={team.status === "Active" ? "default" : "secondary"}
                             className={cn(
                               "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
-                              team.status === "Active" ? "bg-emerald-600 text-white" : "bg-emerald-200 text-slate-700"
+                              team.status === "Active" ? "bg-bg-primary text-primary-foreground" : "bg-emerald-200 text-slate-700"
                             )}
                           >
                             {team.status}
@@ -296,7 +296,7 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                         </TableCell>
                         <TableCell className="px-4 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" className="text-slate-700 hover:text-emerald-800 hover:bg-emerald-50">
+                            <Button variant="ghost" size="sm" className="text-slate-700 hover:text-primary hover:bg-emerald-50">
                               View Flow <ExternalLinkIcon className="ml-2 size-3.5" />
                             </Button>
                             <DropdownMenu>

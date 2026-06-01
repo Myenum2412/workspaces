@@ -78,7 +78,7 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-700">
+              <Avatar className="h-8 w-8 rounded-lg bg-primary/10 text-primary">
                 {displayAvatar && (
                   <AvatarImage
                     src={displayAvatar.startsWith("http") ? displayAvatar : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`}
@@ -105,7 +105,7 @@ export function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-700">
+                <Avatar className="h-8 w-8 rounded-lg bg-primary/10 text-primary">
                   {displayAvatar && (
                     <AvatarImage
                       src={displayAvatar.startsWith("http") ? displayAvatar : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`}

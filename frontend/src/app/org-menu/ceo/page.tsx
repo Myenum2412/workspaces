@@ -123,7 +123,7 @@ export default function CeoPage() {
                     </TableCell>
                     <TableCell className="px-4 py-4">{getRoleBadge(member.role)}</TableCell>
                     <TableCell className="px-4 py-4">
-                      <Badge variant="outline" className={member.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : member.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member.status}</Badge>
+                      <Badge variant="outline" className={member.status === "active" ? "bg-primary/5 text-primary border-emerald-200" : member.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member.status}</Badge>
                     </TableCell>
                     <TableCell className="px-4 py-4 text-sm text-slate-600">{profile.department ?? "—"}</TableCell>
                     <TableCell className="px-4 py-4 text-sm text-slate-500">{member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}</TableCell>

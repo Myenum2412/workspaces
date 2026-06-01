@@ -24,7 +24,7 @@ export function AddStaffDialog({ onStaffAdded }: AddStaffDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald-600 hover:bg-emerald-700">
+        <Button className="bg-primary hover:bg-primary/80">
           <PlusIcon className="mr-2 size-4" />
           Add Staff
         </Button>

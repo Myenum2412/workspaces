@@ -69,7 +69,7 @@ export function AddTeamDialog() {
       if (!val) handleReset()
     }}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 ">
+        <Button className="bg-primary hover:bg-primary/80 ">
           <PlusIcon className="mr-2 size-4" />
           Create Team
         </Button>
@@ -99,7 +99,7 @@ export function AddTeamDialog() {
                     "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all",
                     role === r.id 
                       ? "border-emerald-600 bg-slate-50 text-slate-700 " 
-                      : "border-emerald-100 hover:border-slate-200 hover:bg-slate-50/50 text-slate-500"
+                      : "border-primary/20 hover:border-slate-200 hover:bg-slate-50/50 text-slate-500"
                   )}
                 >
                   <r.icon className={cn("size-6", role === r.id ? "text-slate-600" : "text-slate-400")} />
@@ -134,7 +134,7 @@ export function AddTeamDialog() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-bold text-slate-700">Select Team Members</Label>
-                <Badge variant="secondary" className="bg-emerald-100 text-slate-700 border-slate-200">
+                <Badge variant="secondary" className="bg-primary/10 text-slate-700 border-slate-200">
                   {selectedMembers.size} selected
                 </Badge>
               </div>
@@ -155,14 +155,14 @@ export function AddTeamDialog() {
                         key={member.id}
                         className={cn(
                           "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors",
-                          selectedMembers.has(member.id) ? "bg-emerald-50" : "hover:bg-emerald-100/80"
+                          selectedMembers.has(member.id) ? "bg-emerald-50" : "hover:bg-primary/10/80"
                         )}
                         onClick={() => toggleMember(member.id)}
                       >
                         <Checkbox 
                           checked={selectedMembers.has(member.id)} 
                           onChange={() => toggleMember(member.id)}
-                          className="border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                          className="border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-emerald-600"
                         />
                         <Avatar className="size-8 border ">
                           <AvatarFallback className="bg-slate-50 text-slate-700 font-bold text-[10px]">
@@ -186,7 +186,7 @@ export function AddTeamDialog() {
           <Button variant="ghost" onClick={() => setOpen(false)} className="text-slate-500 font-bold">Cancel</Button>
           <Button 
             disabled={!role || !selectedBranchId || selectedMembers.size === 0}
-            className="bg-emerald-600 hover:bg-emerald-700  font-bold px-8"
+            className="bg-primary hover:bg-primary/80  font-bold px-8"
             onClick={() => {
               // Implementation for saving would go here
               // Saving Team

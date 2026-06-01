@@ -142,23 +142,23 @@ export default function OrgUsersPage() {
   return (
     <section className="space-y-6">
       <div className="overflow-hidden rounded-2xl border bg-background">
-        <div className="border-b bg-emerald-50/70 p-6">
+        <div className="border-b bg-primary/10 p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="shrink-0 space-y-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-emerald-950">User Management</h2>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-100 px-2 text-xs font-bold text-slate-900">{total}</span>
+                <h2 className="text-xl font-bold text-primary">User Management</h2>
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">{total}</span>
               </div>
               <p className="hidden text-xs text-slate-900/75 xl:block">Manage organization members, roles, and access.</p>
             </div>
             <div className="relative flex-1 px-4 lg:max-w-2xl">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-8 size-5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} placeholder="Search by name, email..." className="h-12 bg-background pl-12 focus-visible:ring-emerald-500" />
+              <Input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} placeholder="Search by name, email..." className="h-12 bg-background pl-12 focus-visible:ring-primary" />
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100">
+                  <Button variant="outline" className="border-slate-200 bg-background text-primary hover:bg-primary/10">
                     <FilterIcon className="mr-2 size-4" />Status: {filterStatus === "all" ? "All" : filterStatus}
                   </Button>
                 </DropdownMenuTrigger>
@@ -170,11 +170,11 @@ export default function OrgUsersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button type="button" variant="outline" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100">
+              <Button type="button" variant="outline" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="border-slate-200 bg-background text-primary hover:bg-primary/10">
                 <ChevronDownIcon className={cn("size-4 transition-transform duration-300", isExpanded ? "rotate-0" : "-rotate-90")} />
               </Button>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={refresh} className="border-slate-200 bg-background text-emerald-950 hover:bg-emerald-100">
+                <Button variant="outline" size="icon" onClick={refresh} className="border-slate-200 bg-background text-primary hover:bg-primary/10">
                   <RefreshCw className={cn("size-4", isLoading && "animate-spin")} />
                 </Button>
                 <AddUserDialog onUserAdded={refresh} />
@@ -186,36 +186,36 @@ export default function OrgUsersPage() {
         {isExpanded && (
           <div className="p-6">
             {selectedIds.size > 0 && (
-              <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-900 p-4 text-white">
+              <div className="mb-4 flex items-center justify-between rounded-xl bg-primary p-4 text-white">
                 <span className="text-sm font-medium">{selectedIds.size} members selected</span>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-emerald-100 hover:bg-emerald-800">Clear selection</Button>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-primary-foreground hover:bg-emerald-800">Clear selection</Button>
               </div>
             )}
             <div className="overflow-hidden rounded-xl border bg-background/70">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-emerald-50/70 hover:bg-emerald-50/70">
+                  <TableRow className="bg-primary/10 hover:bg-primary/10">
                     <TableHead className="w-[50px] px-4 py-4 text-center"><Checkbox checked={paginatedRows.length > 0 && selectedIds.size === paginatedRows.length} onChange={toggleAll} /></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("name")}><div className="flex items-center gap-2">Member <SortIcon columnKey="name" /></div></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("role")}><div className="flex items-center gap-2">Role <SortIcon columnKey="role" /></div></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("status")}><div className="flex items-center gap-2">Status <SortIcon columnKey="status" /></div></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-emerald-950 cursor-pointer group" onClick={() => handleSort("joined")}><div className="flex items-center gap-2">Joined <SortIcon columnKey="joined" /></div></TableHead>
-                    <TableHead className="px-4 py-4 text-center font-semibold text-emerald-950">Actions</TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("name")}><div className="flex items-center gap-2">Member <SortIcon columnKey="name" /></div></TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("role")}><div className="flex items-center gap-2">Role <SortIcon columnKey="role" /></div></TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("status")}><div className="flex items-center gap-2">Status <SortIcon columnKey="status" /></div></TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("joined")}><div className="flex items-center gap-2">Joined <SortIcon columnKey="joined" /></div></TableHead>
+                    <TableHead className="px-4 py-4 text-center font-semibold text-primary">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedRows.map(({ profile, member }) => (
-                    <TableRow key={profile.id} className={cn("cursor-pointer transition-colors hover:bg-emerald-50/30", selectedIds.has(profile.id) && "bg-slate-50/50")} onClick={() => { setSelectedUser({ ...profile, role: member?.role, memberStatus: member?.status, joinedAt: member?.joinedAt }); setIsDetailModalOpen(true); }}>
+                    <TableRow key={profile.id} className={cn("cursor-pointer transition-colors hover:bg-primary/5", selectedIds.has(profile.id) && "bg-slate-50/50")} onClick={() => { setSelectedUser({ ...profile, role: member?.role, memberStatus: member?.status, joinedAt: member?.joinedAt }); setIsDetailModalOpen(true); }}>
                       <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.has(profile.id)} onChange={() => toggleRow(profile.id)} /></TableCell>
                       <TableCell className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">{profile.firstName?.[0] ?? "?"}{profile.lastName?.[0] ?? ""}</div>
-                          <div className="flex flex-col"><span className="font-bold text-emerald-950">{profile.firstName} {profile.lastName}</span><span className="text-xs text-muted-foreground">{profile.email}</span></div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">{profile.firstName?.[0] ?? "?"}{profile.lastName?.[0] ?? ""}</div>
+                          <div className="flex flex-col"><span className="font-bold text-primary">{profile.firstName} {profile.lastName}</span><span className="text-xs text-muted-foreground">{profile.email}</span></div>
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-4 capitalize">{member?.role ?? "—"}</TableCell>
                       <TableCell className="px-4 py-4">
-                        <Badge variant="outline" className={member?.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : member?.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member?.status ?? "pending"}</Badge>
+                        <Badge variant="outline" className={member?.status === "active" ? "bg-primary/5 text-primary border-emerald-200" : member?.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member?.status ?? "pending"}</Badge>
                       </TableCell>
                       <TableCell className="px-4 py-4 text-sm text-slate-500">{member?.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : "—"}</TableCell>
                       <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>

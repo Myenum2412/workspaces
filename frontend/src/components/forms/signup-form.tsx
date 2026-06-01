@@ -110,7 +110,7 @@ export function SignupForm() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-emerald-500/20 bg-emerald-50 p-4 dark:bg-emerald-950/20">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 dark:bg-primary/10">
           <p className="text-xs text-muted-foreground mb-2 text-center">Your auto-generated password</p>
           <div className="flex items-center gap-2">
             <Input
@@ -121,7 +121,7 @@ export function SignupForm() {
               onClick={(e) => (e.target as HTMLInputElement).select()}
             />
             <Button type="button" variant="outline" size="icon" onClick={handleCopyPassword} title="Copy password">
-              {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
         </div>

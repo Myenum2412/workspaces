@@ -148,7 +148,7 @@ export function EmailTemplates() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-emerald-950">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary">
             <MailIcon className="size-6 text-slate-600" />
             Email Templates
           </h2>
@@ -158,7 +158,7 @@ export function EmailTemplates() {
         </div>
         <div className="flex items-center gap-2">
           {saved && (
-            <span className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
+            <span className="flex items-center gap-1 text-sm text-primary font-medium">
               <CheckCircle2Icon className="size-4" /> Saved
             </span>
           )}
@@ -166,7 +166,7 @@ export function EmailTemplates() {
             <RotateCcwIcon className="size-4 mr-2" />
             Reset Defaults
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/80">
             <SaveIcon className="size-4 mr-2" />
             {saving ? "Saving..." : "Save Templates"}
           </Button>
@@ -181,7 +181,7 @@ export function EmailTemplates() {
               <CardTitle className="flex items-center gap-2">
                 Welcome Email
                 {config.welcomeEnabled ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                     <CheckCircle2Icon className="size-3" /> Enabled
                   </span>
                 ) : (
@@ -248,7 +248,7 @@ export function EmailTemplates() {
               <CardTitle className="flex items-center gap-2">
                 Task Assigned Email
                 {config.taskAssignedEnabled ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                     <CheckCircle2Icon className="size-3" /> Enabled
                   </span>
                 ) : (

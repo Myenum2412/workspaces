@@ -44,7 +44,7 @@ export default function TaskDetailPage() {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <p className="text-sm text-zinc-500">{error || "Task not found"}</p>
-        <Link href="/workspace/tasks" className="text-sm text-emerald-600 hover:underline">
+        <Link href="/workspace/tasks" className="text-sm text-primary hover:underline">
           ← Back to Tasks
         </Link>
       </div>

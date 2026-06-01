@@ -148,7 +148,7 @@ export default function BuyersUsersPage() {
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-emerald-600 hover:bg-emerald-700  -emerald-100 font-bold">
+                <Button className="bg-primary hover:bg-primary/80  -emerald-100 font-bold">
                   <PlusIcon className="mr-2 size-4" />
                   Add New Buyer
                 </Button>
@@ -215,7 +215,7 @@ export default function BuyersUsersPage() {
                             placeholder="Create a password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="pr-10 focus-visible:ring-emerald-500"
+                            className="pr-10 focus-visible:ring-primary"
                           />
                           <button
                             type="button"
@@ -249,7 +249,7 @@ export default function BuyersUsersPage() {
                     Cancel
                   </Button>
                   <Button
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                    className="bg-primary hover:bg-primary/80"
                     onClick={handleAddBuyer}
                     disabled={isSubmitting || !companyName || !name || !email || !password}
                   >
@@ -289,8 +289,8 @@ export default function BuyersUsersPage() {
               <div
                 key={buyer.id}
               >
-                <Card className="overflow-hidden border-emerald-100 bg-card  group">
-                  <div className="h-2 bg-emerald-500" />
+                <Card className="overflow-hidden border-primary/20 bg-card  group">
+                  <div className="h-2 bg-primary" />
                   <CardContent className="p-6 space-y-6">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
@@ -304,14 +304,14 @@ export default function BuyersUsersPage() {
                       </div>
                       <Badge
                         variant={buyer.status === "Active" ? "default" : "secondary"}
-                        className={buyer.status === "Active" ? "bg-emerald-100 text-slate-700 hover:bg-emerald-200" : ""}
+                        className={buyer.status === "Active" ? "bg-primary/10 text-slate-700 hover:bg-primary/20" : ""}
                       >
                         {buyer.status}
                       </Badge>
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-emerald-100">
+                      <div className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-primary/10">
                         <div className="size-8 rounded-lg bg-white flex items-center justify-center  font-bold text-slate-600">
                           {buyer.name.split(' ').map(n => n[0]).join('')}
                         </div>

@@ -280,7 +280,7 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
               <div 
                 className={cn(
                   "size-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 z-10",
-                  currentStep >= step ? "bg-emerald-600 text-white  -emerald-200" : "bg-muted text-muted-foreground"
+                  currentStep >= step ? "bg-bg-primary text-primary-foreground  -emerald-200" : "bg-muted text-muted-foreground"
                 )}
               >
                 {step}
@@ -294,7 +294,7 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
                   {step < 5 && (
                 <div className="absolute top-4 left-[60%] right-[-40%] h-[2px] bg-muted -z-0">
                   <div 
-                    className="h-full bg-emerald-600 transition-all duration-500"
+                    className="h-full bg-primary transition-all duration-500"
                   />
                 </div>
               )}
@@ -454,11 +454,11 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
         </Button>
         <div className="flex gap-3">
           {currentStep < 5 ? (
-            <Button className="bg-emerald-600 hover:bg-emerald-700 w-32" onClick={nextStep} disabled={createStaffMutation.isPending}>
+            <Button className="bg-primary hover:bg-primary/80 w-32" onClick={nextStep} disabled={createStaffMutation.isPending}>
               {createStaffMutation.isPending ? "Saving..." : "Next Step"}
             </Button>
           ) : (
-            <Button className="bg-emerald-600 hover:bg-emerald-700 w-32" onClick={handleSave} disabled={createStaffMutation.isPending}>
+            <Button className="bg-primary hover:bg-primary/80 w-32" onClick={handleSave} disabled={createStaffMutation.isPending}>
               {createStaffMutation.isPending ? "Saving..." : "Save Employee"}
             </Button>
           )}

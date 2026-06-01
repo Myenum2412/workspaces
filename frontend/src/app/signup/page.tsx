@@ -13,7 +13,7 @@ export default function SignupPage() {
       <div className="relative hidden overflow-hidden bg-slate-950 lg:block">
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <div className="max-w-md space-y-4">
-            <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
+            <p className="text-sm uppercase tracking-[0.3em] text-primary/80">
               Join the Team
             </p>
             <h2 className="font-heading text-5xl leading-tight font-semibold">

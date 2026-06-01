@@ -21,7 +21,7 @@ export function SavedTaskModal({ open, onClose, task }: SavedTaskModalProps) {
     switch (priority?.toLowerCase()) {
       case 'high': return 'bg-rose-50 text-rose-700 border-rose-200'
       case 'medium': return 'bg-amber-50 text-amber-700 border-amber-200'
-      case 'low': return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      case 'low': return 'bg-primary/5 text-primary border-emerald-200'
       default: return 'bg-slate-50 text-slate-700 border-slate-200'
     }
   }

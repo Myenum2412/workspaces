@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 const STATUS_OPTIONS = ["Online", "Lunch Break", "In a Meeting", "Away", "Offline"]
 
 const DOT_COLORS: Record<string, string> = {
-  Online: "bg-emerald-500",
+  Online: "bg-primary",
   "Lunch Break": "bg-amber-500",
   "In a Meeting": "bg-blue-500",
   Away: "bg-orange-500",

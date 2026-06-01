@@ -51,3 +51,19 @@ export {
   IActivityLog,
 } from "./audit-log";
 
+// Branding models
+export {
+  BrandingConfig,
+  IBrandingConfig,
+  IBrandingColors,
+  IBrandingTypography,
+  IBrandingLogo,
+  defaultColors as defaultBrandingColors,
+} from "./branding-config";
+
+export {
+  BrandingHistory,
+  IBrandingHistory,
+  IBrandingChange,
+} from "./branding-history";
+

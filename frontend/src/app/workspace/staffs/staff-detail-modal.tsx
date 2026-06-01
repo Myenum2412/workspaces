@@ -124,10 +124,10 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-screen-xl w-full min-w-[95vw] max-h-[95vh] h-[90vh] p-0 flex flex-col overflow-hidden border-none bg-background ">
-        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 w-full border-b bg-emerald-50/30">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 w-full border-b bg-primary/5">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <DialogTitle className="font-heading text-2xl font-bold text-emerald-950">Staff Profile</DialogTitle>
+              <DialogTitle className="font-heading text-2xl font-bold text-primary">Staff Profile</DialogTitle>
               <DialogDescription className="text-emerald-800/60 font-medium">
                 Detailed professional record for {staff.firstName} {staff.lastName}.
               </DialogDescription>
@@ -142,7 +142,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
               {/* Header Info */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-6">
-                  <Avatar className="size-24 border-4 border-emerald-100 ">
+                  <Avatar className="size-24 border-4 border-primary/20 ">
                     <AvatarImage src={staff.avatar} />
                     <AvatarFallback className="bg-slate-50 text-slate-700 text-2xl font-bold">
                       {staff.firstName[0]}{staff.lastName[0]}
@@ -166,7 +166,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                         {staff.empId}
                       </Badge>
                       <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 border border-border/50">
-                        <div className={cn("h-2 w-2 rounded-full", editedStaff.status === "Active" ? "bg-emerald-500" : "bg-emerald-500")} />
+                        <div className={cn("h-2 w-2 rounded-full", editedStaff.status === "Active" ? "bg-primary" : "bg-primary")} />
                         {isEditing ? (
                            <select 
                              className="bg-transparent text-xs font-bold uppercase tracking-wider outline-none cursor-pointer"
@@ -201,13 +201,13 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
               </div>
 
               {/* Professional Snapshot Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 rounded-2xl bg-emerald-50/20 border border-emerald-100/50 ">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 rounded-2xl bg-emerald-50/20 border border-primary/10/50 ">
                 <div className="space-y-3">
                   <Label className="text-[12px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2.5">
                     <BriefcaseIcon className="h-4 w-4 text-slate-600" /> Professional Role
                   </Label>
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-100/50 flex items-center justify-center text-slate-700 font-bold ">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-slate-700 font-bold ">
                       <Building2 className="h-6 w-6" />
                     </div>
                     <div className="flex-1">
@@ -230,7 +230,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <CalendarIcon className="h-4 w-4 text-slate-600" /> Tenure Record
                   </Label>
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-slate-600 ">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-slate-600 ">
                       <Clock className="h-6 w-6" />
                     </div>
                     <div className="flex-1">
@@ -253,7 +253,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     <History className="h-4 w-4 text-slate-600" /> Experience
                   </Label>
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-slate-600 ">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-slate-600 ">
                       <CalendarIcon className="h-6 w-6" />
                     </div>
                     <div>
@@ -279,7 +279,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                     </div>
                     <div className="flex flex-wrap gap-2 pt-1">
                       {editedStaff.expertise?.map((tag: string) => (
-                        <Badge key={tag} variant="secondary" className="bg-white text-[10px] font-bold text-slate-700 border-emerald-100">{tag}</Badge>
+                        <Badge key={tag} variant="secondary" className="bg-white text-[10px] font-bold text-slate-700 border-primary/10">{tag}</Badge>
                       ))}
                     </div>
                   </div>
@@ -464,7 +464,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
             {/* Sidebar Header */}
             <div className="p-6 border-b border-border/50 bg-background/50 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-100 text-slate-700 ">
+                <div className="p-2 rounded-xl bg-primary/10 text-slate-700 ">
                   <History className="h-5 w-5" />
                 </div>
                 <span className="font-bold text-base tracking-tight">Professional History</span>
@@ -476,7 +476,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
             <ScrollArea className="flex-1 p-6">
               <div className="space-y-8">
                 <div className="flex justify-center">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-700/60 px-3 py-1 bg-slate-50 rounded-full border border-emerald-100">Uploaded Files</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-700/60 px-3 py-1 bg-slate-50 rounded-full border border-primary/10">Uploaded Files</span>
                 </div>
                 
                 <div className="space-y-4">
@@ -487,7 +487,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
 
                       return (
                         <div key={`${fileName}-${i}`} className="flex gap-4 rounded-2xl border bg-white p-4 ">
-                          <div className="h-11 w-11 rounded-2xl bg-slate-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                          <div className="h-11 w-11 rounded-2xl bg-slate-50 border border-primary/20 flex items-center justify-center shrink-0">
                             <FileText className="h-5 w-5 text-slate-600" />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
@@ -498,7 +498,7 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
                       )
                     })
                   ) : (
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                    <div className="rounded-2xl border border-primary/20 bg-emerald-50/60 p-4">
                       <p className="text-sm font-bold text-emerald-800">Need to fill</p>
                       <p className="mt-1 text-xs font-medium text-slate-700/80">No uploaded file details found for this employee.</p>
                     </div>
@@ -551,14 +551,14 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
 
             {/* Sidebar Footer/Actions */}
             <div className="p-6 bg-background border-t border-border/50">
-              <div className="p-4 rounded-2xl bg-slate-50/50 border border-emerald-100/50 mb-6 ">
+              <div className="p-4 rounded-2xl bg-slate-50/50 border border-primary/10/50 mb-6 ">
                 <div className="flex items-center gap-2.5 mb-2">
                   <CheckCircle2Icon className="h-4 w-4 text-slate-600" />
                   <span className="text-[11px] font-bold text-slate-900 uppercase tracking-widest">Verification Status</span>
                 </div>
                 <p className="text-xs text-slate-700 font-medium leading-relaxed">Need to fill</p>
               </div>
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700  -emerald-100 font-bold text-sm h-12 rounded-2xl">
+              <Button className="w-full bg-primary hover:bg-primary/80  -emerald-100 font-bold text-sm h-12 rounded-2xl">
                 Generate Performance Report
               </Button>
             </div>
@@ -573,16 +573,16 @@ export function StaffDetailModal({ staff, open, onOpenChange, onSave, initialEdi
               <span>Record created Mar 12, 2023</span>
             </div>
             <div className="flex items-center gap-2 text-slate-600 font-bold">
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               <span>Status: Active Employee</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="lg" onClick={() => onOpenChange(false)} className="px-8 rounded-2xl font-bold border-2 hover:bg-emerald-50">Close Profile</Button>
             {isEditing ? (
-              <Button size="lg" onClick={handleSave} className="px-8 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700  -emerald-100">Save Records</Button>
+              <Button size="lg" onClick={handleSave} className="px-8 rounded-2xl font-bold bg-primary hover:bg-primary/80  -emerald-100">Save Records</Button>
             ) : (
-              <Button size="lg" onClick={() => setIsEditing(true)} className="px-8 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700  -emerald-100">Modify Records</Button>
+              <Button size="lg" onClick={() => setIsEditing(true)} className="px-8 rounded-2xl font-bold bg-primary hover:bg-primary/80  -emerald-100">Modify Records</Button>
             )}
           </div>
         </div>

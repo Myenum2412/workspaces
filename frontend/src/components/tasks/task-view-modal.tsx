@@ -175,7 +175,7 @@ export function TaskViewModal({ open, onClose, task, isTeamTask = true }: TaskVi
 
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'completed': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+      case 'completed': return <CheckCircle2 className="h-4 w-4 text-primary" />
       case 'pending': return <Clock className="h-4 w-4 text-amber-500" />
       case 'in_progress': return <AlertCircle className="h-4 w-4 text-blue-500" />
       default: return <Clock className="h-4 w-4 text-slate-400" />
@@ -427,8 +427,8 @@ export function TaskViewModal({ open, onClose, task, isTeamTask = true }: TaskVi
             <Clock className="h-3 w-3" />
             <span>Created {task.created_at ? format(new Date(task.created_at), 'MMM d') : "recently"}</span>
           </div>
-          <div className="flex items-center gap-1 text-emerald-600">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-1 text-primary">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             <span>3 members online</span>
           </div>
         </div>
