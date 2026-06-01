@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
     ],
   },
   turbopack: {},
+
+  // Cloudflare Pages deployment
+  // Build command: next build
+  // Then: npx @cloudflare/next-on-pages@1 --skip-build
+  output: "standalone",
 };
 
 export default nextConfig;
