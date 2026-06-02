@@ -265,16 +265,10 @@ export function TaskTablePage({
           <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between relative min-h-[3rem]">
             <div className="shrink-0 space-y-1 lg:w-1/4">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-primary">
-                  {tableTitle}
-                </h2>
                 <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">
                   {isLoading ? "..." : total}
                 </span>
               </div>
-              <p className="hidden text-xs text-slate-900/75 xl:block">
-                Manage all delegated tasks in one place.
-              </p>
             </div>
 
             {/* Centered Search Bar */}

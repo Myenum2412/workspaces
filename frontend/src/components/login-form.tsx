@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { API_BASE_URL } from "@/lib/api/config";
-import { authApi, brandingApi } from "@/lib/api/client";
+import { authApi } from "@/lib/api/client";
 
 export function LoginForm({
   className,
@@ -26,23 +26,6 @@ export function LoginForm({
   const [registeredMessage, setRegisteredMessage] = useState("");
   const [resetMessage, setResetMessage] = useState("");
   const [generatedPassword] = useState<string | null>(null);
-  const [branding, setBranding] = useState<{ logo?: string } | null>(null);
-
-  // Load branding for login page
-  useEffect(() => {
-    brandingApi.get().then((res: any) => {
-      if (res.success && res.branding) {
-        setBranding({ logo: res.branding.logo?.url });
-        const colors = res.branding.colors;
-        if (colors && typeof document !== "undefined") {
-          const root = document.documentElement;
-          root.style.setProperty("--primary", colors.primary);
-          root.style.setProperty("--primary-foreground", colors.primaryForeground);
-          root.style.setProperty("--ring", colors.primary);
-        }
-      }
-    }).catch(() => { /* ignore */ });
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -141,12 +124,6 @@ export function LoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)}>
       <div className="flex flex-col items-center gap-1 text-center">
-        {branding?.logo ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={branding.logo} alt="Logo" className="h-12 mb-2 object-contain" />
-          </>
-        ) : null}
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm text-balance text-muted-foreground">
           Sign in to manage your tasks, teams, and workspace.

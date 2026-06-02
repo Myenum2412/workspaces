@@ -67,3 +67,9 @@ export {
   IBrandingChange,
 } from "./branding-history";
 
+// File records
+export {
+  FileRecord,
+  IFileRecord,
+} from "./file-record";
+

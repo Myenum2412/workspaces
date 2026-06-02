@@ -26,6 +26,7 @@ import uploadRoutes from "./routes/upload.js";
 import { auditMiddleware } from "./middleware/audit.js";
 import profileRoutes from "./routes/profile.js";
 import workspaceRoutes from "./routes/workspace.js";
+import fileRoutes from "./routes/file-routes.js";
 import staffRoutes from "./routes/staff.js";
 import taskRoutes from "./routes/tasks.js";
 
@@ -113,6 +114,9 @@ app.use("/api/invites", inviteRoutes);
 
 // Workspace
 app.use("/api/workspace", workspaceRoutes);
+
+// File records management
+app.use("/api/workspace/files", fileRoutes);
 
 // Tasks (CRUD + saved templates)
 app.use("/api/tasks", taskRoutes);

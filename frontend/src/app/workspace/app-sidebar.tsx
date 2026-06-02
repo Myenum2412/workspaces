@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   BarChart3Icon, ListChecksIcon, SettingsIcon, UsersIcon, Building2,
   LayoutDashboard, Users,
-  ChevronDown, StoreIcon, ShieldCheckIcon,
+  ChevronDown, StoreIcon, ShieldCheckIcon, FilesIcon,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -131,6 +131,11 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Stores" isActive={isActiveUrl("/workspace/stores")}>
                 <Link href="/workspace/stores"><StoreIcon /><span>Stores</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Files" isActive={isActiveUrl("/workspace/administration/files")}>
+                <Link href="/workspace/administration/files"><FilesIcon /><span>Files</span></Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

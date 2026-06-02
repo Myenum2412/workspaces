@@ -7,6 +7,7 @@ import crypto from "crypto";
 import { logAudit } from "../middleware/audit.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { apiResponse } from "../core/utils/apiResponse.js";
+import { FileRecord } from "../models/file-record.js";
 
 const router = Router();
 
@@ -70,6 +71,28 @@ async function uploadToR2(file: Express.Multer.File, folder: string): Promise<{ 
   return { url, key: filename };
 }
 
+async function createFileRecord(req: Request, file: Express.Multer.File, folder: string, url: string, key: string) {
+  const authReq = req as AuthRequest;
+  try {
+    await FileRecord.create({
+      _id: crypto.randomUUID(),
+      organizationId: authReq.user?.organizationId || "unknown",
+      userId: authReq.user?.userId || "unknown",
+      userName: authReq.user?.email || "unknown",
+      filename: key.split("/").pop() || file.originalname,
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      url,
+      key,
+      folder,
+    });
+  } catch (err: any) {
+    console.error("[Upload] FileRecord creation failed:", err.message);
+    // Non-blocking — upload already succeeded
+  }
+}
+
 function auditFileAction(req: Request, action: string, metadata: Record<string, unknown> = {}) {
   const authReq = req as AuthRequest;
   logAudit({
@@ -118,9 +141,10 @@ router.post("/avatar", authenticate, imageUpload.single("file"), catchAsync(asyn
   const authReq = req as AuthRequest;
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-  const { url: avatarUrl } = await uploadToR2(req.file, "avatars");
+  const { url: avatarUrl, key: avatarKey } = await uploadToR2(req.file, "avatars");
   const UserProfile = (await import("../models/index.js")).UserProfile;
   await UserProfile.findOneAndUpdate({ userId: authReq.user!.userId }, { avatarUrl });
+  createFileRecord(req, req.file, "avatars", avatarUrl, avatarKey);
 
   auditFileAction(req, "file_avatar_upload", { size: req.file.size, mimetype: req.file.mimetype });
   apiResponse.success(res, { url: avatarUrl, avatarUrl });
@@ -129,7 +153,8 @@ router.post("/avatar", authenticate, imageUpload.single("file"), catchAsync(asyn
 // ── Image upload ─────────────────────────────────────────────
 router.post("/image", authenticate, imageUpload.single("file"), catchAsync(async (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const { url } = await uploadToR2(req.file, "images");
+  const { url, key } = await uploadToR2(req.file, "images");
+  createFileRecord(req, req.file, "images", url, key);
 
   auditFileAction(req, "file_image_upload", { size: req.file.size, mimetype: req.file.mimetype });
   apiResponse.success(res, { url });
@@ -139,6 +164,7 @@ router.post("/image", authenticate, imageUpload.single("file"), catchAsync(async
 router.post("/file", authenticate, fileUpload.single("file"), catchAsync(async (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
   const { url, key } = await uploadToR2(req.file, "files");
+  createFileRecord(req, req.file, "files", url, key);
 
   auditFileAction(req, "file_upload", { key, size: req.file.size, mimetype: req.file.mimetype, filename: req.file.originalname });
   apiResponse.success(res, { url, key, filename: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size });
@@ -152,6 +178,7 @@ router.post("/files", authenticate, fileUpload.array("files", 10), catchAsync(as
   const results = await Promise.all(
     files.map(async (f) => {
       const { url, key } = await uploadToR2(f, "files");
+      createFileRecord(req, f, "files", url, key);
       return { url, key, filename: f.originalname, mimetype: f.mimetype, size: f.size };
     })
   );
@@ -172,6 +199,9 @@ router.delete("/file", authenticate, catchAsync(async (req: Request, res: Respon
     Bucket: process.env.R2_BUCKET_NAME,
     Key: key,
   }));
+
+  // Remove FileRecord if exists
+  await FileRecord.findOneAndDelete({ key }).catch(() => { /* silent */ });
 
   auditFileAction(req, "file_delete", { key });
   apiResponse.success(res, { success: true });

@@ -28,6 +28,7 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
       },
     },
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     noSniff: true,

@@ -308,9 +308,6 @@ export const auditApi = {
 export const workspaceApi = {
   getHrSettings: () => api.get<{ success: boolean; hrSettings: any }>("/api/workspace/hr-settings"),
   updateHrSettings: (data: any) => api.put<{ success: boolean; hrSettings: any }>("/api/workspace/hr-settings", data),
-  getThemeSettings: () => api.get<{ success: boolean; themeSettings: any }>("/api/workspace/theme-settings"),
-  updateThemeSettings: (data: any) =>
-    api.put<{ success: boolean; themeSettings: any }>("/api/workspace/theme-settings", data),
   uploadImage: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -335,91 +332,16 @@ export const workspaceApi = {
   deleteShift: (id: string) => api.delete<{ success: boolean }>(`/api/workspace/shifts/${id}`),
 };
 
-// ── Branding API ────────────────────────────────────────────
+// ── Upload API ──────────────────────────────────────────────
 
-export interface BrandingColors {
-  primary: string;
-  primaryHover: string;
-  primaryForeground: string;
-  secondary: string;
-  secondaryForeground: string;
-  accent: string;
-  accentForeground: string;
-  background: string;
-  foreground: string;
-  card: string;
-  cardForeground: string;
-  border: string;
-  muted: string;
-  mutedForeground: string;
-  ring: string;
-  sidebar: string;
-  sidebarForeground: string;
-  sidebarPrimary: string;
-  sidebarPrimaryForeground: string;
-  sidebarAccent: string;
-  sidebarAccentForeground: string;
-}
-
-export interface BrandingConfig {
-  organizationId: string;
-  colors: BrandingColors;
-  darkModeColors: Partial<BrandingColors>;
-  typography: { fontFamily: string; headingFont: string; monoFont: string; baseFontSize: number };
-  logo: { url: string; width: number; height: number; darkModeUrl: string };
-  favicon: string;
-  mode: "light" | "dark" | "system";
-  presetName: string;
-  version: number;
-  updatedBy: string;
-  updatedAt?: string;
-  createdAt?: string;
-}
-
-export interface BrandingHistoryEntry {
-  _id: string;
-  organizationId: string;
-  version: number;
-  changes: Array<{ field: string; oldValue: string; newValue: string }>;
-  snapshot: Record<string, any>;
-  updatedBy: string;
-  updatedByName: string;
-  rollbackFrom: number | null;
-  createdAt: string;
-}
-
-export const brandingApi = {
-  get: () => api.get<{ success: boolean; branding: BrandingConfig; isDefault: boolean }>("/api/branding"),
-
-  update: (data: Partial<BrandingConfig>) =>
-    api.put<{ success: boolean; branding: BrandingConfig; version: number }>("/api/branding", data),
-
-  getHistory: (page = 1, limit = 20) =>
-    api.get<{
-      success: boolean;
-      history: BrandingHistoryEntry[];
-      pagination: { page: number; limit: number; total: number; pages: number };
-    }>(`/api/branding/history?page=${page}&limit=${limit}`),
-
-  rollback: (version: number) =>
-    api.post<{ success: boolean; branding: BrandingConfig; version: number }>("/api/branding/rollback", { version }),
-
-  validate: (colors: Record<string, string>) =>
-    api.post<{
-      success: boolean;
-      validation: Record<string, { valid: boolean; contrastAA: boolean; contrastAAA: boolean; ratio: number; message: string }>;
-    }>("/api/branding/validate", { colors }),
-
-  reset: () =>
-    api.post<{ success: boolean; branding: BrandingConfig; version: number }>("/api/branding/reset", {}),
-
-  uploadLogo: async (file: File) => {
+export const uploadApi = {
+  uploadFile: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
     const headers: Record<string, string> = {};
     const csrfToken = getCsrfToken();
     if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
-    const res = await fetch(`${API_BASE_URL}/api/upload/image`, {
+    const res = await fetch(`${API_BASE_URL}/api/upload/file`, {
       method: "POST",
       credentials: "include",
       headers,
@@ -429,6 +351,42 @@ export const brandingApi = {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || "Upload failed");
     }
-    return res.json() as Promise<{ success: boolean; url: string }>;
+    return res.json() as Promise<{ success: boolean; url: string; key: string; filename: string; mimetype: string; size: number }>;
   },
 };
+
+// ── Files API ────────────────────────────────────────────────
+
+export const filesApi = {
+  list: (params?: { folder?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.folder) q.set("folder", params.folder);
+    if (params?.page) q.set("page", String(params.page));
+    if (params?.limit) q.set("limit", String(params.limit));
+    return api.get<{ success: boolean; files: any[]; total: number; page: number; limit: number; pages: number }>(`/api/workspace/files?${q}`);
+  },
+
+  listFolders: () => api.get<{ success: boolean; folders: string[] }>("/api/workspace/files/folders"),
+
+  createRecord: (data: { filename: string; originalName: string; mimetype: string; size: number; url: string; key: string; folder: string }) =>
+    api.post<{ success: boolean; file: any }>("/api/workspace/files/record", data),
+
+  delete: (id: string) => api.delete<{ success: boolean }>(`/api/workspace/files/${id}`),
+
+  uploadAndRecord: async (file: File) => {
+    const uploadResult = await uploadApi.uploadFile(file);
+    const key = uploadResult.key;
+    const folder = key.split("/")[0] || "files";
+    const recordResult = await filesApi.createRecord({
+      filename: uploadResult.filename,
+      originalName: file.name,
+      mimetype: uploadResult.mimetype,
+      size: uploadResult.size,
+      url: uploadResult.url,
+      key,
+      folder,
+    });
+    return recordResult;
+  },
+};
+

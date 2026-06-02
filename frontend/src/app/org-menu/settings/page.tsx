@@ -67,7 +67,7 @@ export default function OrgSettingsPage() {
                 <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
                   <Settings2 className="size-12 text-slate-300 mb-4" />
                   <h3 className="text-lg font-bold text-slate-900">General Organization Settings</h3>
-                  <p className="text-sm text-slate-500 max-w-xs">Organization branding, timezone, and fundamental configuration options.</p>
+                  <p className="text-sm text-slate-500 max-w-xs">Organization settings, timezone, and fundamental configuration options.</p>
                 </Card>
               </div>
             </TabsContent>

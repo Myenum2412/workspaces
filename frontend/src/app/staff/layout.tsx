@@ -3,7 +3,6 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
 import {
   BoxesIcon,
   BracesIcon,
@@ -13,7 +12,6 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { workspaceApi } from "@/lib/api/client"
 
 const navItems = [
   { href: "/staff/data", label: "Data", icon: DatabaseIcon },
@@ -24,30 +22,14 @@ const navItems = [
 export default function MyStaffLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
-  const { data: themeRes } = useQuery({
-    queryKey: ["theme-settings"],
-    queryFn: workspaceApi.getThemeSettings,
-    staleTime: 60_000,
-  })
-  
-  const themeSettings = themeRes?.themeSettings || {}
-  const displayAvatar = themeSettings.companyLogo
-  const displayName = themeSettings.companyName || "My Staff"
+  const displayName = "My Staff"
 
   return (
     <div className="min-h-svh bg-zinc-50 text-zinc-950">
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r bg-white lg:block">
         <div className="flex h-16 items-center gap-3 border-b px-6">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-bg-primary text-primary-foreground overflow-hidden shrink-0">
-            {displayAvatar ? (
-              <img 
-                src={displayAvatar.startsWith("http") ? displayAvatar : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`} 
-                alt={displayName}
-                className="object-cover size-full" 
-              />
-            ) : (
-              <Building2 className="size-5" />
-            )}
+          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+            <Building2 className="size-5" />
           </div>
           <div className="overflow-hidden">
             <p className="text-sm font-semibold truncate">{displayName}</p>

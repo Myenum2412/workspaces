@@ -1,0 +1,42 @@
+{
+  "changes_this_session": [],
+  "cwd": "/home/j0k3r/Desktop/workspaces",
+  "duration_minutes": 280,
+  "ended_at": "2026-06-02T10:22:55Z",
+  "event_seq": 15,
+  "fork_count": 0,
+  "git": {
+    "branch": "main",
+    "last_commit": "940f8ca",
+    "uncommitted_changes": 0
+  },
+  "harness_mem": {
+    "healthy": true,
+    "last_checked": "2026-06-02T10:22:50Z",
+    "last_error": ""
+  },
+  "intent": "literal",
+  "last_event_id": "event-000015",
+  "memory_logged": true,
+  "orchestration": {
+    "max_state_retries": 3,
+    "retry_backoff_seconds": 10
+  },
+  "parent_session_id": null,
+  "plans": {
+    "completed_tasks": 0,
+    "exists": false,
+    "last_modified": 0,
+    "pending_tasks": 0,
+    "todo_tasks": 0,
+    "wip_tasks": 0
+  },
+  "project_name": "workspaces",
+  "prompt_seq": 4,
+  "resume_token": "resume-1780378934577505790",
+  "session_id": "session-1780378934577497244",
+  "started_at": "2026-06-02T05:42:14Z",
+  "state": "stopped",
+  "state_version": 1,
+  "updated_at": "2026-06-02T10:22:50Z"
+}
