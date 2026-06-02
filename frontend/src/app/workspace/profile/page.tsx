@@ -530,44 +530,44 @@ export default function ProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-700">Account Status</CardTitle>
-                    <ShieldCheckIcon className="h-4 w-4 text-slate-600" />
+                    <CardTitle className="text-sm font-medium text-foreground">Account Status</CardTitle>
+                    <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-primary capitalize">{profileRaw?.status ?? "active"}</div>
-                    <p className="text-xs text-slate-700 mt-1 font-medium">Created {formatDate(profileRaw?.createdAt)}</p>
+                    <p className="text-xs text-foreground mt-1 font-medium">Created {formatDate(profileRaw?.createdAt)}</p>
                   </CardContent>
                 </Card>
                 <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-700">Last Login</CardTitle>
-                    <Clock className="h-4 w-4 text-slate-600" />
+                    <CardTitle className="text-sm font-medium text-foreground">Last Login</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-primary">{formatDate(profileRaw?.lastLogin)}</div>
-                    <p className="text-xs text-slate-700 mt-1 font-medium">{profileRaw?.loginCount ?? 0} total logins</p>
+                    <p className="text-xs text-foreground mt-1 font-medium">{profileRaw?.loginCount ?? 0} total logins</p>
                   </CardContent>
                 </Card>
                 <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-700">Email Status</CardTitle>
-                    <MailIcon className="h-4 w-4 text-slate-600" />
+                    <CardTitle className="text-sm font-medium text-foreground">Email Status</CardTitle>
+                    <MailIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-primary">
                       {(isEmailVerified || otpSuccess) ? "Verified" : "Not verified"}
                     </div>
-                    <p className="text-xs text-slate-700 mt-1 font-medium">{userEmail || "No email"}</p>
+                    <p className="text-xs text-foreground mt-1 font-medium">{userEmail || "No email"}</p>
                   </CardContent>
                 </Card>
                 <Card className="overflow-hidden border-primary/20 bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-700">Profile Version</CardTitle>
-                    <History className="h-4 w-4 text-slate-600" />
+                    <CardTitle className="text-sm font-medium text-foreground">Profile Version</CardTitle>
+                    <History className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-primary">v{profileRaw?.profileVersion ?? 1}</div>
-                    <p className="text-xs text-slate-700 mt-1 font-medium">Updated {formatDate(profileRaw?.updatedAt)}</p>
+                    <p className="text-xs text-foreground mt-1 font-medium">Updated {formatDate(profileRaw?.updatedAt)}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -583,47 +583,47 @@ export default function ProfilePage() {
                     <>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> First Name</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-muted-foreground" /> First Name</label>
                           <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> Last Name</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-muted-foreground" /> Last Name</label>
                           <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-slate-600" /> Phone</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-muted-foreground" /> Phone</label>
                           <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Designation</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-muted-foreground" /> Designation</label>
                           <input type="text" name="designation" value={formData.designation} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-slate-600" /> Department</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><Building2Icon className="size-4 text-muted-foreground" /> Department</label>
                           <input type="text" name="department" value={formData.department} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><MailIcon className="size-4 text-slate-600" /> Personal Email</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><MailIcon className="size-4 text-muted-foreground" /> Personal Email</label>
                           <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-slate-600" /> Personal Phone</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><PhoneIcon className="size-4 text-muted-foreground" /> Personal Phone</label>
                           <input type="tel" name="personalPhone" value={formData.personalPhone} onChange={handleInputChange}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><CalendarDaysIcon className="size-4 text-slate-600" /> Date of Birth</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><CalendarDaysIcon className="size-4 text-muted-foreground" /> Date of Birth</label>
                           <input type="text" name="dob" value={formData.dob} onChange={handleInputChange} placeholder="YYYY-MM-DD"
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
-                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-slate-600" /> Bio</label>
+                          <label className="flex items-center gap-2 text-sm font-medium"><UserCircle2Icon className="size-4 text-muted-foreground" /> Bio</label>
                           <textarea name="bio" value={formData.bio} onChange={handleInputChange} rows={3} placeholder="Short bio..."
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
@@ -631,7 +631,7 @@ export default function ProfilePage() {
 
                       {/* Address */}
                       <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" /> Address</label>
+                        <label className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-muted-foreground" /> Address</label>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="space-y-1.5 sm:col-span-2">
                             <label className="text-xs text-muted-foreground">Street</label>
@@ -672,14 +672,14 @@ export default function ProfilePage() {
                   ) : (
                     <div className="grid gap-4 sm:grid-cols-2">
                       {([
-                        { label: "First Name", value: profile.firstName, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: false },
-                        { label: "Last Name", value: profile.lastName, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: false },
-                        { label: "Phone", value: profile.phone, icon: <PhoneIcon className="size-4 text-slate-600" />, span: false },
-                        { label: "Designation", value: profile.designation, icon: <Building2Icon className="size-4 text-slate-600" />, span: false },
-                        { label: "Department", value: profile.department, icon: <Building2Icon className="size-4 text-slate-600" />, span: false },
-                        { label: "Personal Email", value: profile.personalEmail, icon: <MailIcon className="size-4 text-slate-600" />, span: false },
-                        { label: "Personal Phone", value: profile.personalPhone, icon: <PhoneIcon className="size-4 text-slate-600" />, span: false },
-                        { label: "Bio", value: profile.bio, icon: <UserCircle2Icon className="size-4 text-slate-600" />, span: true },
+                        { label: "First Name", value: profile.firstName, icon: <UserCircle2Icon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Last Name", value: profile.lastName, icon: <UserCircle2Icon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Phone", value: profile.phone, icon: <PhoneIcon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Designation", value: profile.designation, icon: <Building2Icon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Department", value: profile.department, icon: <Building2Icon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Personal Email", value: profile.personalEmail, icon: <MailIcon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Personal Phone", value: profile.personalPhone, icon: <PhoneIcon className="size-4 text-muted-foreground" />, span: false },
+                        { label: "Bio", value: profile.bio, icon: <UserCircle2Icon className="size-4 text-muted-foreground" />, span: true },
                       ] as const).map((field) => (
                         <div key={field.label} className={`space-y-2 rounded-lg border p-4${field.span ? " sm:col-span-2" : ""}`}>
                           <div className="flex items-center justify-between">
@@ -693,7 +693,7 @@ export default function ProfilePage() {
                       ))}
                       <div className="space-y-2 rounded-lg border p-4 sm:col-span-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-slate-600" /> Address</div>
+                          <div className="flex items-center gap-2 text-sm font-medium"><MapPinIcon className="size-4 text-muted-foreground" /> Address</div>
                           {isMissing([profile.addressStreet, profile.addressCity, profile.addressCountry].join("")) && <AlertCircle className="size-4 text-red-500" />}
                         </div>
                         <div className="space-y-1">
@@ -790,7 +790,7 @@ export default function ProfilePage() {
             {Object.entries(statusHistory?.totals || {}).map(([status, seconds]) => (
               <Card key={status} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700">{status}</CardTitle>
+                  <CardTitle className="text-sm font-medium text-foreground">{status}</CardTitle>
                   <div className={`h-3 w-3 rounded-full ${statusColor[status] || "bg-slate-300"}`} />
                 </CardHeader>
                 <CardContent>

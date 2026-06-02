@@ -29,7 +29,7 @@ export default function OrgSettingsPage() {
 
   return (
     <section className="space-y-6">
-      <Card className="border bg-white">
+      <Card className="border bg-background">
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tight text-primary">
             Organization Settings
@@ -53,7 +53,7 @@ export default function OrgSettingsPage() {
                   <TabsTrigger
                     key={tab.id}
                     value={tab.id}
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-primary border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-slate-700 flex items-center gap-2 transition-all"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-primary border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2 transition-all"
                   >
                     <tab.icon className="size-4" />
                     {tab.label}
@@ -64,8 +64,8 @@ export default function OrgSettingsPage() {
 
             <TabsContent value="general">
               <div className="grid gap-6">
-                <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
-                  <Settings2 className="size-12 text-slate-300 mb-4" />
+                <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-muted/50">
+                  <Settings2 className="size-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-bold text-slate-900">General Organization Settings</h3>
                   <p className="text-sm text-slate-500 max-w-xs">Organization settings, timezone, and fundamental configuration options.</p>
                 </Card>
@@ -82,8 +82,8 @@ export default function OrgSettingsPage() {
 
             <TabsContent value="security">
               <div className="grid gap-6">
-                <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
-                  <Shield className="size-12 text-slate-300 mb-4" />
+                <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-muted/50">
+                  <Shield className="size-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-bold text-slate-900">Security & Permissions</h3>
                   <p className="text-sm text-slate-500 max-w-xs">Configure role-based access control, 2FA, and audit logs.</p>
                 </Card>
@@ -92,8 +92,8 @@ export default function OrgSettingsPage() {
 
             <TabsContent value="notifications">
               <div className="grid gap-6">
-                <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
-                  <Bell className="size-12 text-slate-300 mb-4" />
+                <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-muted/50">
+                  <Bell className="size-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-bold text-slate-900">Notification Preferences</h3>
                   <p className="text-sm text-slate-500 max-w-xs">Manage system-wide alerts, email triggers, and push notifications.</p>
                 </Card>

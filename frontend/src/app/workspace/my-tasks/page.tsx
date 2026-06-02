@@ -76,9 +76,9 @@ export default function MyTasksPage() {
       description: "Currently in progress",
       icon: ClipboardCheck,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Team Task",
@@ -86,9 +86,9 @@ export default function MyTasksPage() {
       description: "Assigned to teams",
       icon: Users,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Pending Task",
@@ -96,9 +96,9 @@ export default function MyTasksPage() {
       description: "Waiting to start",
       icon: Clock,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Postponed Task",
@@ -106,9 +106,9 @@ export default function MyTasksPage() {
       description: "Paused or on hold",
       icon: Layers,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Repeated Task",
@@ -116,9 +116,9 @@ export default function MyTasksPage() {
       description: "Recurring tasks",
       icon: RefreshCw,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Overdue Task",
@@ -148,7 +148,7 @@ export default function MyTasksPage() {
 
               <Button
                 onClick={() => setIsDialogOpen(true)}
-                className="bg-primary hover:bg-primary/80 text-white "
+                className="bg-primary hover:bg-primary/80 text-primary-foreground "
               >
                 <UserPlusIcon className="mr-2 size-4" />
                 Allocate Task
@@ -165,7 +165,7 @@ export default function MyTasksPage() {
               return (
                 <Card 
                   key={card.title} 
-                  className={`overflow-hidden cursor-pointer transition-all hover:shadow-md ${card.title === selectedCategory ? 'ring-2 ring-emerald-500' : ''} ${card.className}`}
+                  className={`overflow-hidden cursor-pointer transition-all hover:shadow-md ${card.title === selectedCategory ? 'ring-2 ring-primary' : ''} ${card.className}`}
                   onClick={() => setSelectedCategory(card.title === selectedCategory ? "All" : card.title)}
                 >
                   <CardHeader className="flex flex-row items-center justify-between pb-2">

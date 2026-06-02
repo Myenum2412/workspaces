@@ -138,8 +138,8 @@ export default function SettingsPage() {
                 <div className="pt-4 border-t mt-4 flex flex-col gap-4">
                   <div className="flex items-end justify-between gap-4">
                     <div className="flex-1 space-y-2">
-                      <h4 className="text-sm font-medium text-slate-900">Hold Employee ID</h4>
-                      <p className="text-xs text-slate-500">Add the current ID prefix to the hold list.</p>
+                      <h4 className="text-sm font-medium text-foreground">Hold Employee ID</h4>
+                      <p className="text-xs text-muted-foreground">Add the current ID prefix to the hold list.</p>
                       <input
                         type="text"
                         value={holdReason}
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                   {heldIds.length > 0 && (
                     <div className="rounded-md border mt-4 overflow-hidden">
                       <Table>
-                        <TableHeader className="bg-slate-50">
+                        <TableHeader className="bg-muted">
                           <TableRow>
                             <TableHead className="font-semibold">Held ID Prefix</TableHead>
                             <TableHead className="font-semibold">Reason</TableHead>
@@ -193,12 +193,12 @@ export default function SettingsPage() {
                             const status = typeof item === 'string' ? 'On Hold' : item.status
 
                             return (
-                              <TableRow key={index} className="hover:bg-slate-50/50">
+                              <TableRow key={index} className="hover:bg-muted/50">
                                 <TableCell className="font-medium text-primary">{id}</TableCell>
-                                <TableCell className="text-slate-600">{reason}</TableCell>
-                                <TableCell className="text-slate-500 text-sm">{date}</TableCell>
+                                <TableCell className="text-muted-foreground">{reason}</TableCell>
+                                <TableCell className="text-muted-foreground text-sm">{date}</TableCell>
                                 <TableCell>
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
                                     {status}
                                   </span>
                                 </TableCell>
@@ -211,7 +211,7 @@ export default function SettingsPage() {
                                       setHeldIds(newHeld)
                                       localStorage.setItem("heldEmployeeIds", JSON.stringify(newHeld))
                                     }}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                   >
                                     Release
                                   </Button>
@@ -429,10 +429,10 @@ export default function SettingsPage() {
 
         <TabsContent value="notifications" className="border-none p-0 outline-none space-y-6">
           <div className="grid gap-6">
-            <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-slate-50/50">
-              <Bell className="size-12 text-slate-300 mb-4" />
-              <h3 className="text-lg font-bold text-slate-900">Notification Preferences</h3>
-              <p className="text-sm text-slate-500 max-w-xs">Manage system-wide alerts, email triggers, and push notifications.</p>
+            <Card className="p-8 border-dashed flex flex-col items-center justify-center text-center py-20 bg-muted/50">
+              <Bell className="size-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-bold text-foreground">Notification Preferences</h3>
+              <p className="text-sm text-muted-foreground max-w-xs">Manage system-wide alerts, email triggers, and push notifications.</p>
             </Card>
           </div>
         </TabsContent>

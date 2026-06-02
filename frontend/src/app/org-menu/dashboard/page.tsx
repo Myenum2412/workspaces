@@ -88,52 +88,52 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Overview of your organization</p>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">Overview of your organization</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Total Members</CardTitle>
-            <Users className="h-4 w-4 text-slate-400" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? "—" : stats.totalMembers}</div>
-            <p className="text-xs text-slate-500 mt-1">In your organization</p>
+            <p className="text-xs text-muted-foreground mt-1">In your organization</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Active Members</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Members</CardTitle>
             <UserCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? "—" : stats.activeMembers}</div>
-            <p className="text-xs text-slate-500 mt-1">Currently active</p>
+            <p className="text-xs text-muted-foreground mt-1">Currently active</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Pending Invites</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Invites</CardTitle>
             <UserPlus className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? "—" : stats.pendingInvites}</div>
-            <p className="text-xs text-slate-500 mt-1">Awaiting response</p>
+            <p className="text-xs text-muted-foreground mt-1">Awaiting response</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Organization</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Organization</CardTitle>
             <Building2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold truncate">{stats.organizationName}</div>
-            <p className="text-xs text-slate-500 mt-1">Your company</p>
+            <p className="text-xs text-muted-foreground mt-1">Your company</p>
           </CardContent>
         </Card>
       </div>
@@ -145,9 +145,9 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-slate-400"><p className="text-sm">Loading...</p></div>
+            <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Loading...</p></div>
           ) : recentMembers.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
+            <div className="text-center py-8 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
               <p className="text-sm">No members yet. Invite your team to get started.</p>
             </div>
@@ -160,15 +160,15 @@ export default function DashboardPage() {
                       {(member.firstName?.[0] ?? "?")}{(member.lastName?.[0] ?? "")}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{member.firstName} {member.lastName}</p>
-                      <p className="text-xs text-slate-500">{member.email}</p>
+                      <p className="text-sm font-medium text-foreground">{member.firstName} {member.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{member.email}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary capitalize">
                       {member.role}
                     </span>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}
                     </p>
                   </div>

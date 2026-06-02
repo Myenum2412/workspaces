@@ -280,14 +280,14 @@ export function AddStaffForm({ onCancel, onStaffAdded }: AddStaffFormProps) {
               <div 
                 className={cn(
                   "size-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 z-10",
-                  currentStep >= step ? "bg-bg-primary text-primary-foreground  -emerald-200" : "bg-muted text-muted-foreground"
+                  currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 )}
               >
                 {step}
               </div>
               <span className={cn(
                 "text-[9px] font-bold uppercase tracking-wider transition-colors duration-300",
-                currentStep >= step ? "text-slate-700" : "text-muted-foreground"
+                currentStep >= step ? "text-foreground" : "text-muted-foreground"
               )}>
                 {step === 1 ? "Profile" : step === 2 ? "Work Info" : step === 3 ? "Contact" : step === 4 ? "Social" : "History"}
               </span>

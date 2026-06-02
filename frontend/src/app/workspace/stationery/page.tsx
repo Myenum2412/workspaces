@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, ClipboardList, AlertTriangle, TrendingUp } from "lucide-react"
 
 export default function StationeryPage() {
@@ -15,64 +15,54 @@ export default function StationeryPage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Total Items
-                </CardTitle>
-                <Package className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Total Items</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">48</div>
-                <p className="text-xs text-slate-700 mt-1">In inventory</p>
+                <p className="text-xs text-muted-foreground mt-1">In inventory</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Pending Requests
-                </CardTitle>
-                <ClipboardList className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Pending Requests</CardTitle>
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">5</div>
-                <p className="text-xs text-slate-700 mt-1">Awaiting approval</p>
+                <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Low Stock
-                </CardTitle>
-                <AlertTriangle className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Low Stock</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">3</div>
-                <p className="text-xs text-slate-700 mt-1">Items need reorder</p>
+                <p className="text-xs text-muted-foreground mt-1">Items need reorder</p>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Monthly Usage
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Monthly Usage</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">+12%</div>
-                <p className="text-xs text-slate-700 mt-1">From last month</p>
+                <p className="text-xs text-muted-foreground mt-1">From last month</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Placeholder Content */}
-          <Card className="border-dashed bg-slate-50/50">
-            <CardContent className="text-sm text-slate-400 py-20 flex items-center justify-center italic">
+          <Card className="border-dashed bg-muted/50">
+            <CardContent className="text-sm text-muted-foreground py-20 flex items-center justify-center italic">
               Stationery management interface is coming soon.
             </CardContent>
           </Card>

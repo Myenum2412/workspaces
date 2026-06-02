@@ -71,7 +71,7 @@ const alertVariants = cva('flex items-stretch w-full gap-2 group-[.toaster]:w-(-
     {
       variant: 'mono',
       appearance: 'solid',
-      className: 'bg-zinc-950 text-white dark:bg-zinc-300 dark:text-black *:data-slot-[alert=close]:text-white',
+      className: 'bg-foreground text-background dark:bg-background dark:text-foreground *:data-slot-[alert=close]:text-background',
     },
 
     /* Outline */

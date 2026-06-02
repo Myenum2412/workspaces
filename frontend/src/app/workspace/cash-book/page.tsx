@@ -20,45 +20,45 @@ export default function CashBookPage() {
           <div className="grid gap-4 sm:grid-cols-4">
             <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Cash Book</CardTitle>
-                <DollarSign className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Cash Book</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">Active</div>
-                <p className="text-xs text-slate-700 mt-1">Recording transactions</p>
+                <p className="text-xs text-foreground mt-1">Recording transactions</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Total Receipts</CardTitle>
-                <Receipt className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Total Receipts</CardTitle>
+                <Receipt className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">24</div>
-                <p className="text-xs text-slate-700 mt-1">This month</p>
+                <p className="text-xs text-foreground mt-1">This month</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Cash In Hand</CardTitle>
-                <Wallet className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Cash In Hand</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">$5.2K</div>
-                <p className="text-xs text-slate-700 mt-1">Available balance</p>
+                <p className="text-xs text-foreground mt-1">Available balance</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Pending Verification</CardTitle>
-                <TrendingUp className="h-4 w-4 text-slate-600" />
+                <CardTitle className="text-sm font-medium text-foreground">Pending Verification</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">3</div>
-                <p className="text-xs text-slate-700 mt-1">Awaiting review</p>
+                <p className="text-xs text-foreground mt-1">Awaiting review</p>
               </CardContent>
             </Card>
           </div>

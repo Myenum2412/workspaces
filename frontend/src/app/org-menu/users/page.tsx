@@ -134,8 +134,8 @@ export default function OrgUsersPage() {
 
   const SortIcon = ({ columnKey }: { columnKey: string }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDownIcon className="size-3.5 opacity-30" />;
-    if (sortConfig.direction === "asc") return <ArrowUpIcon className="size-3.5 text-slate-600" />;
-    if (sortConfig.direction === "desc") return <ArrowDownIcon className="size-3.5 text-slate-600" />;
+    if (sortConfig.direction === "asc") return <ArrowUpIcon className="size-3.5 text-muted-foreground" />;
+    if (sortConfig.direction === "desc") return <ArrowDownIcon className="size-3.5 text-muted-foreground" />;
     return <ArrowUpDownIcon className="size-3.5 opacity-30" />;
   };
 
@@ -147,9 +147,9 @@ export default function OrgUsersPage() {
             <div className="shrink-0 space-y-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-primary">User Management</h2>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-slate-900">{total}</span>
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-foreground">{total}</span>
               </div>
-              <p className="hidden text-xs text-slate-900/75 xl:block">Manage organization members, roles, and access.</p>
+              <p className="hidden text-xs text-foreground/75 xl:block">Manage organization members, roles, and access.</p>
             </div>
             <div className="relative flex-1 px-4 lg:max-w-2xl">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-8 size-5 -translate-y-1/2 text-muted-foreground" />
@@ -158,7 +158,7 @@ export default function OrgUsersPage() {
             <div className="flex shrink-0 items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-slate-200 bg-background text-primary hover:bg-primary/10">
+                  <Button variant="outline" className="border-border bg-background text-primary hover:bg-primary/10">
                     <FilterIcon className="mr-2 size-4" />Status: {filterStatus === "all" ? "All" : filterStatus}
                   </Button>
                 </DropdownMenuTrigger>
@@ -170,11 +170,11 @@ export default function OrgUsersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button type="button" variant="outline" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="border-slate-200 bg-background text-primary hover:bg-primary/10">
+              <Button type="button" variant="outline" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="border-border bg-background text-primary hover:bg-primary/10">
                 <ChevronDownIcon className={cn("size-4 transition-transform duration-300", isExpanded ? "rotate-0" : "-rotate-90")} />
               </Button>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={refresh} className="border-slate-200 bg-background text-primary hover:bg-primary/10">
+                <Button variant="outline" size="icon" onClick={refresh} className="border-border bg-background text-primary hover:bg-primary/10">
                   <RefreshCw className={cn("size-4", isLoading && "animate-spin")} />
                 </Button>
                 <AddUserDialog onUserAdded={refresh} />
@@ -188,7 +188,7 @@ export default function OrgUsersPage() {
             {selectedIds.size > 0 && (
               <div className="mb-4 flex items-center justify-between rounded-xl bg-primary p-4 text-white">
                 <span className="text-sm font-medium">{selectedIds.size} members selected</span>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-primary-foreground hover:bg-emerald-800">Clear selection</Button>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-primary-foreground hover:bg-primary/80">Clear selection</Button>
               </div>
             )}
             <div className="overflow-hidden rounded-xl border bg-background/70">
@@ -205,7 +205,7 @@ export default function OrgUsersPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedRows.map(({ profile, member }) => (
-                    <TableRow key={profile.id} className={cn("cursor-pointer transition-colors hover:bg-primary/5", selectedIds.has(profile.id) && "bg-slate-50/50")} onClick={() => { setSelectedUser({ ...profile, role: member?.role, memberStatus: member?.status, joinedAt: member?.joinedAt }); setIsDetailModalOpen(true); }}>
+                    <TableRow key={profile.id} className={cn("cursor-pointer transition-colors hover:bg-primary/5", selectedIds.has(profile.id) && "bg-muted/50")} onClick={() => { setSelectedUser({ ...profile, role: member?.role, memberStatus: member?.status, joinedAt: member?.joinedAt }); setIsDetailModalOpen(true); }}>
                       <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.has(profile.id)} onChange={() => toggleRow(profile.id)} /></TableCell>
                       <TableCell className="px-4 py-4">
                         <div className="flex items-center gap-3">
@@ -215,9 +215,9 @@ export default function OrgUsersPage() {
                       </TableCell>
                       <TableCell className="px-4 py-4 capitalize">{member?.role ?? "—"}</TableCell>
                       <TableCell className="px-4 py-4">
-                        <Badge variant="outline" className={member?.status === "active" ? "bg-primary/5 text-primary border-emerald-200" : member?.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member?.status ?? "pending"}</Badge>
+                        <Badge variant="outline" className={member?.status === "active" ? "bg-primary/5 text-primary border-primary/20" : member?.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member?.status ?? "pending"}</Badge>
                       </TableCell>
-                      <TableCell className="px-4 py-4 text-sm text-slate-500">{member?.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell className="px-4 py-4 text-sm text-muted-foreground">{member?.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : "—"}</TableCell>
                       <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontalIcon className="size-4" /></Button></DropdownMenuTrigger>
@@ -232,7 +232,7 @@ export default function OrgUsersPage() {
                     </TableRow>
                   ))}
                   {paginatedRows.length === 0 && !isLoading && (
-                    <TableRow><TableCell colSpan={6} className="py-12 text-center"><Users className="h-10 w-10 text-slate-300 mx-auto mb-3" /><p className="text-sm text-slate-500">No members found.</p></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="py-12 text-center"><Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" /><p className="text-sm text-muted-foreground">No members found.</p></TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

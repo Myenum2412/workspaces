@@ -44,53 +44,53 @@ export default function StaffsPage() {
           <div className="grid gap-4 sm:grid-cols-4">
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Total Staff
                 </CardTitle>
                 <Users className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.totalStaff}</div>
-                <p className="text-xs text-slate-700 mt-1">All registered members</p>
+                <p className="text-xs text-foreground mt-1">All registered members</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Active Now
                 </CardTitle>
                 <UserCheck className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.activeNow}</div>
-                <p className="text-xs text-slate-700 mt-1">Currently working</p>
+                <p className="text-xs text-foreground mt-1">Currently working</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   On Leave
                 </CardTitle>
                 <UserX className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.onLeave}</div>
-                <p className="text-xs text-slate-700 mt-1">Away today</p>
+                <p className="text-xs text-foreground mt-1">Away today</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Assigned Tasks
                 </CardTitle>
                 <Briefcase className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.assignedTasks}</div>
-                <p className="text-xs text-slate-700 mt-1">Across all staff</p>
+                <p className="text-xs text-foreground mt-1">Across all staff</p>
               </CardContent>
             </Card>
           </div>

@@ -46,53 +46,53 @@ export default function TeamsPage() {
           <div className="grid gap-4 sm:grid-cols-4">
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Total Teams
                 </CardTitle>
-                <Layers className="h-4 w-4 text-slate-600" />
+                <Layers className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.totalTeams}</div>
-                <p className="text-xs text-slate-700 mt-1">Active departments</p>
+                <p className="text-xs text-foreground mt-1">Active departments</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Team Members
                 </CardTitle>
-                <Users className="h-4 w-4 text-slate-600" />
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.totalMembers}</div>
-                <p className="text-xs text-slate-700 mt-1">Across all teams</p>
+                <p className="text-xs text-foreground mt-1">Across all teams</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Team Leads
                 </CardTitle>
-                <UserCog className="h-4 w-4 text-slate-600" />
+                <UserCog className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.teamLeads}</div>
-                <p className="text-xs text-slate-700 mt-1">Department heads</p>
+                <p className="text-xs text-foreground mt-1">Department heads</p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden border-primary/20 bg-card ">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
+                <CardTitle className="text-sm font-medium text-foreground">
                   Departments
                 </CardTitle>
-                <Building2 className="h-4 w-4 text-slate-600" />
+                <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{stats.departments}</div>
-                <p className="text-xs text-slate-700 mt-1">Organizational units</p>
+                <p className="text-xs text-foreground mt-1">Organizational units</p>
               </CardContent>
             </Card>
           </div>

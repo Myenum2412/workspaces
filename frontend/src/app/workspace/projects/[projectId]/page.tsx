@@ -35,7 +35,7 @@ export default function ProjectDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-zinc-400" />
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     )
   }
@@ -43,7 +43,7 @@ export default function ProjectDetailPage() {
   if (error || !project) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <p className="text-sm text-zinc-500">{error || "Project not found"}</p>
+        <p className="text-sm text-muted-foreground">{error || "Project not found"}</p>
         <Link href="/workspace" className="text-sm text-primary hover:underline">
           ← Back to Workspace
         </Link>
@@ -54,7 +54,7 @@ export default function ProjectDetailPage() {
   return (
     <section className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/workspace" className="text-zinc-500 hover:text-zinc-900">
+        <Link href="/workspace" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-5" />
         </Link>
         <div>
@@ -62,7 +62,7 @@ export default function ProjectDetailPage() {
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline">{project.jobId}</Badge>
             {project.location && (
-              <span className="text-sm text-zinc-500 flex items-center gap-1">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
                 <MapPin className="size-3" /> {project.location}
               </span>
             )}
@@ -87,34 +87,34 @@ export default function ProjectDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-zinc-500">Contractor</h4>
-                  <p className="mt-1 text-sm text-zinc-900">
+                  <h4 className="text-sm font-medium text-muted-foreground">Contractor</h4>
+                  <p className="mt-1 text-sm text-foreground">
                     {project.contractorName || "Not specified"}
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-zinc-500">Estimated Tons</h4>
-                  <p className="mt-1 text-sm text-zinc-900">
+                  <h4 className="text-sm font-medium text-muted-foreground">Estimated Tons</h4>
+                  <p className="mt-1 text-sm text-foreground">
                     {project.estimatedTons || "N/A"}
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-zinc-500">Detailing Status</h4>
-                  <p className="mt-1 text-sm text-zinc-900">
+                  <h4 className="text-sm font-medium text-muted-foreground">Detailing Status</h4>
+                  <p className="mt-1 text-sm text-foreground">
                     {project.detailingStatus || "N/A"}
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-zinc-500">Release Status</h4>
-                  <p className="mt-1 text-sm text-zinc-900">
+                  <h4 className="text-sm font-medium text-muted-foreground">Release Status</h4>
+                  <p className="mt-1 text-sm text-foreground">
                     {project.releaseStatus || "N/A"}
                   </p>
                 </div>
               </div>
               {project.allocatedUsers && (
                 <div>
-                  <h4 className="text-sm font-medium text-zinc-500">Allocated Users</h4>
-                  <p className="mt-1 text-sm text-zinc-900">
+                  <h4 className="text-sm font-medium text-muted-foreground">Allocated Users</h4>
+                  <p className="mt-1 text-sm text-foreground">
                     {project.allocatedUsers.length} user{project.allocatedUsers.length !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -133,7 +133,7 @@ export default function ProjectDetailPage() {
               />
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">Chat requires a database connection.</p>
+            <p className="text-sm text-muted-foreground">Chat requires a database connection.</p>
           )}
         </TabsContent>
       </Tabs>

@@ -144,8 +144,8 @@ export default function ResetPasswordPage() {
           </div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-slate-950 lg:block">
-        <div className="relative flex h-full flex-col justify-between p-12 text-white">
+      <div className="relative hidden overflow-hidden bg-foreground lg:block">
+        <div className="relative flex h-full flex-col justify-between p-12 text-background">
           <div className="max-w-md space-y-4">
             <p className="text-sm uppercase tracking-[0.3em] text-primary/80">
               Secure Reset
@@ -153,15 +153,15 @@ export default function ResetPasswordPage() {
             <h2 className="font-heading text-5xl leading-tight font-semibold">
               Enter the OTP and set a new password.
             </h2>
-            <p className="text-base text-slate-300">
+            <p className="text-base text-muted-foreground">
               Check your email for the 6-digit OTP, then create a strong password to secure your account.
             </p>
           </div>
           <div className="max-w-md">
-            <p className="text-sm text-slate-400 italic">
+            <p className="text-sm text-muted-foreground italic">
               &ldquo;Quick and secure. I was back in my account within minutes.&rdquo;
             </p>
-            <p className="mt-2 text-sm font-medium text-slate-200">— Workspace User</p>
+            <p className="mt-2 text-sm font-medium text-background/80">— Workspace User</p>
           </div>
         </div>
       </div>

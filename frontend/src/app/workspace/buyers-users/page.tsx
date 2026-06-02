@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { PlusIcon, SearchIcon, Filter, Download, Building2, Mail, User, EyeIcon, EyeOffIcon } from "lucide-react"
@@ -75,7 +75,6 @@ export default function BuyersUsersPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-  // Form state
   const [companyName, setCompanyName] = React.useState("")
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
@@ -113,7 +112,6 @@ export default function BuyersUsersPage() {
 
       trackEvent('add_buyer_user_success')
 
-      // Reset form and close dialog
       setCompanyName("")
       setName("")
       setEmail("")
@@ -148,7 +146,7 @@ export default function BuyersUsersPage() {
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/80  -emerald-100 font-bold">
+                <Button className="bg-primary hover:bg-primary/80 font-bold">
                   <PlusIcon className="mr-2 size-4" />
                   Add New Buyer
                 </Button>
@@ -220,21 +218,18 @@ export default function BuyersUsersPage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-600 transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           >
                             {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
                           </button>
 
-                          {/* Strength Meter */}
                           <div className="mt-2 flex gap-1 h-1 w-full rounded-full bg-muted overflow-hidden">
-                            <div
-                              className="h-full"
-                            />
+                            <div className="h-full" />
                           </div>
                           {password.length > 0 && (
                               <p
                                 className="text-[10px] font-bold uppercase tracking-wider mt-1 text-right"
-                                style={{ color: strength <= 33 ? "#ef4444" : strength <= 66 ? "#f59e0b" : "#10b981" }}
+                                style={{ color: strength <= 33 ? "#ef4444" : strength <= 66 ? "#f59e0b" : "#3de1ca" }}
                               >
                                 {strength <= 33 ? "Weak" : strength <= 66 ? "Medium" : "Strong"}
                               </p>
@@ -262,80 +257,76 @@ export default function BuyersUsersPage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Search and Filters */}
-          <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border ">
+          <div className="flex items-center gap-4 bg-background p-4 rounded-2xl border">
             <div className="relative flex-1">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 placeholder="Search by company, name, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-slate-50 border-none h-11"
+                className="pl-9 bg-muted border-none h-11"
               />
             </div>
-            <Button variant="outline" className="h-11 border-slate-200">
+            <Button variant="outline" className="h-11 border-border">
               <Filter className="mr-2 size-4" />
               Filters
             </Button>
-            <Button variant="outline" className="h-11 border-slate-200">
+            <Button variant="outline" className="h-11 border-border">
               <Download className="mr-2 size-4" />
               Export
             </Button>
           </div>
 
-          {/* Buyer Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredBuyers.map((buyer, index) => (
-              <div
-                key={buyer.id}
-              >
-                <Card className="overflow-hidden border-primary/20 bg-card  group">
+              <div key={buyer.id}>
+                <Card className="overflow-hidden border-primary/20 bg-card group">
                   <div className="h-2 bg-primary" />
                   <CardContent className="p-6 space-y-6">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <h3 className="font-heading text-xl font-bold text-slate-900">
+                        <h3 className="font-heading text-xl font-bold text-foreground">
                           {buyer.companyName}
                         </h3>
-                        <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                        <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                           <Building2 className="size-3" />
                           {buyer.email}
                         </p>
                       </div>
                       <Badge
                         variant={buyer.status === "Active" ? "default" : "secondary"}
-                        className={buyer.status === "Active" ? "bg-primary/10 text-slate-700 hover:bg-primary/20" : ""}
+                        className={buyer.status === "Active" ? "bg-primary/10 text-foreground hover:bg-primary/20" : ""}
                       >
                         {buyer.status}
                       </Badge>
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-primary/10">
-                        <div className="size-8 rounded-lg bg-white flex items-center justify-center  font-bold text-slate-600">
-                          {buyer.name.split(' ').map(n => n[0]).join('')}
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground bg-muted p-3 rounded-xl border border-primary/10">
+                        <div className="size-8 rounded-lg bg-background flex items-center justify-center font-bold text-muted-foreground">
+                          {buyer.name.split(' ').map((n: string) => n[0]).join('')}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900">{buyer.name}</p>
-                          <p className="text-xs text-slate-400 font-medium">Primary Contact</p>
+                          <p className="font-bold text-foreground">{buyer.name}</p>
+                          <p className="text-xs text-muted-foreground font-medium">Primary Contact</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 gap-2">
-                        <a href={`mailto:${buyer.email}`} className="flex items-center gap-3 text-sm text-slate-600 hover:text-slate-600 transition-colors p-2 rounded-lg hover:bg-slate-50/50">
-                          <Mail className="size-4 text-slate-500" />
+                        <a href={`mailto:${buyer.email}`} className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50">
+                          <Mail className="size-4 text-muted-foreground" />
                           {buyer.email}
                         </a>
                       </div>
                     </div>
 
                     <div className="pt-4 border-t flex items-center justify-between">
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-muted-foreground">
                         Added: {new Date(buyer.createdAt).toLocaleDateString()}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-emerald-50">
+                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10">
                             <MoreHorizontal className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>

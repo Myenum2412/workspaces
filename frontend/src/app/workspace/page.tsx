@@ -12,12 +12,12 @@ async function TaskStatsCards() {
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
       <Card className="overflow-hidden border-primary/20 bg-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700">Overview</CardTitle>
-          <Activity className="h-5 w-5 text-slate-600" />
+          <CardTitle className="text-sm font-medium text-foreground">Overview</CardTitle>
+          <Activity className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">Active</div>
-          <div className="flex items-center gap-1 text-xs text-slate-700">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Activity className="h-3 w-3" />
             <span className="font-medium">System Status</span>
             <span className="text-muted-foreground">Optimal</span>
@@ -27,14 +27,14 @@ async function TaskStatsCards() {
 
       <Card className="overflow-hidden border-primary/20 bg-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700">Total Tasks</CardTitle>
-          <ClipboardCheck className="h-5 w-5 text-slate-600" />
+          <CardTitle className="text-sm font-medium text-foreground">Total Tasks</CardTitle>
+          <ClipboardCheck className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">
             {stats.todayTask + stats.inProgressTask + stats.pendingTask + stats.postponedTask + stats.repeatedTask + stats.overdueTask}
           </div>
-          <div className="flex items-center gap-1 text-xs text-slate-700">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <TrendingUp className="h-3 w-3" />
             <span className="font-medium">{stats.todayTask} due today</span>
             <span className="text-muted-foreground">this period</span>
@@ -44,12 +44,12 @@ async function TaskStatsCards() {
 
       <Card className="overflow-hidden border-primary/20 bg-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700">Pending Tasks</CardTitle>
-          <Users className="h-5 w-5 text-slate-600" />
+          <CardTitle className="text-sm font-medium text-foreground">Pending Tasks</CardTitle>
+          <Users className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">{stats.pendingTask}</div>
-          <div className="flex items-center gap-1 text-xs text-slate-700">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Activity className="h-3 w-3" />
             <span className="font-medium">In Progress</span>
             <span className="text-muted-foreground">awaiting action</span>
@@ -59,12 +59,12 @@ async function TaskStatsCards() {
 
       <Card className="overflow-hidden border-primary/20 bg-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-700">Overdue</CardTitle>
-          <TrendingUp className="h-5 w-5 text-slate-600" />
+          <CardTitle className="text-sm font-medium text-foreground">Overdue</CardTitle>
+          <TrendingUp className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">{stats.overdueTask}</div>
-          <div className="flex items-center gap-1 text-xs text-slate-700">
+          <div className="flex items-center gap-1 text-xs text-foreground">
             <Activity className="h-3 w-3" />
             <span className="font-medium">Urgent</span>
             <span className="text-muted-foreground">requires attention</span>

@@ -17,8 +17,8 @@ export function SectionPage({ title, description, children }: SectionPageProps) 
   return (
     <section className="space-y-8 p-1 font-poppins">
       <div className="space-y-1.5">
-        <h1 className="font-heading text-4xl font-bold tracking-tight text-slate-900">{title}</h1>
-        <p className="text-base text-slate-500 font-medium">{description}</p>
+        <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">{title}</h1>
+        <p className="text-base text-muted-foreground font-medium">{description}</p>
       </div>
 
       {children ? (
@@ -26,9 +26,9 @@ export function SectionPage({ title, description, children }: SectionPageProps) 
           {children}
         </div>
       ) : (
-        <Card className="border-dashed bg-slate-50/50">
+        <Card className="border-dashed bg-muted/50">
           <CardHeader>
-            <CardTitle className="text-slate-700">{title}</CardTitle>
+            <CardTitle className="text-foreground">{title}</CardTitle>
             <CardDescription>Workspace Section Placeholder</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-slate-400 py-20 flex items-center justify-center italic">

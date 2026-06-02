@@ -10,8 +10,8 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-slate-950 lg:block">
-        <div className="relative flex h-full flex-col justify-between p-12 text-white">
+      <div className="relative hidden overflow-hidden bg-foreground lg:block">
+        <div className="relative flex h-full flex-col justify-between p-12 text-background">
           <div className="max-w-md space-y-4">
             <p className="text-sm uppercase tracking-[0.3em] text-primary/80">
               Join the Team
@@ -19,22 +19,22 @@ export default function SignupPage() {
             <h2 className="font-heading text-5xl leading-tight font-semibold">
               Create your account and start collaborating.
             </h2>
-            <p className="text-base text-slate-300">
+            <p className="text-base text-muted-foreground">
               Sign up to join the organization, manage tasks, and work together with your team in real time.
             </p>
           </div>
           <div className="grid max-w-xl grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-2xl border border-background/10 bg-background/5 p-4">
               <p className="text-2xl font-semibold">Easy</p>
-              <p className="mt-1 text-sm text-slate-300">Quick signup process</p>
+              <p className="mt-1 text-sm text-muted-foreground">Quick signup process</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-2xl border border-background/10 bg-background/5 p-4">
               <p className="text-2xl font-semibold">Secure</p>
-              <p className="mt-1 text-sm text-slate-300">Enterprise-grade security</p>
+              <p className="mt-1 text-sm text-muted-foreground">Enterprise-grade security</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-2xl border border-background/10 bg-background/5 p-4">
               <p className="text-2xl font-semibold">Fast</p>
-              <p className="mt-1 text-sm text-slate-300">Instant team access</p>
+              <p className="mt-1 text-sm text-muted-foreground">Instant team access</p>
             </div>
           </div>
         </div>

@@ -110,7 +110,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input id="firstName" placeholder="John" className="pl-10" value={form.firstName} onChange={(e) => update("firstName", e.target.value)} required />
               </div>
             </div>
@@ -122,7 +122,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="email" type="email" placeholder="john@company.com" className="pl-10" value={form.email} onChange={(e) => update("email", e.target.value)} required />
             </div>
           </div>
@@ -141,7 +141,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
             <div className="space-y-2">
               <Label htmlFor="designation">Designation</Label>
               <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input id="designation" placeholder="Developer, Designer..." className="pl-10" value={form.designation} onChange={(e) => update("designation", e.target.value)} />
               </div>
             </div>
@@ -149,7 +149,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
           <div className="space-y-2">
             <Label htmlFor="department">Department</Label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input id="department" placeholder="Engineering, Marketing..." className="pl-10" value={form.department} onChange={(e) => update("department", e.target.value)} />
             </div>
           </div>

@@ -17,11 +17,11 @@ const STATUS_OPTIONS = ["Online", "Lunch Break", "In a Meeting", "Away", "Offlin
 
 const DOT_COLORS: Record<string, string> = {
   Online: "bg-primary",
-  "Lunch Break": "bg-amber-500",
-  "In a Meeting": "bg-blue-500",
-  Away: "bg-orange-500",
-  Offline: "bg-slate-300",
-  Leave: "bg-red-500",
+  "Lunch Break": "bg-secondary",
+  "In a Meeting": "bg-primary",
+  Away: "bg-secondary",
+  Offline: "bg-muted-foreground",
+  Leave: "bg-destructive",
 }
 
 export function HeaderStatusUpdater() {
@@ -141,12 +141,12 @@ export function HeaderStatusUpdater() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="h-8 border-slate-200 bg-background text-sm font-medium text-slate-700 hover:bg-slate-50">
+        <Button variant="outline" className="h-8 border-border bg-background text-sm font-medium text-foreground hover:bg-muted">
           <div className="flex items-center gap-2">
             <p>Status: </p>
             <div className={cn("h-2 w-2 rounded-full", dotColor)} />
             {displayStatus}
-            <ChevronDown className="size-3 text-slate-400" />
+            <ChevronDown className="size-3 text-muted-foreground" />
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -154,7 +154,7 @@ export function HeaderStatusUpdater() {
         {STATUS_OPTIONS.map((s) => (
           <DropdownMenuItem key={s} onClick={() => handleStatusChange(s)}>
             <div className="flex items-center gap-2">
-              <div className={cn("h-2 w-2 rounded-full", DOT_COLORS[s] || "bg-slate-300")} />
+              <div className={cn("h-2 w-2 rounded-full", DOT_COLORS[s] || "bg-muted-foreground")} />
               {s}
             </div>
           </DropdownMenuItem>

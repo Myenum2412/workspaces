@@ -16,15 +16,15 @@ export default function StaffChatPage() {
     <section className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Direct Discussions</h2>
-        <p className="mt-1 text-sm text-zinc-600">Chat rooms for your assigned tasks and allocated projects.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Chat rooms for your assigned tasks and allocated projects.</p>
       </div>
 
       {chatRooms.length === 0 ? (
-        <div className="flex h-64 items-center justify-center rounded-lg border bg-zinc-50">
+        <div className="flex h-64 items-center justify-center rounded-lg border bg-muted">
           <div className="text-center">
-            <MessageSquare className="mx-auto size-8 text-zinc-400" />
-            <p className="mt-2 text-sm text-zinc-500">No chat rooms yet.</p>
-            <p className="text-xs text-zinc-400">You'll see chats here when assigned to tasks or allocated to projects.</p>
+            <MessageSquare className="mx-auto size-8 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">No chat rooms yet.</p>
+            <p className="text-xs text-muted-foreground">You'll see chats here when assigned to tasks or allocated to projects.</p>
           </div>
         </div>
       ) : (
@@ -36,9 +36,9 @@ export default function StaffChatPage() {
             <div className="divide-y">
               {chatRooms.map((room) => (
                 <button key={room.id} onClick={() => setSelectedChatId(room.id)}
-                  className={`w-full text-left p-3 hover:bg-zinc-50 transition-colors ${selectedChatId === room.id ? "bg-primary/5 border-r-2 border-emerald-600" : ""}`}>
+                  className={`w-full text-left p-3 hover:bg-muted transition-colors ${selectedChatId === room.id ? "bg-primary/5 border-r-2 border-emerald-600" : ""}`}>
                   <div className="flex items-center gap-2">
-                    {room.entityType === "task" ? <FileText className="size-4 text-zinc-500" /> : <FolderKanban className="size-4 text-zinc-500" />}
+                    {room.entityType === "task" ? <FileText className="size-4 text-muted-foreground" /> : <FolderKanban className="size-4 text-muted-foreground" />}
                     <span className="text-sm font-medium truncate">{room.entityName || room.entityId}</span>
                   </div>
                 </button>
@@ -49,8 +49,8 @@ export default function StaffChatPage() {
             {selectedRoom ? (
               <ChatWindow chatId={selectedRoom.id} participants={selectedParticipants} currentUserId={currentUserId} />
             ) : (
-              <div className="h-full flex items-center justify-center border rounded-lg bg-zinc-50">
-                <p className="text-sm text-zinc-500">Select a chat to start discussing.</p>
+              <div className="h-full flex items-center justify-center border rounded-lg bg-muted">
+                <p className="text-sm text-muted-foreground">Select a chat to start discussing.</p>
               </div>
             )}
           </div>

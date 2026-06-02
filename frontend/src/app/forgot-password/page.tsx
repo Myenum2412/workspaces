@@ -24,8 +24,8 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-slate-950 lg:block">
-        <div className="relative flex h-full flex-col justify-between p-12 text-white">
+      <div className="relative hidden overflow-hidden bg-foreground lg:block">
+        <div className="relative flex h-full flex-col justify-between p-12 text-background">
           <div className="max-w-md space-y-4">
             <p className="text-sm uppercase tracking-[0.3em] text-primary/80">
               Secure Access
@@ -33,15 +33,15 @@ export default function ForgotPasswordPage() {
             <h2 className="font-heading text-5xl leading-tight font-semibold">
               Reset your password and get back to work.
             </h2>
-            <p className="text-base text-slate-300">
+            <p className="text-base text-muted-foreground">
               Enter your email and we will send you a link to reset your password. It is quick and secure.
             </p>
           </div>
           <div className="max-w-md">
-            <p className="text-sm text-slate-400 italic">
+            <p className="text-sm text-muted-foreground italic">
               &ldquo;Resetting my password took less than a minute. Back to managing my team in no time.&rdquo;
             </p>
-            <p className="mt-2 text-sm font-medium text-slate-200">— Workspace Admin</p>
+            <p className="mt-2 text-sm font-medium text-background/80">— Workspace Admin</p>
           </div>
         </div>
       </div>

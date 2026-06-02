@@ -104,8 +104,8 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
                   )}
                 </div>
                 <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold text-slate-900 tracking-tighter text-base">{displayName}</span>
-                  <span className="truncate text-[9px] font-semibold uppercase text-slate-400 tracking-[0.25em] mt-0.5">My Workspace</span>
+                  <span className="truncate font-semibold text-sidebar-foreground tracking-tighter text-base">{displayName}</span>
+                  <span className="truncate text-[9px] font-semibold uppercase text-muted-foreground tracking-[0.25em] mt-0.5">My Workspace</span>
                 </div>
               </Link>
             </SidebarMenuButton>

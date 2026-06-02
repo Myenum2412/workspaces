@@ -20,6 +20,16 @@ services:
     depends_on:
       - mongodb
 
+  # Cloudflare Tunnel — exposes backend on a public *.trycloudflare.com URL
+  # After `docker compose up`, check logs: `docker compose logs -f cloudflared`
+  # Look for: "INF Connection established ... https://xxxxx.trycloudflare.com"
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --url http://backend:4000 --no-autoupdate
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
     ports:

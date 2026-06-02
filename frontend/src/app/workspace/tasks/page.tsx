@@ -52,9 +52,9 @@ export default function TasksPage() {
       description: "Currently in progress",
       icon: ClipboardCheck,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Team Task",
@@ -62,9 +62,9 @@ export default function TasksPage() {
       description: "Assigned to teams",
       icon: Users,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Pending Task",
@@ -72,9 +72,9 @@ export default function TasksPage() {
       description: "Waiting to start",
       icon: Clock,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Postponed Task",
@@ -82,9 +82,9 @@ export default function TasksPage() {
       description: "Paused or on hold",
       icon: Layers,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Repeated Task",
@@ -92,9 +92,9 @@ export default function TasksPage() {
       description: "Recurring tasks",
       icon: RefreshCw,
       className: "border-primary/20 bg-card",
-      titleClassName: "text-slate-700",
+      titleClassName: "text-foreground",
       valueClassName: "text-primary",
-      iconClassName: "text-slate-600",
+      iconClassName: "text-muted-foreground",
     },
     {
       title: "Overdue Task",
@@ -122,7 +122,7 @@ export default function TasksPage() {
             </div>
             <Button
               onClick={() => setIsDialogOpen(true)}
-              className="bg-primary hover:bg-primary/80 text-white "
+              className="bg-primary hover:bg-primary/80 text-primary-foreground "
             >
               <UserPlusIcon className="mr-2 size-4" />
               Allocate Task

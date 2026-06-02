@@ -112,7 +112,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
 
   if (loading || !initialized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -120,7 +120,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
 
   if (!session) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -129,13 +129,13 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ session, loading, refresh, logout }}>
       <SidebarProvider>
-        <div className="flex h-screen w-full bg-zinc-50">
+        <div className="flex h-screen w-full bg-background">
           <OrgSidebar />
           <SidebarInset className="flex-1 flex flex-col overflow-hidden">
             <header className="flex h-16 shrink-0 items-center justify-between border-b bg-white px-6">
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-2 mr-2" />
-                <h1 className="text-lg font-semibold text-slate-900">
+                <h1 className="text-lg font-semibold text-foreground">
                   {session.organization?.name ?? "Organization Portal"}
                 </h1>
               </div>

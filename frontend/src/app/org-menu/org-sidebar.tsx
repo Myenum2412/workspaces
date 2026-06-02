@@ -72,7 +72,7 @@ export function OrgSidebar({ className, ...props }: React.ComponentProps<typeof 
                   <Building2 className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold text-slate-900 tracking-tighter text-base">{orgName}</span>
+                  <span className="truncate font-semibold text-foreground tracking-tighter text-base">{orgName}</span>
                   <span className="truncate text-[9px] font-semibold uppercase text-slate-400 tracking-[0.25em] mt-0.5">Organization Portal</span>
                 </div>
               </Link>
