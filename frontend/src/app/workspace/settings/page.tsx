@@ -4,14 +4,13 @@ import { SectionPage } from "../section-page"
 import { MasterDataManagement } from "./master-data-management"
 import { ShiftManagement } from "./shift-management"
 import { EmailSettings } from "./email-settings"
-import { ThemeSettings } from "./theme-settings"
 import { RepeatedSettings } from "./repeated-settings"
 import { ChangePassword } from "./change-password"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Settings2, Database, Shield, Bell, Users, Mail, Palette, RotateCcw, KeyRound } from "lucide-react"
+import { Settings2, Database, Shield, Bell, Users, Mail, RotateCcw, KeyRound } from "lucide-react"
 import React, { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { workspaceApi } from "@/lib/api/client"
@@ -85,7 +84,6 @@ export default function SettingsPage() {
               { id: "master-data", label: "Master Data", icon: Database },
               { id: "hr", label: "HR Settings", icon: Users },
               { id: "email", label: "Email Settings", icon: Mail },
-              { id: "branding", label: "Branding", icon: Palette },
               { id: "security", label: "Security", icon: Shield },
               { id: "repeated", label: "Repeated", icon: RotateCcw },
               { id: "notifications", label: "Notifications", icon: Bell },
@@ -93,7 +91,7 @@ export default function SettingsPage() {
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="data-[state=active]:bg-transparent data-[state=active]: data-[state=active]:border-primary border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-slate-700 flex items-center gap-2 transition-all"
+                className="data-[state=active]:bg-transparent data-[state=active]: data-[state=active]:border-primary border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold uppercase tracking-widest text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2 transition-all"
               >
                 <tab.icon className="size-4" />
                 {tab.label}
@@ -130,7 +128,7 @@ export default function SettingsPage() {
                         localStorage.setItem("employeeIdPrefix", workspaceId)
                         toast.success('Employee ID Prefix successfully updated!')
                       }} 
-                      className="bg-primary hover:bg-primary/80 text-white"
+                      className="bg-primary hover:bg-primary/80 text-primary-foreground"
                     >
                       Update ID
                     </Button>
@@ -421,10 +419,6 @@ export default function SettingsPage() {
 
         <TabsContent value="email" className="border-none p-0 outline-none">
           <EmailSettings />
-        </TabsContent>
-
-        <TabsContent value="branding" className="border-none p-0 outline-none">
-          <ThemeSettings />
         </TabsContent>
 
         <TabsContent value="security" className="border-none p-0 outline-none space-y-6">

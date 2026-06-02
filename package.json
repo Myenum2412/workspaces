@@ -1,0 +1,8 @@
+{
+  "name": "workspaces",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install --legacy-peer-deps && npm run build",
+    "deploy": "cd frontend && npx wrangler pages deploy .next/standalone --project-name workspaces-frontend"
+  }
+}

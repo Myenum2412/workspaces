@@ -6,9 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  Field,
   FieldDescription,
-  FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +25,7 @@ export function LoginForm({
   const [errorMessage, setErrorMessage] = useState("");
   const [registeredMessage, setRegisteredMessage] = useState("");
   const [resetMessage, setResetMessage] = useState("");
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [generatedPassword] = useState<string | null>(null);
   const [branding, setBranding] = useState<{ logo?: string } | null>(null);
 
   // Load branding for login page
@@ -48,15 +46,21 @@ export function LoginForm({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("registered") === "true") {
-      setRegisteredMessage("Account created! Check your email for the password.");
-    }
-    if (params.get("reset") === "success") {
-      setResetMessage("Password reset successfully! Sign in with your new password.");
-    }
-    if (params.get("reason") === "session_expired") {
-      setErrorMessage("Session expired. Please sign in again.");
-    }
+    const registered = params.get("registered");
+    const reset = params.get("reset");
+    const reason = params.get("reason");
+
+    setTimeout(() => {
+      if (registered === "true") {
+        setRegisteredMessage("Account created! Check your email for the password.");
+      }
+      if (reset === "success") {
+        setResetMessage("Password reset successfully! Sign in with your new password.");
+      }
+      if (reason === "session_expired") {
+        setErrorMessage("Session expired. Please sign in again.");
+      }
+    }, 0);
     try {
       localStorage.removeItem("auth_token");
     } catch { /* ignore */ }
@@ -138,7 +142,10 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)}>
       <div className="flex flex-col items-center gap-1 text-center">
         {branding?.logo ? (
-          <img src={branding.logo} alt="Logo" className="h-12 mb-2 object-contain" />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={branding.logo} alt="Logo" className="h-12 mb-2 object-contain" />
+          </>
         ) : null}
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm text-balance text-muted-foreground">

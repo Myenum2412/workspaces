@@ -1,0 +1,5 @@
+{
+  "name": "workspaces-frontend",
+  "build_command": "cd frontend && npm install --legacy-peer-deps && npm run build",
+  "output_dir": "frontend/.next/standalone"
+}

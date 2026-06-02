@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins, JetBrains_Mono } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
-import ThemeScript from "./theme-script";
+import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -21,9 +22,6 @@ export const metadata: Metadata = {
   description: "Manage tasks, teams, and workspace operations.",
 };
 
-import { Providers } from "./providers";
-import { Toaster } from "@/components/ui/sonner";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,9 +32,7 @@ export default function RootLayout({
       lang="en"
       className={`${poppins.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <head>
-        <ThemeScript />
-      </head>
+      <head />
       <body className="min-h-full flex flex-col font-poppins">
         <Providers>
           <TooltipProvider>{children}</TooltipProvider>

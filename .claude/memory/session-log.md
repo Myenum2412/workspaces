@@ -28,3 +28,44 @@
 - （必要に応じて追記）
 
 ---
+
+## セッション: 2026-06-01T17:12:34Z
+
+- session_id: `session-1780321899209625097`
+- project: `workspaces`
+- branch: `main`
+- started_at: `2026-06-01T13:51:39Z`
+- ended_at: `2026-06-01T17:12:34Z`
+- duration_minutes: 200
+- changes: 0
+
+### 変更ファイル
+- （なし）
+
+### 重要な変更（important=true）
+- （なし）
+
+### 次回への引き継ぎ（任意）
+- （必要に応じて追記）
+
+---
+
+## セッション: 2026-06-01T17:49:08Z
+
+- session_id: `session-1780336141986464413`
+- project: `workspaces`
+- branch: `main`
+- started_at: `2026-06-01T17:49:01Z`
+- ended_at: `2026-06-01T17:49:08Z`
+- changes: 0
+
+### 変更ファイル
+- （なし）
+
+### 重要な変更（important=true）
+- （なし）
+
+### 次回への引き継ぎ（任意）
+- （必要に応じて追記）
+
+---

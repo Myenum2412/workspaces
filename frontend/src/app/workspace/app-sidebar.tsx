@@ -19,9 +19,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { API_BASE_URL } from "@/lib/api/config";
-import { profileApi, workspaceApi } from "@/lib/api/client";
+import { profileApi } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
-import { useBrandingStore } from "@/lib/branding/store";
 
 
 // ── Main AppSidebar ─────────────────────────────────────────
@@ -50,11 +49,6 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           setSocket(newSocket);
           newSocket.on("connect", () => { newSocket.emit("identify", userId); setIsWorkspaceActive(true); });
           newSocket.on("presence_update", ({ userId: uid, online }: any) => { if (uid === userId) setIsWorkspaceActive(online); });
-          newSocket.on("branding_updated", (data: any) => {
-            if (data?.branding) {
-              useBrandingStore.getState().syncFromWs(data.branding);
-            }
-          });
           const heartbeatInterval = setInterval(() => newSocket.emit("heartbeat"), 15000);
           return () => { clearInterval(heartbeatInterval); newSocket.disconnect(); };
         }
@@ -69,18 +63,10 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
     staleTime: 30_000,
   });
 
-  const { data: themeRes } = useQuery({
-    queryKey: ["theme-settings"],
-    queryFn: workspaceApi.getThemeSettings,
-    staleTime: 60_000,
-  });
-
   const profile = profileRes?.profile;
-  const themeSettings = themeRes?.themeSettings || {};
-  
-  // Use branding if available, fallback to user info
-  const displayAvatar = themeSettings.companyLogo || profile?.avatarUrl || user.avatar;
-  const displayName = themeSettings.companyName || (profile ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || profile.email : user.name);
+
+  const displayAvatar = profile?.avatarUrl || user.avatar;
+  const displayName = profile ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || profile.email : user.name;
 
   const handleToggleStatus = (checked: boolean) => {
     setIsWorkspaceActive(checked);

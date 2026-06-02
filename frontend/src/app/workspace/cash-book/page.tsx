@@ -1,11 +1,8 @@
-﻿"use client"
-
-import { Suspense } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { CashBookTablePage } from "./cash-book-table-page"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, TrendingUp, Receipt, Wallet } from "lucide-react"
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DollarSign, TrendingUp, Receipt, Wallet } from "lucide-react";
+import { CashBookTablePage } from "./cash-book-table-page";
 
 export default function CashBookPage() {
   return (
@@ -19,15 +16,11 @@ export default function CashBookPage() {
             Track cash transactions, vouchers, and financial records.
           </CardDescription>
         </CardHeader>
-
         <CardContent className="space-y-6">
-          {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Cash Book
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-700">Cash Book</CardTitle>
                 <DollarSign className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
@@ -36,11 +29,9 @@ export default function CashBookPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Total Receipts
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-700">Total Receipts</CardTitle>
                 <Receipt className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
@@ -49,11 +40,9 @@ export default function CashBookPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Cash In Hand
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-700">Cash In Hand</CardTitle>
                 <Wallet className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
@@ -62,11 +51,9 @@ export default function CashBookPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-primary/20 bg-card ">
+            <Card className="overflow-hidden border-primary/20 bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">
-                  Pending Verification
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-700">Pending Verification</CardTitle>
                 <TrendingUp className="h-4 w-4 text-slate-600" />
               </CardHeader>
               <CardContent>
@@ -76,12 +63,11 @@ export default function CashBookPage() {
             </Card>
           </div>
 
-          {/* Cash Book Table */}
           <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
             <CashBookTablePage />
           </Suspense>
         </CardContent>
       </Card>
     </section>
-  )
+  );
 }

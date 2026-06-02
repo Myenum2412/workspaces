@@ -1,12 +1,10 @@
-"use client"
-
-import * as React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { SavedTaskTable } from "@/components/tasks/saved-task-table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SavedTaskTable } from "@/components/tasks/saved-task-table";
 
 export default function SavedTasksPage() {
   return (
     <section className="space-y-6">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -19,10 +17,10 @@ export default function SavedTasksPage() {
             </div>
           </div>
         </CardHeader>
-
         <CardContent className="space-y-6">
           <SavedTaskTable />
         </CardContent>
+      </Card>
     </section>
-  )
+  );
 }

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  // Check for access_token cookie presence (httpOnly cookie set by backend)
+export async function middleware(request: NextRequest) {
   const hasAccessToken = request.cookies.has("access_token");
   const url = request.nextUrl.pathname;
 
@@ -13,18 +12,48 @@ export function middleware(request: NextRequest) {
 
   // 2. Redirect authenticated users away from /login
   if (hasAccessToken && url === "/login") {
-    // Role-based redirect is handled client-side after /api/auth/me fetch
-    // Default to /workspace since server will redirect non-staff via API if needed
     return NextResponse.redirect(new URL("/workspace", request.url));
   }
 
-  // 3. NOTE: Role-based route protection (staff vs workspace) is enforced
-  // server-side in each API route via the `authenticate` middleware on the backend.
-  // Client-side role checks are UX-only; the backend is the authority.
-  // Attempting to access /workspace as "staff" returns 403 from API.
-  // The org-menu admin check is handled client-side in org-menu/layout.tsx
-  // after fetching /api/auth/me — acceptable because backend APIs enforce
-  // actual permissions regardless of client-side routing.
+  // 3. Role-based route protection (server-side)
+  // Only apply to org-menu routes — admin-only section
+  if (hasAccessToken && url.startsWith("/org-menu")) {
+    // Get admin email from env — this is a server-side check
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase();
+
+    if (adminEmail) {
+      // We can't easily decode JWT in middleware without a library,
+      // so we rely on the backend API for role check.
+      // The org-menu layout client-side check is a UX optimization;
+      // backend APIs enforce actual permissions.
+      // Redirect non-admins to workspace
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+        if (apiUrl) {
+          const res = await fetch(`${apiUrl}/api/auth/me`, {
+            headers: {
+              Cookie: `access_token=${request.cookies.get("access_token")?.value || ""}`,
+            },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const userEmail = data.user?.email?.toLowerCase();
+            if (userEmail && userEmail !== adminEmail && url !== "/org-menu/register") {
+              return NextResponse.redirect(new URL("/workspace", request.url));
+            }
+          }
+        }
+      } catch {
+        // If API check fails, let through — backend APIs will enforce
+      }
+    }
+  }
+
+  // 4. Staff role redirect — staff users accessing /workspace should go to /staff
+  if (hasAccessToken && url.startsWith("/workspace") && !url.startsWith("/workspace/profile")) {
+    // Let the page handle staff/workspace redirect — JWT decode not available here
+    // The client-side check in workspace/layout is UX optimization
+  }
 
   return NextResponse.next();
 }

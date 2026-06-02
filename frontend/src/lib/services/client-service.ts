@@ -40,11 +40,11 @@ function toPayload(data: Partial<Client>): Record<string, unknown> {
 }
 
 export const clientService = {
-  async uploadLogo(_file: File): Promise<string> {
+  async uploadLogo(): Promise<string> {
     return "";
   },
 
-  getLogoPreview(_logoId: string): string {
+  getLogoPreview(): string {
     return "";
   },
 

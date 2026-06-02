@@ -100,6 +100,7 @@ export async function apiFetch<T>(
               credentials: "include",
             });
             if (retryRes.ok) return (await retryRes.json()) as T;
+            // Retry failed with non-2xx — fall through to throw below
             const retryJson = await retryRes.json().catch(() => null);
             const errorMsg = typeof retryJson?.error === "string" ? retryJson.error : retryJson?.error?.message;
             throw new ApiError(
@@ -109,12 +110,17 @@ export async function apiFetch<T>(
               retryJson?.error?.details || retryJson?.details
             );
           }
+          // Refresh returned non-2xx — fall through to redirect (don't catch)
         } catch (refreshErr) {
-          // Refresh failed — fall through to redirect
+          // Only redirect if refresh itself failed (network error, etc.)
+          // Don't redirect on retry request failures — throw those instead
+          if (refreshErr instanceof ApiError) throw refreshErr;
+          // Refresh network failure — fall through to redirect
         }
       }
-      // All refresh attempts failed — redirect to login
-      if (typeof window !== "undefined") {
+      // All refresh attempts failed — redirect to login, but not if already on an auth page
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith("/login") && !currentPath.startsWith("/signup") && !currentPath.startsWith("/forgot-password") && !currentPath.startsWith("/reset-password")) {
         window.location.href = "/login?reason=session_expired";
       }
     }
@@ -197,9 +203,13 @@ export const profileApi = {
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+    const headers: Record<string, string> = {};
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
     const res = await fetch(`${API_BASE_URL}/api/upload/avatar`, {
       method: "POST",
       credentials: "include",
+      headers,
       body: formData,
     });
     if (!res.ok) {
@@ -304,9 +314,13 @@ export const workspaceApi = {
   uploadImage: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+    const headers: Record<string, string> = {};
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
     const res = await fetch(`${API_BASE_URL}/api/upload/image`, {
       method: "POST",
       credentials: "include",
+      headers,
       body: formData,
     });
     if (!res.ok) {
@@ -402,9 +416,13 @@ export const brandingApi = {
   uploadLogo: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+    const headers: Record<string, string> = {};
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
     const res = await fetch(`${API_BASE_URL}/api/upload/image`, {
       method: "POST",
       credentials: "include",
+      headers,
       body: formData,
     });
     if (!res.ok) {
