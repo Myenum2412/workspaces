@@ -1,37 +1,69 @@
 services:
   mongodb:
     image: mongo:8
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
     ports:
       - "4000:4000"
-    env_file:
-      - backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://mongodb:27017/workspace_db
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access-secret-min-32-chars!!}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret-min-32-chars!!}
+      API_BASE_URL: https://workspaceapi.myenum.in
+      FRONTEND_URL: ${FRONTEND_URL:-https://workspace.myenum.in}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://workspace.myenum.in}
+      EMAIL_FROM: noreply@myenum.in
+      LOG_LEVEL: info
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - upload_data:/app/uploads
 
-  # Cloudflare Tunnel — exposes backend via trycloudflare.com (ephemeral)
-  # For permanent tunnel, use deploy/docker-compose.production.yml
   cloudflared:
     image: cloudflare/cloudflared:latest
-    command: tunnel --url http://backend:4000 --no-autoupdate
-    depends_on:
-      - backend
     restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://backend:4000
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./workspace-backend.yml:/etc/cloudflared/config.yml:ro
+      - /home/cloudflared/.cloudflared:/etc/cloudflared/credentials:ro
     depends_on:
       - backend
 
 volumes:
   mongo_data:
+  redis_data:
+  upload_data:

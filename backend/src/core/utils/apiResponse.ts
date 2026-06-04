@@ -1,13 +1,5 @@
 import { Response } from "express";
 
-/**
- * Standardized API response builder.
- * All API responses follow a consistent shape:
- *
- * Success: { success: true, data: T, meta: { requestId, timestamp, pagination? } }
- * Error:   { success: false, error: { code, message, details?, reference? }, meta: { requestId, timestamp } }
- */
-
 export interface PaginationMeta {
   page: number;
   limit: number;
@@ -48,43 +40,24 @@ function buildMeta(requestId?: string, pagination?: PaginationMeta): ResponseMet
 }
 
 export const apiResponse = {
-  /** Send a success response with data */
-  success<T>(res: Response, data: T, statusCode: number = 200, requestId?: string, pagination?: PaginationMeta) {
-    const response: SuccessResponse<T> = {
-      success: true,
-      data,
-      meta: buildMeta(requestId, pagination),
-    };
-    return res.status(statusCode).json(response);
+  success<T>(res: Response, data: T, statusCode = 200, requestId?: string, pagination?: PaginationMeta) {
+    return res.status(statusCode).json({ success: true as const, data, meta: buildMeta(requestId, pagination) });
   },
 
-  /** Send a created response (201) */
   created<T>(res: Response, data: T, requestId?: string) {
     return this.success(res, data, 201, requestId);
   },
 
-  /** Send a no-content response (204) */
   noContent(res: Response) {
     return res.status(204).send();
   },
 
-  /** Send a paginated list response */
-  paginated<T>(
-    res: Response,
-    data: T[],
-    total: number,
-    page: number,
-    limit: number,
-    requestId?: string
-  ) {
+  paginated<T>(res: Response, data: T[], total: number, page: number, limit: number, requestId?: string) {
     const pages = Math.ceil(total / limit);
-    return this.success(res, data, 200, requestId, {
-      page,
-      limit,
-      total,
-      pages,
-      hasNext: page * limit < total,
-      hasPrev: page > 1,
-    });
+    return this.success(res, data, 200, requestId, { page, limit, total, pages, hasNext: page * limit < total, hasPrev: page > 1 });
+  },
+
+  deleted(res: Response, requestId?: string) {
+    return this.success(res, { message: "Deleted successfully" }, 200, requestId);
   },
 };

@@ -1,15 +1,9 @@
-/**
- * Security middleware — helmet headers, input sanitization, RBAC.
- */
 import crypto from "crypto";
 import { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
-import mongoSanitize from "express-mongo-sanitize";
-import { AuthRequest } from "./auth.js";
-import { isSuperAdmin } from "../config/env.js";
-import { AuthorizationError } from "../core/errors/AppError.js";
-// Note: requireRole is NOT defined here — use requireRole from rbac.ts or auth.ts
-import { env } from "../config/env.js";
+import hpp from "hpp";
+import { env, getCorsOrigins, getIpWhitelist } from "../config/env.js";
+import { logger } from "../core/logging/logger.js";
 
 // ── Helmet ────────────────────────────────────────────────────
 
@@ -37,100 +31,99 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   })(_req, res, next);
 }
 
-// ── CSRF Protection ───────────────────────────────────────────
+// ── HPP (HTTP Parameter Pollution) ───────────────────────────
 
-const CSRF_COOKIE_NAME = "csrf_token";
-const CSRF_HEADER_NAME = "x-csrf-token";
+export const preventParameterPollution = hpp();
 
-/** Set CSRF cookie (httpOnly=false so JS can read it for SPA) */
-export function setCsrfCookie(req: Request, res: Response): void {
-  const token = crypto.randomUUID();
-  res.cookie(CSRF_COOKIE_NAME, token, {
-    httpOnly: false,  // JS must read this to send back in header
-    secure: env.NODE_ENV === "production",
-    sameSite: env.NODE_ENV === "production" ? "strict" : "lax",
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    path: "/",
-  });
-  // Also set as req body for convenience
-  (req as any)._csrfToken = token;
-}
+// ── IP Whitelist ──────────────────────────────────────────────
 
-/** Validate CSRF token for state-changing requests */
-export function validateCsrf(req: Request, res: Response, next: NextFunction): void {
-  // Skip for safe methods
-  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
-    return next();
-  }
+export function ipWhitelist(req: Request, res: Response, next: NextFunction): void {
+  const whitelist = getIpWhitelist();
+  if (whitelist.length === 0) return next();
 
-  const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
-  const headerToken = req.headers[CSRF_HEADER_NAME] as string | undefined;
-
-  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
-    res.status(403).json({
-      success: false,
-      error: {
-        code: "CSRF_VIOLATION",
-        message: "CSRF token missing or invalid. Include X-CSRF-Token header.",
-      },
-    });
+  const clientIp = req.ip ?? req.socket.remoteAddress ?? "";
+  if (!whitelist.includes(clientIp)) {
+    logger.warn({ ip: clientIp, path: req.path }, "IP whitelist blocked");
+    res.status(403).json({ success: false, error: { code: "IP_BLOCKED", message: "Access denied from this IP" }, meta: { timestamp: new Date().toISOString() } });
     return;
   }
-
   next();
 }
 
-// ── Input sanitization ────────────────────────────────────────
+// ── CSRF Protection ───────────────────────────────────────────
 
-export function sanitizeInput(req: Request, _res: Response, next: NextFunction) {
-  if (req.body && typeof req.body === "object") {
-    sanitizeStrings(req.body);
+const CSRF_COOKIE = "csrf_token";
+const CSRF_HEADER = "x-csrf-token";
+
+export function setCsrfCookie(req: Request, res: Response): void {
+  const token = crypto.randomUUID();
+  res.cookie(CSRF_COOKIE, token, {
+    httpOnly: false,
+    secure: env.COOKIE_SECURE,
+    sameSite: env.COOKIE_SAME_SITE,
+    maxAge: 24 * 60 * 60 * 1000,
+    path: "/",
+  });
+  (req as Record<string, unknown>)._csrfToken = token;
+}
+
+export function validateCsrf(req: Request, res: Response, next: NextFunction): void {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+
+  const cookieToken = req.cookies?.[CSRF_COOKIE];
+  const headerToken = req.headers[CSRF_HEADER] as string | undefined;
+
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    res.status(403).json({ success: false, error: { code: "CSRF_VIOLATION", message: "CSRF token missing or invalid" }, meta: { timestamp: new Date().toISOString() } });
+    return;
   }
   next();
 }
 
-function sanitizeStrings(obj: Record<string, any>): void {
+// ── Input Sanitization ────────────────────────────────────────
+
+export function sanitizeInput(req: Request, _res: Response, next: NextFunction) {
+  if (req.body && typeof req.body === "object") sanitizeObject(req.body);
+  next();
+}
+
+function sanitizeObject(obj: Record<string, unknown>): void {
   for (const key of Object.keys(obj)) {
-    if (typeof obj[key] === "string") {
-      // Remove potential NoSQL injection operators
-      if (obj[key].startsWith("$")) {
-        obj[key] = obj[key].replace(/^\$/, "");
-      }
-      // Basic XSS prevention for string inputs
-      obj[key] = obj[key]
+    const val = obj[key];
+    if (typeof val === "string") {
+      obj[key] = val
+        .replace(/^\$/, "")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#x27;");
-    } else if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
-      sanitizeStrings(obj[key]);
-    } else if (Array.isArray(obj[key])) {
-      for (const item of obj[key]) {
-        if (typeof item === "object" && item !== null) sanitizeStrings(item);
+    } else if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+      sanitizeObject(val as Record<string, unknown>);
+    } else if (Array.isArray(val)) {
+      for (const item of val) {
+        if (typeof item === "object" && item !== null) sanitizeObject(item as Record<string, unknown>);
       }
     }
   }
 }
 
-// ── MongoDB sanitization (removes $ and . from keys) ─────────
+// ── Audit Logger ──────────────────────────────────────────────
 
-export function mongoSanitizeMiddleware(req: Request, _res: Response, next: NextFunction) {
-  // Use express-mongo-sanitize for body, query, params
-  mongoSanitize({
-    replaceWith: "_",
-    onSanitize: ({ req: sanitizedReq, key }: { req: Request; key: string }) => {
-      console.warn(`[Sanitize] Removed prohibited key "${key}" from ${(sanitizedReq as any).originalUrl}`);
-    },
-  })(req, _res, next);
-}
-
-// ── Organization access check (super-admin bypass) ─────────────
-
-export function requireOrgAccess(req: Request, _res: Response, next: NextFunction) {
-  const authReq = req as AuthRequest;
-  if (!authReq.user) {
-    return next(new AuthorizationError("Authentication required"));
-  }
-  if (isSuperAdmin(authReq.user.email)) return next();
+export function auditLogger(req: Request, _res: Response, next: NextFunction) {
+  const start = Date.now();
+  const originalEnd = res.end.bind(res);
+  res.end = function (chunk?: unknown, encoding?: unknown, cb?: unknown) {
+    const duration = Date.now() - start;
+    logger.info({
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      duration,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      userId: (req as Record<string, unknown>)?.user?.id,
+    }, "Request completed");
+    return originalEnd(chunk as never, encoding as never, cb as never);
+  };
   next();
 }

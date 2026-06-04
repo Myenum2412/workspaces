@@ -1,60 +1,51 @@
 import "dotenv/config";
-
-// ── Validate environment BEFORE any other imports ────────────
-import { env } from "./config/env.js";
-
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import passport from "passport";
-import path from "path";
-import fs from "fs";
 import compression from "compression";
 import { createServer } from "http";
-import { connectDB } from "./config/connection.js";
-import { initSocketServer } from "./ws/server.js";
-import { securityHeaders, sanitizeInput, mongoSanitizeMiddleware, validateCsrf } from "./middleware/security.js";
+import path from "path";
+import fs from "fs";
+import mongoose from "mongoose";
+
+import { env, getCorsOrigins } from "./config/env.js";
+import { logger } from "./core/logging/logger.js";
+import { connectDB, disconnectDB } from "./db/connection.js";
+import { disconnectRedis } from "./db/redis.js";
+
 import { requestIdMiddleware } from "./core/middleware/requestId.js";
+import { securityHeaders, preventParameterPollution, sanitizeInput, validateCsrf, ipWhitelist } from "./middleware/security.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 import { globalErrorHandler } from "./core/errors/handler.js";
-import { apiResponse } from "./core/utils/apiResponse.js";
 
-// Core routes
-import authRoutes from "./routes/auth.js";
-import inviteRoutes from "./routes/invites.js";
-import setupRoutes from "./routes/setup.js";
-import workspaceRoutes from "./routes/workspace.js";
-import fileRoutes from "./routes/file-routes.js";
-import memberRoutes from "./routes/members.js";
-import taskRoutes from "./routes/tasks.js";
-
-// Entity routes
-import teamRoutes from "./routes/team-routes.js";
-import clientRoutes from "./routes/client-routes.js";
-import branchRoutes from "./routes/branch-routes.js";
-import orgRoutes from "./routes/org-routes.js";
-
-// Branding
-import brandingRoutes from "./routes/branding.js";
-
-import { checkHealth } from "./services/health.js";
+import authRoutes from "./modules/auth/routes/authRoutes.js";
+import userRoutes from "./modules/users/routes/userRoutes.js";
+import workspaceRoutes from "./modules/workspaces/routes/workspaceRoutes.js";
+import teamRoutes from "./modules/teams/routes/teamRoutes.js";
+import projectRoutes from "./modules/projects/routes/projectRoutes.js";
+import taskRoutes from "./modules/tasks/routes/taskRoutes.js";
+import notificationRoutes from "./modules/notifications/routes/notificationRoutes.js";
+import fileRoutes from "./modules/files/routes/fileRoutes.js";
+import activityRoutes from "./modules/activity/routes/activityRoutes.js";
+import dashboardRoutes from "./modules/dashboard/routes/dashboardRoutes.js";
+import settingRoutes from "./modules/settings/routes/settingRoutes.js";
+import searchRoutes from "./modules/search/routes/searchRoutes.js";
+import exportRoutes from "./modules/export/routes/exportRoutes.js";
 
 const app = express();
 
-// ── Trust proxy ─────────────────────────────────────────────
 app.set("trust proxy", 1);
 
-// ── Core Middleware ─────────────────────────────────────────
+// ── Core middleware ─────────────────────────────────────────
 app.use(requestIdMiddleware);
 app.use(securityHeaders);
-app.use(mongoSanitizeMiddleware);
+app.use(preventParameterPollution);
 
-// CORS
-const allowedOrigins = env.FRONTEND_URL.split(",").map((s) => s.trim());
+const allowedOrigins = getCorsOrigins();
 app.use(cors({
   origin(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    console.warn(`[CORS] Blocked origin: ${origin}`);
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    logger.warn(`[CORS] Blocked: ${origin}`);
     callback(new Error(`CORS: ${origin} not allowed`));
   },
   credentials: true,
@@ -68,113 +59,87 @@ app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
-app.use(passport.initialize());
 app.use(sanitizeInput);
-app.use(validateCsrf);
 
-// ── Rate limiting ──────────────────────────────────────────
-import rateLimit from "express-rate-limit";
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 20,
-  standardHeaders: true, legacyHeaders: false,
-  message: { success: false, error: { code: "RATE_LIMITED", message: "Too many auth attempts. Try again in 15 minutes." } },
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 120,
-  standardHeaders: true, legacyHeaders: false,
-  message: { success: false, error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down." } },
-});
-
-const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 30,
-  standardHeaders: true, legacyHeaders: false,
-  message: { success: false, error: { code: "RATE_LIMITED", message: "Too many upload attempts. Try again in 15 minutes." } },
-});
-
-app.use("/api/auth/", authLimiter);
-app.use("/api/upload/", uploadLimiter);
+// ── Rate limiting ────────────────────────────────────────────
 app.use("/api/", apiLimiter);
 
-// ── Route Mounting ─────────────────────────────────────────
-// Auth & Users
-app.use("/api/auth", authRoutes);
-app.use("/api/members", memberRoutes);
-app.use("/api/invites", inviteRoutes);
-
-// Workspace
-app.use("/api/workspace", workspaceRoutes);
-
-// File records management
-app.use("/api/workspace/files", fileRoutes);
-
-// Tasks (CRUD + saved templates)
-app.use("/api/tasks", taskRoutes);
-
-// Entities
-app.use("/api/teams", teamRoutes);
-app.use("/api/clients", clientRoutes);
-app.use("/api/branches", branchRoutes);
-app.use("/api", orgRoutes);
-
-app.use("/api/setup", setupRoutes);
-
-// Branding
-app.use("/api/branding", brandingRoutes);
-
-// ── Static files ───────────────────────────────────────────
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
-// ── Health check ───────────────────────────────────────────
+// ── Health check ─────────────────────────────────────────────
 app.get("/api/health", async (_req, res) => {
   try {
-    const health = await checkHealth();
-    const statusCode = health.status === "healthy" ? 200 : health.status === "degraded" ? 200 : 503;
-    res.status(statusCode).json({ success: health.status !== "unhealthy", ...health });
-  } catch (error: any) {
-    res.status(503).json({ success: false, status: "unhealthy", error: error.message });
+    const dbStatus = mongoose.connection.readyState === 1 ? "up" : "down";
+    const health = {
+      status: dbStatus === "up" ? "healthy" as const : "unhealthy" as const,
+      timestamp: new Date().toISOString(),
+      uptime: Math.round(process.uptime()),
+      services: { mongodb: dbStatus as "up" | "down", redis: "unknown" as const },
+      memory: { heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024), heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) },
+    };
+    res.status(dbStatus === "up" ? 200 : 503).json({ success: dbStatus === "up", ...health });
+  } catch (err) {
+    logger.error({ err }, "Health check failed");
+    res.status(503).json({ success: false, status: "unhealthy", error: "Database connection failed", meta: { timestamp: new Date().toISOString() } });
   }
 });
 
-// ── Server setup ───────────────────────────────────────────
-const httpServer = createServer(app);
+// ── API v1 ────────────────────────────────────────────────────
+const v1 = "/api/v1";
+app.use(`${v1}/auth`, authRoutes);
+app.use(`${v1}/users`, userRoutes);
+app.use(`${v1}/workspaces`, workspaceRoutes);
+app.use(`${v1}/teams`, teamRoutes);
+app.use(`${v1}/projects`, projectRoutes);
+app.use(`${v1}/tasks`, taskRoutes);
+app.use(`${v1}/notifications`, notificationRoutes);
+app.use(`${v1}/files`, fileRoutes);
+app.use(`${v1}/activity`, activityRoutes);
+app.use(`${v1}/dashboard`, dashboardRoutes);
+app.use(`${v1}/settings`, settingRoutes);
+app.use(`${v1}/search`, searchRoutes);
+app.use(`${v1}/export`, exportRoutes);
 
-const io = initSocketServer(httpServer);
+// ── Static ────────────────────────────────────────────────────
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+// ── 404 ───────────────────────────────────────────────────────
+app.use((_req, res) => {
+  res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Route not found" }, meta: { timestamp: new Date().toISOString() } });
+});
+
+// ── Error handler ─────────────────────────────────────────────
+app.use(globalErrorHandler);
+
+// ── Server ────────────────────────────────────────────────────
+const httpServer = createServer(app);
 
 const uploadDirs = ["uploads", "uploads/avatars", "uploads/files", "uploads/temp"];
 for (const dir of uploadDirs) {
-  const fullPath = path.join(process.cwd(), dir);
-  if (!fs.existsSync(fullPath)) fs.mkdirSync(fullPath, { recursive: true });
+  const p = path.join(process.cwd(), dir);
+  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 }
 
 httpServer.listen(env.PORT, () => {
-  console.log(`🚀 Backend running on http://localhost:${env.PORT} [${env.NODE_ENV}]`);
-  connectDB()
-    .then(async () => {
-      console.log("✅ MongoDB connected");
-      const { seedDefaultAdmin } = await import("./services/seed.js");
-      await seedDefaultAdmin();
-    })
-    .catch((err) => { console.error("❌ Startup failed:", err); process.exit(1); });
+  logger.info(`🚀 Server running on port ${env.PORT} [${env.NODE_ENV}]`);
+  logger.info(`📡 API base: ${env.API_BASE_URL}/api/${env.API_VERSION}`);
+  connectDB().catch((err) => { logger.error({ err }, "DB connection failed"); process.exit(1); });
 });
 
-// ── Graceful shutdown ──────────────────────────────────────
+// ── Graceful shutdown ──────────────────────────────────────────
 let shuttingDown = false;
 async function shutdown(signal: string) {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log(`\nReceived ${signal}. Shutting down gracefully...`);
-  httpServer.close(() => console.log("HTTP server closed."));
-  try {
-    const mongoose = await import("mongoose");
-    await mongoose.disconnect();
-    console.log("MongoDB disconnected.");
-  } catch { /* ignore */ }
-  process.exit(0);
+  logger.info(`Received ${signal}. Shutting down...`);
+  httpServer.close(() => {
+    logger.info("HTTP server closed");
+    Promise.all([disconnectDB(), disconnectRedis()]).then(() => { logger.info("All connections closed"); process.exit(0); });
+  });
+  setTimeout(() => { logger.error("Forced shutdown"); process.exit(1); }, 30000);
 }
+
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("unhandledRejection", (reason: unknown) => { logger.error({ reason }, "Unhandled rejection"); });
+process.on("uncaughtException", (err: Error) => { logger.error({ err }, "Uncaught exception"); shutdown("uncaughtException"); });
 
-// ── Global error handler (MUST be last) ────────────────────
-app.use(globalErrorHandler);
+export { app, httpServer };

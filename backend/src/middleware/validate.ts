@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
-import { ValidationError } from "../core/errors/AppError.js";
 
 export function validateBody(schema: ZodSchema) {
   return (req: Request, _res: Response, next: NextFunction) => {
@@ -8,7 +7,7 @@ export function validateBody(schema: ZodSchema) {
       req.body = schema.parse(req.body);
       next();
     } catch (err) {
-      next(err); // Forward to global error handler (handles ZodError → 400)
+      next(err);
     }
   };
 }
@@ -16,7 +15,18 @@ export function validateBody(schema: ZodSchema) {
 export function validateQuery(schema: ZodSchema) {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
-      (req as any).validatedQuery = schema.parse(req.query);
+      (req as Record<string, unknown>).validatedQuery = schema.parse(req.query);
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
+export function validateParams(schema: ZodSchema) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    try {
+      (req as Record<string, unknown>).validatedParams = schema.parse(req.params);
       next();
     } catch (err) {
       next(err);
