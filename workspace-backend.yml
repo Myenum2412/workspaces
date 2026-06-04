@@ -1,0 +1,7 @@
+tunnel: 39e3e4d2-ccf7-4ac2-960e-8c048cdc89f3
+credentials-file: /home/cloudflared/.cloudflared/39e3e4d2-ccf7-4ac2-960e-8c048cdc89f3.json
+
+ingress:
+  - hostname: workspaceapi.myenum.in
+    service: http://backend:4000
+  - service: http_status:404

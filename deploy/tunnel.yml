@@ -1,0 +1,10 @@
+# Cloudflare Tunnel Config
+# Place this at /home/cloudflared/.cloudflared/config.yml on the Droplet
+# OR use token-based auth (simpler, set TUNNEL_TOKEN in .env)
+tunnel: TUNNEL_ID
+credentials-file: /home/cloudflared/.cloudflared/TUNNEL_ID.json
+
+ingress:
+  - hostname: workspaceapi.myenum.in
+    service: http://backend:4000
+  - service: http_status:404

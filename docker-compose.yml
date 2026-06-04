@@ -10,19 +10,13 @@ services:
     build: ./backend
     ports:
       - "4000:4000"
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/workspace
-      - JWT_SECRET=change-me-in-production
-      - RESEND_API_KEY=re_UdPPBmpt_NytS7UDENw9LgQvoi64mikcY
-      - EMAIL_FROM=noreply@myenum.in
-      - FRONTEND_URL=http://localhost:3000
-      - PORT=4000
+    env_file:
+      - backend/.env
     depends_on:
       - mongodb
 
-  # Cloudflare Tunnel — exposes backend on a public *.trycloudflare.com URL
-  # After `docker compose up`, check logs: `docker compose logs -f cloudflared`
-  # Look for: "INF Connection established ... https://xxxxx.trycloudflare.com"
+  # Cloudflare Tunnel — exposes backend via trycloudflare.com (ephemeral)
+  # For permanent tunnel, use deploy/docker-compose.production.yml
   cloudflared:
     image: cloudflare/cloudflared:latest
     command: tunnel --url http://backend:4000 --no-autoupdate
