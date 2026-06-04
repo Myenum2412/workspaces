@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const runtime = "edge";
 import { ClipboardCheck, TrendingUp, Activity, Users } from "lucide-react";
 import { TaskTablePage } from "./task-table-page";
 import { getTaskStats } from "@/lib/server/tasks";
