@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import type { AuthSession, Organization, OrgMember, UserProfile } from "@/types";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 // ── Auth Context ──────────────────────────────────────────────
 
@@ -153,7 +153,9 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
                 </Button>
               </div>
             </header>
-            <main className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</main>
+            <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </main>
           </SidebarInset>
         </div>
       </SidebarProvider>

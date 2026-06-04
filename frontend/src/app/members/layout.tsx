@@ -11,7 +11,8 @@ import {
   Building2,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 const navItems = [
   { href: "/members/data", label: "Data", icon: DatabaseIcon },
@@ -91,7 +92,9 @@ export default function MembersLayout({ children }: { children: ReactNode }) {
             </nav>
           </div>
         </header>
-        <main className="px-4 py-6 lg:px-8">{children}</main>
+        <main className="px-4 py-6 lg:px-8">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
       </div>
     </div>
   )

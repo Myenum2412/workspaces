@@ -1,29 +1,53 @@
 import { Server as HTTPServer } from "http";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import redis from "../redis/connection.js";
 import { connectDB } from "../config/connection.js";
 import { UserStatus, UserStatusHistory } from "../models/index.js";
 import jwt from "jsonwebtoken";
-import { env, isSuperAdmin } from "../config/env.js";
+import { env, getCorsOrigins } from "../config/env.js";
 
-let io: Server | null = null;
-const onlineUsers = new Map<string, string>(); // socketId -> userId
+// ── Types ──────────────────────────────────────────────────────
+
+interface AuthPayload {
+  userId: string;
+  email: string;
+  organizationId: string;
+  workspaceId: string | null;
+  role: string;
+}
+
+interface AuthenticatedSocket extends Socket {
+  user: AuthPayload;
+}
 
 interface SessionInfo {
   historyId: string;
   currentStatus: string;
   lastChange: Date;
 }
+
+interface ManualStatusPayload {
+  userId: string;
+  status: string;
+}
+
+// ── State ──────────────────────────────────────────────────────
+
+let io: Server | null = null;
+const onlineUsers = new Map<string, string>();
 const sessionHistory = new Map<string, SessionInfo>();
+
+// ── Public API ─────────────────────────────────────────────────
 
 export function getIO(): Server | null {
   return io;
 }
 
-/** Get set of currently-online user IDs from socket map */
 export function getOnlineUserIds(): Set<string> {
   return new Set(onlineUsers.values());
 }
+
+// ── Helpers ────────────────────────────────────────────────────
 
 async function ensureDB(retries = 3): Promise<boolean> {
   for (let i = 0; i < retries; i++) {
@@ -38,9 +62,16 @@ async function ensureDB(retries = 3): Promise<boolean> {
   return false;
 }
 
-/** Push a status slice to DB */
-async function pushSlice(historyId: string, fromStatus: string, startedAt: Date, endedAt: Date) {
-  const durationSeconds = Math.max(0, Math.round((endedAt.getTime() - startedAt.getTime()) / 1000));
+async function pushSlice(
+  historyId: string,
+  fromStatus: string,
+  startedAt: Date,
+  endedAt: Date,
+): Promise<void> {
+  const durationSeconds = Math.max(
+    0,
+    Math.round((endedAt.getTime() - startedAt.getTime()) / 1000),
+  );
   if (durationSeconds <= 0) return;
   try {
     await UserStatusHistory.findByIdAndUpdate(historyId, {
@@ -53,10 +84,11 @@ async function pushSlice(historyId: string, fromStatus: string, startedAt: Date,
   }
 }
 
-// ── WS Connection Rate Limiting ──────────────────────────────
+// ── Rate Limiting ──────────────────────────────────────────────
+
 const wsConnectionCounts = new Map<string, { count: number; resetAt: number }>();
-const WS_MAX_CONNECTIONS = 10; // per IP per window
-const WS_WINDOW_MS = 60 * 1000; // 1 minute
+const WS_MAX_CONNECTIONS = 10;
+const WS_WINDOW_MS = 60 * 1000;
 
 function wsRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -70,7 +102,6 @@ function wsRateLimit(ip: string): boolean {
   return true;
 }
 
-// Periodic cleanup
 setInterval(() => {
   const now = Date.now();
   for (const [ip, record] of wsConnectionCounts) {
@@ -78,17 +109,22 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-export function initSocketServer(httpServer: HTTPServer) {
+// ── Initialization ─────────────────────────────────────────────
+
+export function initSocketServer(httpServer: HTTPServer): Server {
   if (io) return io;
+
+  const allowedOrigins = getCorsOrigins();
 
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.NEXT_PUBLIC_APP_URL as string || "*",
+      origin: allowedOrigins.length > 0 ? allowedOrigins : false,
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 
-  // Connection rate limit middleware (before auth)
+  // Rate limit middleware
   io.use((socket, next) => {
     const ip = socket.handshake.address || "unknown";
     if (!wsRateLimit(ip)) {
@@ -98,21 +134,24 @@ export function initSocketServer(httpServer: HTTPServer) {
     next();
   });
 
+  // Auth middleware
   io.use((socket, next) => {
-    // 1. Try auth.token (from socket.io auth option)
-    let token = socket.handshake.auth.token
-      || socket.handshake.headers.authorization?.split(" ")[1];
+    let token: string | undefined =
+      socket.handshake.auth.token ||
+      socket.handshake.headers.authorization?.split(" ")[1];
 
-    // 2. Try cookie (httpOnly access_token)
     if (!token && socket.handshake.headers.cookie) {
-      const match = socket.handshake.headers.cookie.match(/(?:^|; )access_token=([^;]*)/);
+      const match = socket.handshake.headers.cookie.match(
+        /(?:^|; )access_token=([^;]*)/,
+      );
       if (match) token = decodeURIComponent(match[1]);
     }
 
     if (!token) return next(new Error("No token"));
+
     try {
-      const decoded = jwt.verify(token, env.JWT_SECRET) as any;
-      (socket as any).user = decoded;
+      const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as AuthPayload;
+      (socket as AuthenticatedSocket).user = decoded;
       next();
     } catch {
       next(new Error("Invalid token"));
@@ -120,7 +159,7 @@ export function initSocketServer(httpServer: HTTPServer) {
   });
 
   io.on("connection", (socket) => {
-    const user = (socket as any).user;
+    const user = (socket as AuthenticatedSocket).user;
     console.log(`[Socket] Connected: ${socket.id} (user: ${user?.userId})`);
 
     if (user?.organizationId) {
@@ -130,7 +169,7 @@ export function initSocketServer(httpServer: HTTPServer) {
       socket.join(`user:${user.userId}`);
     }
 
-    // ── Identify ──────────────────────────────────────────
+    // ── Identify ──────────────────────────────────────────────
     socket.on("identify", async (userId: string, currentStatus?: string) => {
       if (!userId) return;
       onlineUsers.set(socket.id, userId);
@@ -138,14 +177,13 @@ export function initSocketServer(httpServer: HTTPServer) {
       try {
         if (!(await ensureDB())) throw new Error("DB not connected");
 
-        // Fresh session always Online — lastStatus preserved for data but showing Online
         const effectiveStatus = currentStatus || "Online";
         const now = new Date();
 
         await UserStatus.findOneAndUpdate(
           { userId },
           { $set: { status: effectiveStatus, lastActiveAt: now } },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
         const history = await UserStatusHistory.create({
@@ -162,14 +200,18 @@ export function initSocketServer(httpServer: HTTPServer) {
           lastChange: now,
         });
 
-        io?.emit("presence_update", { userId, online: true, status: effectiveStatus });
+        io?.emit("presence_update", {
+          userId,
+          online: true,
+          status: effectiveStatus,
+        });
         console.log(`[WS] Identify: ${userId} → ${effectiveStatus}`);
       } catch (error) {
         console.error(`[WS] Identify error:`, (error as Error).message);
       }
     });
 
-    // ── Heartbeat ─────────────────────────────────────────
+    // ── Heartbeat ─────────────────────────────────────────────
     socket.on("heartbeat", async () => {
       const userId = onlineUsers.get(socket.id);
       if (!userId) return;
@@ -179,15 +221,18 @@ export function initSocketServer(httpServer: HTTPServer) {
         await UserStatus.updateOne({ userId }, { lastActiveAt: now });
         const sess = sessionHistory.get(socket.id);
         if (sess) {
-          await UserStatusHistory.findByIdAndUpdate(sess.historyId, { lastActiveTime: now });
+          await UserStatusHistory.findByIdAndUpdate(sess.historyId, {
+            lastActiveTime: now,
+          });
         }
       } catch (error) {
         console.error(`[WS] Heartbeat error:`, (error as Error).message);
       }
     });
 
-    // ── Manual status change — record slice ───────────────
-    socket.on("manual_status", async ({ userId, status }: { userId: string; status: string }) => {
+    // ── Manual status change ──────────────────────────────────
+    socket.on("manual_status", async (payload: ManualStatusPayload) => {
+      const { userId, status } = payload;
       if (!userId || !status) return;
       io?.emit("presence_update", { userId, online: status === "Online", status });
 
@@ -197,10 +242,9 @@ export function initSocketServer(httpServer: HTTPServer) {
         await UserStatus.findOneAndUpdate(
           { userId },
           { status, lastActiveAt: new Date() },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
-        // Record slice
         const sess = sessionHistory.get(socket.id);
         if (sess && sess.currentStatus !== status) {
           const now = new Date();
@@ -216,16 +260,22 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
     });
 
-    socket.on("get_online_users", (callback) => {
+    // ── Get online users ──────────────────────────────────────
+    socket.on("get_online_users", (callback: (users: string[]) => void) => {
       if (typeof callback === "function") {
         callback(Array.from(new Set(onlineUsers.values())));
       }
     });
 
-    socket.on("subscribe", (ch: string) => { socket.join(ch); });
-    socket.on("unsubscribe", (ch: string) => { socket.leave(ch); });
+    // ── Subscribe / Unsubscribe ───────────────────────────────
+    socket.on("subscribe", (channel: string) => {
+      socket.join(channel);
+    });
+    socket.on("unsubscribe", (channel: string) => {
+      socket.leave(channel);
+    });
 
-    // ── Disconnect — push final slice + close session ─────
+    // ── Disconnect ────────────────────────────────────────────
     socket.on("disconnect", async () => {
       console.log(`[Socket] Disconnected: ${socket.id}`);
       const userId = onlineUsers.get(socket.id);
@@ -246,9 +296,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
         if (sess) {
           const now = new Date();
-          // Push final slice
           await pushSlice(sess.historyId, sess.currentStatus, sess.lastChange, now);
-          // Close session
           await UserStatusHistory.findByIdAndUpdate(sess.historyId, {
             logoutTimestamp: now,
             status: "Offline",
@@ -264,9 +312,13 @@ export function initSocketServer(httpServer: HTTPServer) {
   return io;
 }
 
-export async function publishChange(channel: string, data: unknown) {
+export async function publishChange(channel: string, data: unknown): Promise<void> {
   if (io) io.to(channel).emit("change", data);
   if (redis) {
-    try { await redis.publish(channel, JSON.stringify(data)); } catch { /* redis optional */ }
+    try {
+      await redis.publish(channel, JSON.stringify(data));
+    } catch {
+      /* redis optional */
+    }
   }
 }

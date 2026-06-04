@@ -1,7 +1,5 @@
 import { api } from "@/lib/api/client";
-import type { Task, TaskStats } from "@/types";
-
-export type { Task, TaskStats };
+import type { Task, TaskStats, PaginatedResult } from "@/types/shared";
 
 function mapTask(doc: Record<string, unknown>): Task {
   return {
@@ -26,15 +24,48 @@ function mapTask(doc: Record<string, unknown>): Task {
     createdAt: doc.createdAt as string,
     updatedAt: doc.updatedAt as string,
     deletedAt: (doc.deletedAt as string) ?? null,
+    projectId: (doc.projectId ?? null) as string | null,
   };
+}
+
+function computeTaskStats(tasks: Task[]): TaskStats {
+  const today = new Date().toISOString().slice(0, 10);
+  return tasks.reduce<TaskStats>(
+    (stats, task) => {
+      if (task.dueDate?.startsWith(today)) stats.todayTask += 1;
+      if (task.status === "in_progress") stats.inProgressTask += 1;
+      if (task.status === "pending") stats.pendingTask += 1;
+      if (task.status === "on_hold") stats.postponedTask += 1;
+      if (
+        task.dueDate &&
+        task.dueDate < today &&
+        !["completed", "rejected"].includes(task.status)
+      ) {
+        stats.overdueTask += 1;
+      }
+      return stats;
+    },
+    {
+      todayTask: 0,
+      inProgressTask: 0,
+      teamTask: 0,
+      pendingTask: 0,
+      postponedTask: 0,
+      repeatedTask: 0,
+      overdueTask: 0,
+    },
+  );
 }
 
 export const taskService = {
   async getAllTasks(organizationId?: string): Promise<Task[]> {
     try {
       const q = organizationId ? `?organizationId=${organizationId}` : "";
-      const res = await api.get<{ success: boolean; tasks: Record<string, unknown>[] }>(`/api/tasks${q}`);
-      return (res.tasks ?? []).map(mapTask);
+      const res = api.get<{ success: boolean; data: Record<string, unknown>[] }>(
+        `/api/tasks${q}`,
+      );
+      const result = await res;
+      return (result.data ?? []).map(mapTask);
     } catch (error) {
       console.warn("taskService.getAllTasks error:", error);
       return [];
@@ -42,23 +73,28 @@ export const taskService = {
   },
 
   async getTaskById(id: string): Promise<Task> {
-    const res = await api.get<{ success: boolean; task: Record<string, unknown> }>(`/api/tasks/${id}`);
-    return mapTask(res.task);
+    const res = await api.get<{ success: boolean; data: Record<string, unknown> }>(
+      `/api/tasks/${id}`,
+    );
+    return mapTask(res.data);
   },
 
   async createTask(data: Partial<Task>, organizationId?: string): Promise<Task> {
     const shortId = String(Date.now()).slice(-6);
-    const res = await api.post<{ success: boolean; task: Record<string, unknown> }>("/api/tasks", {
-      taskNo: `TK${shortId}`,
-      title: data.title ?? "Untitled Task",
-      assignedTo: data.assignedTo ?? "",
-      assignedBy: data.assignedBy ?? "",
-      status: data.status ?? "pending",
-      priority: data.priority ?? "medium",
-      dueDate: data.dueDate ?? "",
-      organizationId: organizationId ?? "",
-    });
-    return mapTask(res.task);
+    const res = await api.post<{ success: boolean; data: Record<string, unknown> }>(
+      "/api/tasks",
+      {
+        taskNo: `TK${shortId}`,
+        title: data.title ?? "Untitled Task",
+        assignedTo: data.assignedTo ?? "",
+        assignedBy: data.assignedBy ?? "",
+        status: data.status ?? "pending",
+        priority: data.priority ?? "medium",
+        dueDate: data.dueDate ?? "",
+        organizationId: organizationId ?? "",
+      },
+    );
+    return mapTask(res.data);
   },
 
   async updateTaskStatus(taskId: string, newStatus: Task["status"]): Promise<void> {
@@ -66,8 +102,11 @@ export const taskService = {
   },
 
   async updateTask(taskId: string, data: Partial<Task>): Promise<Task> {
-    const res = await api.put<{ success: boolean; task: Record<string, unknown> }>(`/api/tasks/${taskId}`, data);
-    return mapTask(res.task);
+    const res = await api.put<{ success: boolean; data: Record<string, unknown> }>(
+      `/api/tasks/${taskId}`,
+      data,
+    );
+    return mapTask(res.data);
   },
 
   async deleteTask(taskId: string): Promise<void> {
@@ -76,8 +115,10 @@ export const taskService = {
 
   async getMyTasks(assignedTo: string): Promise<Task[]> {
     try {
-      const res = await api.get<{ success: boolean; tasks: Record<string, unknown>[] }>(`/api/tasks?assignedTo=${assignedTo}`);
-      return (res.tasks ?? []).map(mapTask);
+      const res = await api.get<{ success: boolean; data: Record<string, unknown>[] }>(
+        `/api/tasks?assignedTo=${assignedTo}`,
+      );
+      return (res.data ?? []).map(mapTask);
     } catch {
       return [];
     }
@@ -94,20 +135,4 @@ export const taskService = {
   },
 };
 
-function computeTaskStats(tasks: Task[]): TaskStats {
-  const today = new Date().toISOString().slice(0, 10);
-  return tasks.reduce<TaskStats>(
-    (stats, task) => {
-      if (task.dueDate?.startsWith(today)) stats.todayTask += 1;
-      if (task.status === "in_progress") stats.inProgressTask += 1;
-      if (task.status === "pending") stats.pendingTask += 1;
-      if (task.status === "on_hold") stats.postponedTask += 1;
-      if (task.dueDate && task.dueDate < today
-        && !["completed", "rejected"].includes(task.status)) {
-        stats.overdueTask += 1;
-      }
-      return stats;
-    },
-    { todayTask: 0, inProgressTask: 0, teamTask: 0, pendingTask: 0, postponedTask: 0, repeatedTask: 0, overdueTask: 0 }
-  );
-}
+export type { Task, TaskStats };

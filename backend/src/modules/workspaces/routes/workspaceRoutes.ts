@@ -15,6 +15,6 @@ router.get("/", validateQuery(listSchema), workspaceController.list);
 router.get("/:id", workspaceController.getById);
 router.post("/", requireRole("ORG_ADMIN"), validateBody(createSchema), workspaceController.create);
 router.patch("/:id", requireRole("ORG_ADMIN"), validateBody(updateSchema), workspaceController.update);
-router.delete("/:id", requireRole("ORG_ADMIN"), workspaceController.delete);
+router.delete("/:id", requireRole("ORG_ADMIN"), workspaceController.remove);
 
 export default router;

@@ -1,93 +1,66 @@
 "use client";
 
-import { Component, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { logger } from "@/lib/utils/logger";
+import React, { Component, ReactNode } from "react";
 
-interface Props {
+interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-  variant?: "full" | "card" | "inline";
-  title?: string;
-  description?: string;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null };
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error("ErrorBoundary caught", {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-    });
-    this.props.onError?.(error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    console.error("ErrorBoundary caught:", error, errorInfo);
   }
 
-  handleReset = () => this.setState({ hasError: false, error: null });
+  render(): ReactNode {
+    if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
 
-  render() {
-    if (!this.state.hasError) return this.props.children;
-
-    if (this.props.fallback) return this.props.fallback;
-
-    const { variant = "card" } = this.props;
-    const title = this.props.title ?? "Something went wrong";
-    const description = this.props.description ?? "An unexpected error occurred. Please try again.";
-
-    if (variant === "inline") {
       return (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>{description}</span>
-          <Button variant="ghost" size="sm" onClick={this.handleReset} className="ml-auto h-6 text-xs">
-            Retry
-          </Button>
-        </div>
-      );
-    }
-
-    if (variant === "full") {
-      return (
-        <div className="flex min-h-screen items-center justify-center p-4">
-          <div className="w-full max-w-md text-center space-y-4">
-            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-            <h2 className="text-xl font-semibold">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
-            <Button onClick={this.handleReset}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Try again
-            </Button>
+        <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-8 text-center">
+          <div className="rounded-full bg-red-100 p-4 dark:bg-red-900/20">
+            <svg
+              className="h-8 w-8 text-red-600 dark:text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
           </div>
+          <h2 className="text-lg font-semibold">Something went wrong</h2>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            An unexpected error occurred. Please try refreshing the page.
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Try again
+          </button>
         </div>
       );
     }
 
-    // Card variant (default)
-    return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center">
-          <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center">
-          <Button onClick={this.handleReset} variant="outline">
-            <RefreshCw className="mr-2 h-4 w-4" /> Retry
-          </Button>
-        </CardContent>
-      </Card>
-    );
+    return this.props.children;
   }
 }

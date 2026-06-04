@@ -15,6 +15,6 @@ router.get("/", validateQuery(listSchema), taskController.list);
 router.get("/:id", taskController.getById);
 router.post("/", requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"), validateBody(createSchema), taskController.create);
 router.patch("/:id", validateBody(updateSchema), taskController.update);
-router.delete("/:id", requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"), taskController.delete);
+router.delete("/:id", requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"), taskController.remove);
 
 export default router;

@@ -10,8 +10,18 @@ export const taskController = {
     const authReq = req as AuthRequest;
     const params = parsePagination(req.query as Record<string, unknown>);
     const query = req.query as Record<string, unknown>;
-    const { tasks, total } = await taskService.list(authReq.user!.organizationId, authReq.user!.workspaceId, { ...params, status: query.status as string, priority: query.priority as string, assignedTo: query.assignedTo as string, projectId: query.projectId as string });
-    apiResponse.paginated(res, tasks, total, params.page, params.limit, req.requestId);
+    const result = await taskService.list(
+      authReq.user!.organizationId,
+      authReq.user!.workspaceId,
+      params,
+      {
+        status: query.status as string,
+        priority: query.priority as string,
+        assignedTo: query.assignedTo as string,
+        projectId: query.projectId as string,
+      },
+    );
+    apiResponse.paginated(res, result.data, result.total, result.page, result.limit, req.requestId);
   }),
 
   getById: catchAsync(async (req: Request, res: Response) => {
@@ -22,7 +32,12 @@ export const taskController = {
 
   create: catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
-    const task = await taskService.create(authReq.user!.organizationId, authReq.user!.workspaceId || "", authReq.user!.userId, req.body);
+    const task = await taskService.create(
+      authReq.user!.organizationId,
+      authReq.user!.workspaceId || "",
+      authReq.user!.userId,
+      req.body,
+    );
     apiResponse.created(res, task, req.requestId);
   }),
 
@@ -32,9 +47,9 @@ export const taskController = {
     apiResponse.success(res, task, 200, req.requestId);
   }),
 
-  delete: catchAsync(async (req: Request, res: Response) => {
+  remove: catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
-    const result = await taskService.delete(req.params.id, authReq.user!.organizationId);
+    const result = await taskService.remove(req.params.id, authReq.user!.organizationId);
     apiResponse.success(res, result, 200, req.requestId);
   }),
 };

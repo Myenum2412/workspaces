@@ -1,54 +1,57 @@
-"use client"
+"use client";
 
-import type { CSSProperties, ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react";
 
-import { AppSidebar } from "./app-sidebar"
+import { AppSidebar } from "./app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-import { HeaderStatusUpdater } from "./header-status-updater"
+import { HeaderStatusUpdater } from "./header-status-updater";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
-export default function MyTaskLayout({ children }: { children: ReactNode }) {
+export default function WorkspaceLayout({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "20rem",
-          "--sidebar-width-icon": "4rem",
-        } as CSSProperties
-      }
-    >
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 px-4">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-vertical:h-4 data-vertical:self-auto"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>My Task</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-          <HeaderStatusUpdater />
-        </header>
-        <main className="flex flex-1 flex-col p-4">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
-  )
+    <ErrorBoundary>
+      <SidebarProvider
+        style={
+          {
+            "--sidebar-width": "20rem",
+            "--sidebar-width-icon": "4rem",
+          } as CSSProperties
+        }
+      >
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 px-4">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <Separator
+                orientation="vertical"
+                className="mr-2 data-vertical:h-4 data-vertical:self-auto"
+              />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Workspace</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <HeaderStatusUpdater />
+          </header>
+          <main className="flex flex-1 flex-col p-4">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </ErrorBoundary>
+  );
 }

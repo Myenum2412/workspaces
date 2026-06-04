@@ -9,8 +9,8 @@ export const workspaceController = {
   list: catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const params = parsePagination(req.query as Record<string, unknown>);
-    const { workspaces, total } = await workspaceService.list(authReq.user!.organizationId, params);
-    apiResponse.paginated(res, workspaces, total, params.page, params.limit, req.requestId);
+    const result = await workspaceService.list(authReq.user!.organizationId, params);
+    apiResponse.paginated(res, result.data, result.total, result.page, result.limit, req.requestId);
   }),
 
   getById: catchAsync(async (req: Request, res: Response) => {
@@ -31,9 +31,9 @@ export const workspaceController = {
     apiResponse.success(res, ws, 200, req.requestId);
   }),
 
-  delete: catchAsync(async (req: Request, res: Response) => {
+  remove: catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
-    const result = await workspaceService.delete(req.params.id, authReq.user!.organizationId);
+    const result = await workspaceService.remove(req.params.id, authReq.user!.organizationId);
     apiResponse.success(res, result, 200, req.requestId);
   }),
 };
