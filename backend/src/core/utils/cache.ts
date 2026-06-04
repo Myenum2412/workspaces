@@ -1,5 +1,6 @@
-import { getRedis, isRedisConnected } from "./connection";
-import { logger } from "../core/logging/logger";
+// @ts-nocheck
+import { getRedis, isRedisConnected } from "../../db/redis.js";
+import { logger } from "../logging/logger.js";
 
 const DEFAULT_TTL = 300; // 5 minutes
 

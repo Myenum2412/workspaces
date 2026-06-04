@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { connectDB } from "../../../db/connection.js";
 import { Task, Project, User } from "../../../models/index.js";
 

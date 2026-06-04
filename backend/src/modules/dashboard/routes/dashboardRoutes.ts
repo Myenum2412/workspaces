@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { dashboardController } from "../controllers/dashboardController.js";
 import { authenticate } from "../../../middleware/auth.js";

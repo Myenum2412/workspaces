@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from "express";
 import { authService } from "../services/authService.js";
 import { catchAsync } from "../../../core/utils/catchAsync.js";

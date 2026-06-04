@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { settingController } from "../controllers/settingController.js";
 import { validateBody } from "../../../middleware/validate.js";

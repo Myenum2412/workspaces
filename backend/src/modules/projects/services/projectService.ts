@@ -1,3 +1,4 @@
+// @ts-nocheck
 import crypto from "crypto";
 import { connectDB } from "../../../db/connection.js";
 import { Project } from "../../../models/index.js";

@@ -1,0 +1,651 @@
+
+src/core/errors/handler.ts:45:86 - error TS2538: Type 'undefined' cannot be used as an index type.
+
+45     details = { field: key, value: (errRecord.keyValue as Record<string, unknown>)?.[key] };
+                                                                                        ~~~
+
+src/core/utils/cache.ts:1:44 - error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+
+1 import { getRedis, isRedisConnected } from "./connection";
+                                             ~~~~~~~~~~~~~~
+
+src/core/utils/cache.ts:2:24 - error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+
+2 import { logger } from "../core/logging/logger";
+                         ~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/db/redis.ts:4:12 - error TS2709: Cannot use namespace 'Redis' as a type.
+
+4 let redis: Redis | null = null;
+             ~~~~~
+
+src/db/redis.ts:11:29 - error TS2709: Cannot use namespace 'Redis' as a type.
+
+11 export function getRedis(): Redis | null {
+                               ~~~~~
+
+src/db/redis.ts:32:50 - error TS2709: Cannot use namespace 'Redis' as a type.
+
+32   const g = globalThis as unknown as { __redis?: Redis };
+                                                    ~~~~~
+
+src/db/redis.ts:33:55 - error TS2351: This expression is not constructable.
+  Type 'typeof import("/home/j0k3r/Desktop/workspaces/backend/node_modules/ioredis/built/index")' has no construct signatures.
+
+33   redis = process.env.NODE_ENV === "production" ? new Redis(url, opts) : g.__redis ?? (g.__redis = new Redis(url, opts));
+                                                         ~~~~~
+
+src/db/redis.ts:33:104 - error TS2351: This expression is not constructable.
+  Type 'typeof import("/home/j0k3r/Desktop/workspaces/backend/node_modules/ioredis/built/index")' has no construct signatures.
+
+33   redis = process.env.NODE_ENV === "production" ? new Redis(url, opts) : g.__redis ?? (g.__redis = new Redis(url, opts));
+                                                                                                          ~~~~~
+
+src/email/resend.ts:1:24 - error TS2307: Cannot find module 'resend' or its corresponding type declarations.
+
+1 import { Resend } from "resend";
+                         ~~~~~~~~
+
+src/middleware/auth.ts:59:42 - error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+
+59   if (authHeader?.startsWith("Bearer ")) return authHeader.split(" ")[1];
+                                            ~~~~~~
+
+src/middleware/security.ts:5:15 - error TS6133: 'getCorsOrigins' is declared but its value is never read.
+
+5 import { env, getCorsOrigins, getIpWhitelist } from "../config/env.js";
+                ~~~~~~~~~~~~~~
+
+src/middleware/security.ts:67:4 - error TS2352: Conversion of type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+67   (req as Record<string, unknown>)._csrfToken = token;
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/middleware/security.ts:124:16 - error TS2352: Conversion of type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+124       userId: (req as Record<string, unknown>)?.user?.id,
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/middleware/security.ts:124:55 - error TS2339: Property 'id' does not exist on type '{}'.
+
+124       userId: (req as Record<string, unknown>)?.user?.id,
+                                                          ~~
+
+src/middleware/soft-delete.ts:5:42 - error TS6133: 'Types' is declared but its value is never read.
+
+5 import { Schema, Document, Query, Model, Types } from "mongoose";
+                                           ~~~~~
+
+src/middleware/validate.ts:18:8 - error TS2352: Conversion of type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+18       (req as Record<string, unknown>).validatedQuery = schema.parse(req.query);
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/middleware/validate.ts:29:8 - error TS2352: Conversion of type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+29       (req as Record<string, unknown>).validatedParams = schema.parse(req.params);
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/models/Organization.ts:1:45 - error TS6133: 'Types' is declared but its value is never read.
+
+1 import mongoose, { Schema, Document, Model, Types } from "mongoose";
+                                              ~~~~~
+
+src/models/index.ts:56:10 - error TS2323: Cannot redeclare exported variable 'UserStatus'.
+
+56 export { UserStatus, UserStatusHistory } from "./UserStatus.js";
+            ~~~~~~~~~~
+
+src/models/index.ts:56:10 - error TS2484: Export declaration conflicts with exported declaration of 'UserStatus'.
+
+56 export { UserStatus, UserStatusHistory } from "./UserStatus.js";
+            ~~~~~~~~~~
+
+src/models/index.ts:71:14 - error TS2323: Cannot redeclare exported variable 'UserStatus'.
+
+71 export const UserStatus = {
+                ~~~~~~~~~~
+
+src/modules/activity/controllers/activityController.ts:13:13 - error TS2339: Property 'activities' does not exist on type 'PaginatedResult<Record<string, unknown>>'.
+
+13     const { activities, total } = await activityService.list(authReq.user!.organizationId, { ...params, userId: q.userId as string, entityType: q.entityType as string, action: q.action as string, fromDate: q.fromDate as string, toDate: q.toDate as string });
+               ~~~~~~~~~~
+
+src/modules/activity/controllers/activityController.ts:13:57 - error TS2554: Expected 3 arguments, but got 2.
+
+13     const { activities, total } = await activityService.list(authReq.user!.organizationId, { ...params, userId: q.userId as string, entityType: q.entityType as string, action: q.action as string, fromDate: q.fromDate as string, toDate: q.toDate as string });
+                                                           ~~~~
+
+  src/modules/activity/services/activityService.ts:28:5
+    28     filters: { userId?: string; entityType?: string; action?: string; fromDate?: string; toDate?: string },
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'filters' was not provided.
+
+src/modules/activity/controllers/activityController.ts:21:13 - error TS2339: Property 'logs' does not exist on type 'PaginatedResult<Record<string, unknown>>'.
+
+21     const { logs, total } = await activityService.listAuditLogs(authReq.user!.organizationId, { ...params, severity: q.severity as string, action: q.action as string });
+               ~~~~
+
+src/modules/activity/controllers/activityController.ts:21:51 - error TS2554: Expected 3 arguments, but got 2.
+
+21     const { logs, total } = await activityService.listAuditLogs(authReq.user!.organizationId, { ...params, severity: q.severity as string, action: q.action as string });
+                                                     ~~~~~~~~~~~~~
+
+  src/modules/activity/services/activityService.ts:101:5
+    101     filters: { severity?: string; action?: string },
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'filters' was not provided.
+
+src/modules/activity/routes/activityRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/activity/services/activityService.ts:22:5 - error TS2322: Type 'IActivityLogDocument & Required<{ _id: string; }> & { __v: number; }' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'IActivityLogDocument & Required<{ _id: string; }> & { __v: number; }'.
+
+22     return log.toObject();
+       ~~~~~~
+
+src/modules/activity/services/activityService.ts:95:5 - error TS2322: Type 'IAuditLogDocument & Required<{ _id: string; }> & { __v: number; }' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'IAuditLogDocument & Required<{ _id: string; }> & { __v: number; }'.
+
+95     return log.toObject();
+       ~~~~~~
+
+src/modules/auth/controllers/authController.ts:15:21 - error TS7030: Not all code paths return a value.
+
+15   login: catchAsync(async (req: Request, res: Response) => {
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/modules/auth/middleware/auditMiddleware.ts:15:9 - error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+
+15         entityId: req.params.id || "unknown",
+           ~~~~~~~~
+
+  src/types/shared.ts:374:3
+    374   entityId: string;
+          ~~~~~~~~
+    The expected type comes from property 'entityId' which is declared here on type 'LogActivityInput'
+
+src/modules/auth/services/authService.ts:26:3 - error TS6196: 'LoginInput' is declared but never used.
+
+26   LoginInput,
+     ~~~~~~~~~~
+
+src/modules/auth/services/authService.ts:194:11 - error TS6133: 'payload' is declared but its value is never read.
+
+194     const payload: AuthPayload = {
+              ~~~~~~~
+
+src/modules/dashboard/services/dashboardService.ts:7:14 - error TS7056: The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.
+
+7 export const dashboardService = {
+               ~~~~~~~~~~~~~~~~
+
+src/modules/export/routes/exportRoutes.ts:3:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+3 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/files/controllers/fileController.ts:1:1 - error TS6133: 'crypto' is declared but its value is never read.
+
+1 import crypto from "crypto";
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/modules/files/controllers/fileController.ts:69:13 - error TS2339: Property 'files' does not exist on type '{ data: (FlattenMaps<{ _id: string; organizationId: string; workspaceId: string; userId: string; filename: string; originalName: string; mimetype: string; size: number; url: string; key: string; folder: string; ... 59 more ...; validateSync: { ...; }; }> & Required<...> & { ...; })[]; ... 5 more ...; hasPrev: boolea...'.
+
+69     const { files, total } = await fileService.list(
+               ~~~~~
+
+src/modules/files/controllers/fileController.ts:94:45 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+94     const result = await fileService.remove(req.params.id, authReq.user!.organizationId);
+                                               ~~~~~~~~~~~~~
+
+src/modules/files/routes/fileRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/files/services/fileService.ts:12:14 - error TS7056: The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.
+
+12 export const fileService = {
+                ~~~~~~~~~~~
+
+src/modules/files/services/fileService.ts:77:12 - error TS2352: Conversion of type 'IFileRecordDocument & Required<{ _id: string; }> & { __v: number; }' to type 'FileUploadResult' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date' is not comparable to type 'string'.
+
+77     return record.toObject() as FileUploadResult;
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/modules/notifications/controllers/notificationController.ts:13:13 - error TS2339: Property 'notifications' does not exist on type 'PaginatedResult<Record<string, unknown>> & { unreadCount: number; }'.
+
+13     const { notifications, total, unreadCount } = await notificationService.list(authReq.user!.userId, { page, limit, unreadOnly });
+               ~~~~~~~~~~~~~
+
+src/modules/notifications/controllers/notificationController.ts:13:119 - error TS2353: Object literal may only specify known properties, and 'unreadOnly' does not exist in type 'PaginationParams'.
+
+13     const { notifications, total, unreadCount } = await notificationService.list(authReq.user!.userId, { page, limit, unreadOnly });
+                                                                                                                         ~~~~~~~~~~
+
+src/modules/notifications/controllers/notificationController.ts:19:55 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+19     const result = await notificationService.markRead(req.params.id, authReq.user!.userId);
+                                                         ~~~~~~~~~~~~~
+
+src/modules/notifications/controllers/notificationController.ts:31:46 - error TS2339: Property 'delete' does not exist on type '{ list(userId: string, pagination: PaginationParams, unreadOnly?: boolean | undefined): Promise<PaginatedResult<Record<string, unknown>> & { ...; }>; create(data: CreateNotificationInput): Promise<...>; markRead(id: string, userId: string): Promise<...>; markAllRead(userId: string): Promise<...>; remove(id: string, ...'.
+
+31     const result = await notificationService.delete(req.params.id, authReq.user!.userId);
+                                                ~~~~~~
+
+src/modules/notifications/services/notificationService.ts:52:5 - error TS2322: Type 'INotificationDocument & Required<{ _id: string; }> & { __v: number; }' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'INotificationDocument & Required<{ _id: string; }> & { __v: number; }'.
+
+52     return notification.toObject();
+       ~~~~~~
+
+src/modules/projects/controllers/projectController.ts:12:13 - error TS2339: Property 'projects' does not exist on type 'PaginatedResult<Record<string, unknown>>'.
+
+12     const { projects, total } = await projectService.list(authReq.user!.organizationId, authReq.user!.workspaceId, params);
+               ~~~~~~~~
+
+src/modules/projects/controllers/projectController.ts:18:50 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+18     const project = await projectService.getById(req.params.id, authReq.user!.organizationId);
+                                                    ~~~~~~~~~~~~~
+
+src/modules/projects/controllers/projectController.ts:30:49 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+30     const project = await projectService.update(req.params.id, authReq.user!.organizationId, req.body);
+                                                   ~~~~~~~~~~~~~
+
+src/modules/projects/controllers/projectController.ts:36:41 - error TS2339: Property 'delete' does not exist on type '{ list(organizationId: string, workspaceId: string | null, pagination: PaginationParams): Promise<PaginatedResult<Record<string, unknown>>>; getById(id: string, organizationId: string): Promise<...>; create(organizationId: string, workspaceId: string, createdBy: string, data: CreateProjectInput): Promise<...>; updat...'.
+
+36     const result = await projectService.delete(req.params.id, authReq.user!.organizationId);
+                                           ~~~~~~
+
+src/modules/projects/routes/projectRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/projects/services/projectService.ts:78:5 - error TS2322: Type 'IProjectDocument & Required<{ _id: string; }> & { __v: number; }' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'IProjectDocument & Required<{ _id: string; }> & { __v: number; }'.
+
+78     return project.toObject();
+       ~~~~~~
+
+src/modules/search/controllers/searchController.ts:8:22 - error TS7030: Not all code paths return a value.
+
+8   global: catchAsync(async (req: Request, res: Response) => {
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/modules/settings/controllers/settingController.ts:16:76 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+16     const setting = await settingService.get(authReq.user!.organizationId, req.params.key);
+                                                                              ~~~~~~~~~~~~~~
+
+src/modules/settings/controllers/settingController.ts:29:41 - error TS2339: Property 'delete' does not exist on type '{ get(organizationId: string, key: string): Promise<Record<string, unknown> | null>; list(organizationId: string): Promise<Record<string, unknown>[]>; upsert(organizationId: string, key: string, value: Record<...>, updatedBy?: string | undefined): Promise<...>; remove(organizationId: string, key: string): Promise<.....'.
+
+29     const result = await settingService.delete(authReq.user!.organizationId, req.params.key);
+                                           ~~~~~~
+
+src/modules/settings/controllers/settingController.ts:35:43 - error TS2339: Property 'getBranding' does not exist on type '{ get(organizationId: string, key: string): Promise<Record<string, unknown> | null>; list(organizationId: string): Promise<Record<string, unknown>[]>; upsert(organizationId: string, key: string, value: Record<...>, updatedBy?: string | undefined): Promise<...>; remove(organizationId: string, key: string): Promise<.....'.
+
+35     const branding = await settingService.getBranding(authReq.user!.organizationId);
+                                             ~~~~~~~~~~~
+
+src/modules/settings/controllers/settingController.ts:41:43 - error TS2339: Property 'updateBranding' does not exist on type '{ get(organizationId: string, key: string): Promise<Record<string, unknown> | null>; list(organizationId: string): Promise<Record<string, unknown>[]>; upsert(organizationId: string, key: string, value: Record<...>, updatedBy?: string | undefined): Promise<...>; remove(organizationId: string, key: string): Promise<.....'.
+
+41     const branding = await settingService.updateBranding(authReq.user!.organizationId, req.body, authReq.user!.userId);
+                                             ~~~~~~~~~~~~~~
+
+src/modules/settings/routes/settingRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/settings/routes/settingRoutes.ts:8:45 - error TS2554: Expected 2-3 arguments, but got 1.
+
+8 const brandingSchema = z.object({ colors: z.record(z.string()).optional(), darkModeColors: z.record(z.string()).optional(), typography: z.record(z.string()).optional(), logo: z.record(z.string()).optional(), favicon: z.string().max(500).optional(), mode: z.enum(["light", "dark", "system"]).optional(), presetName: z.string().max(100).optional() });
+                                              ~~~~~~
+
+  node_modules/zod/v4/classic/schemas.d.cts:534:107
+    534 export declare function record<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key, Value>;
+                                                                                                                  ~~~~~~~~~~~~~~~~
+    An argument for 'valueType' was not provided.
+
+src/modules/settings/routes/settingRoutes.ts:8:94 - error TS2554: Expected 2-3 arguments, but got 1.
+
+8 const brandingSchema = z.object({ colors: z.record(z.string()).optional(), darkModeColors: z.record(z.string()).optional(), typography: z.record(z.string()).optional(), logo: z.record(z.string()).optional(), favicon: z.string().max(500).optional(), mode: z.enum(["light", "dark", "system"]).optional(), presetName: z.string().max(100).optional() });
+                                                                                               ~~~~~~
+
+  node_modules/zod/v4/classic/schemas.d.cts:534:107
+    534 export declare function record<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key, Value>;
+                                                                                                                  ~~~~~~~~~~~~~~~~
+    An argument for 'valueType' was not provided.
+
+src/modules/settings/routes/settingRoutes.ts:8:139 - error TS2554: Expected 2-3 arguments, but got 1.
+
+8 const brandingSchema = z.object({ colors: z.record(z.string()).optional(), darkModeColors: z.record(z.string()).optional(), typography: z.record(z.string()).optional(), logo: z.record(z.string()).optional(), favicon: z.string().max(500).optional(), mode: z.enum(["light", "dark", "system"]).optional(), presetName: z.string().max(100).optional() });
+                                                                                                                                            ~~~~~~
+
+  node_modules/zod/v4/classic/schemas.d.cts:534:107
+    534 export declare function record<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key, Value>;
+                                                                                                                  ~~~~~~~~~~~~~~~~
+    An argument for 'valueType' was not provided.
+
+src/modules/settings/routes/settingRoutes.ts:8:178 - error TS2554: Expected 2-3 arguments, but got 1.
+
+8 const brandingSchema = z.object({ colors: z.record(z.string()).optional(), darkModeColors: z.record(z.string()).optional(), typography: z.record(z.string()).optional(), logo: z.record(z.string()).optional(), favicon: z.string().max(500).optional(), mode: z.enum(["light", "dark", "system"]).optional(), presetName: z.string().max(100).optional() });
+                                                                                                                                                                                   ~~~~~~
+
+  node_modules/zod/v4/classic/schemas.d.cts:534:107
+    534 export declare function record<Key extends core.$ZodRecordKey, Value extends core.SomeType>(keyType: Key, valueType: Value, params?: string | core.$ZodRecordParams): ZodRecord<Key, Value>;
+                                                                                                                  ~~~~~~~~~~~~~~~~
+    An argument for 'valueType' was not provided.
+
+src/modules/tasks/controllers/taskController.ts:29:44 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+29     const task = await taskService.getById(req.params.id, authReq.user!.organizationId);
+                                              ~~~~~~~~~~~~~
+
+src/modules/tasks/controllers/taskController.ts:46:43 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+46     const task = await taskService.update(req.params.id, authReq.user!.organizationId, req.body);
+                                             ~~~~~~~~~~~~~
+
+src/modules/tasks/controllers/taskController.ts:52:45 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+52     const result = await taskService.remove(req.params.id, authReq.user!.organizationId);
+                                               ~~~~~~~~~~~~~
+
+src/modules/tasks/routes/taskRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/tasks/services/taskService.ts:81:13 - error TS2352: Conversion of type '(FlattenMaps<{ _id: string; organizationId: string; workspaceId: string; projectId: string | null; taskNo: string; title: string; description: string; assignedTo: string | null; assignedType: string; ... 70 more ...; validateSync: { ...; }; }> & Required<...> & { ...; })[]' to type 'TaskOutput[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'FlattenMaps<{ _id: string; organizationId: string; workspaceId: string; projectId: string | null; taskNo: string; title: string; description: string; assignedTo: string | null; assignedType: string; ... 70 more ...; validateSync: { ...; }; }> & Required<...> & { ...; }' is not comparable to type 'TaskOutput'.
+    Types of property 'createdAt' are incompatible.
+      Type 'Date' is not comparable to type 'string'.
+
+81       data: tasks as TaskOutput[],
+               ~~~~~~~~~~~~~~~~~~~~~
+
+src/modules/tasks/services/taskService.ts:103:28 - error TS2352: Conversion of type 'FlattenMaps<{ _id: string; organizationId: string; workspaceId: string; projectId: string | null; taskNo: string; title: string; description: string; assignedTo: string | null; assignedType: string; ... 70 more ...; validateSync: { ...; }; }> & Required<...> & { ...; }' to type 'TaskOutput' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date' is not comparable to type 'string'.
+
+103     await cacheSet(cacheK, task as TaskOutput, 120);
+                               ~~~~~~~~~~~~~~~~~~
+
+src/modules/tasks/services/taskService.ts:104:12 - error TS2352: Conversion of type 'FlattenMaps<{ _id: string; organizationId: string; workspaceId: string; projectId: string | null; taskNo: string; title: string; description: string; assignedTo: string | null; assignedType: string; ... 70 more ...; validateSync: { ...; }; }> & Required<...> & { ...; }' to type 'TaskOutput' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date' is not comparable to type 'string'.
+
+104     return task as TaskOutput;
+               ~~~~~~~~~~~~~~~~~~
+
+src/modules/tasks/services/taskService.ts:138:12 - error TS2352: Conversion of type 'ITaskDocument & Required<{ _id: string; }> & { __v: number; }' to type 'TaskOutput' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date' is not comparable to type 'string'.
+
+138     return task.toObject() as TaskOutput;
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/modules/teams/controllers/teamController.ts:12:13 - error TS2339: Property 'teams' does not exist on type 'PaginatedResult<Record<string, unknown>>'.
+
+12     const { teams, total } = await teamService.list(authReq.user!.organizationId, authReq.user!.workspaceId, params);
+               ~~~~~
+
+src/modules/teams/controllers/teamController.ts:18:44 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+18     const team = await teamService.getById(req.params.id, authReq.user!.organizationId);
+                                              ~~~~~~~~~~~~~
+
+src/modules/teams/controllers/teamController.ts:30:43 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+30     const team = await teamService.update(req.params.id, authReq.user!.organizationId, req.body);
+                                             ~~~~~~~~~~~~~
+
+src/modules/teams/controllers/teamController.ts:36:38 - error TS2339: Property 'delete' does not exist on type '{ list(organizationId: string, workspaceId: string | null, pagination: PaginationParams): Promise<PaginatedResult<Record<string, unknown>>>; getById(id: string, organizationId: string): Promise<...>; create(organizationId: string, workspaceId: string, data: CreateTeamInput): Promise<...>; update(id: string, organiza...'.
+
+36     const result = await teamService.delete(req.params.id, authReq.user!.organizationId);
+                                        ~~~~~~
+
+src/modules/teams/controllers/teamController.ts:42:38 - error TS2339: Property 'addMember' does not exist on type '{ list(organizationId: string, workspaceId: string | null, pagination: PaginationParams): Promise<PaginatedResult<Record<string, unknown>>>; getById(id: string, organizationId: string): Promise<...>; create(organizationId: string, workspaceId: string, data: CreateTeamInput): Promise<...>; update(id: string, organiza...'.
+
+42     const result = await teamService.addMember(req.params.id, userId, role);
+                                        ~~~~~~~~~
+
+src/modules/teams/controllers/teamController.ts:47:38 - error TS2339: Property 'removeMember' does not exist on type '{ list(organizationId: string, workspaceId: string | null, pagination: PaginationParams): Promise<PaginatedResult<Record<string, unknown>>>; getById(id: string, organizationId: string): Promise<...>; create(organizationId: string, workspaceId: string, data: CreateTeamInput): Promise<...>; update(id: string, organiza...'.
+
+47     const result = await teamService.removeMember(req.params.id, req.params.userId);
+                                        ~~~~~~~~~~~~
+
+src/modules/teams/routes/teamRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/teams/services/teamService.ts:67:5 - error TS2322: Type 'ITeamDocument & Required<{ _id: string; }> & { __v: number; }' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'ITeamDocument & Required<{ _id: string; }> & { __v: number; }'.
+
+67     return team.toObject();
+       ~~~~~~
+
+src/modules/users/controllers/userController.ts:12:13 - error TS2339: Property 'users' does not exist on type 'PaginatedResult<Record<string, unknown>>'.
+
+12     const { users, total } = await userService.list(authReq.user!.organizationId, params);
+               ~~~~~
+
+src/modules/users/controllers/userController.ts:12:48 - error TS2554: Expected 3 arguments, but got 2.
+
+12     const { users, total } = await userService.list(authReq.user!.organizationId, params);
+                                                  ~~~~
+
+  src/modules/users/services/userService.ts:20:5
+    20     filters: { status?: string; role?: string },
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'filters' was not provided.
+
+src/modules/users/controllers/userController.ts:18:44 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+18     const user = await userService.getById(req.params.id, authReq.user!.organizationId);
+                                              ~~~~~~~~~~~~~
+
+src/modules/users/controllers/userController.ts:30:43 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+30     const user = await userService.update(req.params.id, authReq.user!.organizationId, req.body);
+                                             ~~~~~~~~~~~~~
+
+src/modules/users/controllers/userController.ts:37:49 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+37     const result = await userService.updateRole(req.params.id, authReq.user!.organizationId, role, workspaceId);
+                                                   ~~~~~~~~~~~~~
+
+src/modules/users/controllers/userController.ts:43:38 - error TS2339: Property 'delete' does not exist on type '{ list(organizationId: string, pagination: PaginationParams, filters: { status?: string | undefined; role?: string | undefined; }): Promise<PaginatedResult<Record<string, unknown>>>; ... 5 more ...; bulkAction(organizationId: string, userIds: string[], action: string): Promise<...>; }'.
+
+43     const result = await userService.delete(req.params.id, authReq.user!.organizationId);
+                                        ~~~~~~
+
+src/modules/users/routes/userRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/users/services/userService.ts:5:27 - error TS6133: 'Organization' is declared but its value is never read.
+
+5 import { User, OrgMember, Organization, Workspace } from "../../../models/index.js";
+                            ~~~~~~~~~~~~
+
+src/modules/users/services/userService.ts:5:41 - error TS6133: 'Workspace' is declared but its value is never read.
+
+5 import { User, OrgMember, Organization, Workspace } from "../../../models/index.js";
+                                          ~~~~~~~~~
+
+src/modules/workspaces/controllers/workspaceController.ts:18:47 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+18     const ws = await workspaceService.getById(req.params.id, authReq.user!.organizationId);
+                                                 ~~~~~~~~~~~~~
+
+src/modules/workspaces/controllers/workspaceController.ts:30:46 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+30     const ws = await workspaceService.update(req.params.id, authReq.user!.organizationId, req.body);
+                                                ~~~~~~~~~~~~~
+
+src/modules/workspaces/controllers/workspaceController.ts:36:50 - error TS2345: Argument of type 'string | string[] | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+36     const result = await workspaceService.remove(req.params.id, authReq.user!.organizationId);
+                                                    ~~~~~~~~~~~~~
+
+src/modules/workspaces/routes/workspaceRoutes.ts:4:24 - error TS2305: Module '"../../../middleware/auth.js"' has no exported member 'requireRole'.
+
+4 import { authenticate, requireRole } from "../../../middleware/auth.js";
+                         ~~~~~~~~~~~
+
+src/modules/workspaces/services/workspaceService.ts:80:5 - error TS2322: Type 'IWorkspaceDocument & Required<{ _id: string; }> & { __v: number; }' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'IWorkspaceDocument & Required<{ _id: string; }> & { __v: number; }'.
+
+80     return ws.toObject();
+       ~~~~~~
+
+src/redis/connection.ts:3:12 - error TS2709: Cannot use namespace 'Redis' as a type.
+
+3 let redis: Redis | null = null;
+             ~~~~~
+
+src/redis/connection.ts:10:29 - error TS2709: Cannot use namespace 'Redis' as a type.
+
+10 export function getRedis(): Redis | null {
+                               ~~~~~
+
+src/redis/connection.ts:35:56 - error TS2709: Cannot use namespace 'Redis' as a type.
+
+35     const g = globalThis as unknown as { redisGlobal?: Redis };
+                                                          ~~~~~
+
+src/redis/connection.ts:37:19 - error TS2351: This expression is not constructable.
+  Type 'typeof import("/home/j0k3r/Desktop/workspaces/backend/node_modules/ioredis/built/index")' has no construct signatures.
+
+37       redis = new Redis(REDIS_URL, opts);
+                     ~~~~~
+
+src/redis/connection.ts:40:29 - error TS2351: This expression is not constructable.
+  Type 'typeof import("/home/j0k3r/Desktop/workspaces/backend/node_modules/ioredis/built/index")' has no construct signatures.
+
+40         g.redisGlobal = new Redis(REDIS_URL, opts);
+                               ~~~~~
+
+src/server.ts:17:69 - error TS6133: 'validateCsrf' is declared but its value is never read.
+
+17 import { securityHeaders, preventParameterPollution, sanitizeInput, validateCsrf, ipWhitelist } from "./middleware/security.js";
+                                                                       ~~~~~~~~~~~~
+
+src/server.ts:17:83 - error TS6133: 'ipWhitelist' is declared but its value is never read.
+
+17 import { securityHeaders, preventParameterPollution, sanitizeInput, validateCsrf, ipWhitelist } from "./middleware/security.js";
+                                                                                     ~~~~~~~~~~~
+
+src/ws/server.ts:147:45 - error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+147       if (match) token = decodeURIComponent(match[1]);
+                                                ~~~~~~~~
+
+src/ws/server.ts:183:26 - error TS2339: Property 'findOneAndUpdate' does not exist on type '{ readonly active: "active"; readonly inactive: "inactive"; readonly suspended: "suspended"; readonly terminated: "terminated"; }'.
+
+183         await UserStatus.findOneAndUpdate(
+                             ~~~~~~~~~~~~~~~~
+
+src/ws/server.ts:221:26 - error TS2339: Property 'updateOne' does not exist on type '{ readonly active: "active"; readonly inactive: "inactive"; readonly suspended: "suspended"; readonly terminated: "terminated"; }'.
+
+221         await UserStatus.updateOne({ userId }, { lastActiveAt: now });
+                             ~~~~~~~~~
+
+src/ws/server.ts:242:26 - error TS2339: Property 'findOneAndUpdate' does not exist on type '{ readonly active: "active"; readonly inactive: "inactive"; readonly suspended: "suspended"; readonly terminated: "terminated"; }'.
+
+242         await UserStatus.findOneAndUpdate(
+                             ~~~~~~~~~~~~~~~~
+
+src/ws/server.ts:294:28 - error TS2339: Property 'updateOne' does not exist on type '{ readonly active: "active"; readonly inactive: "inactive"; readonly suspended: "suspended"; readonly terminated: "terminated"; }'.
+
+294           await UserStatus.updateOne({ userId }, { status: "Offline" });
+                               ~~~~~~~~~
+
+
+Found 103 errors in 44 files.
+
+Errors  Files
+     1  src/core/errors/handler.ts:45
+     2  src/core/utils/cache.ts:1
+     5  src/db/redis.ts:4
+     1  src/email/resend.ts:1
+     1  src/middleware/auth.ts:59
+     4  src/middleware/security.ts:5
+     1  src/middleware/soft-delete.ts:5
+     2  src/middleware/validate.ts:18
+     1  src/models/Organization.ts:1
+     3  src/models/index.ts:56
+     4  src/modules/activity/controllers/activityController.ts:13
+     1  src/modules/activity/routes/activityRoutes.ts:4
+     2  src/modules/activity/services/activityService.ts:22
+     1  src/modules/auth/controllers/authController.ts:15
+     1  src/modules/auth/middleware/auditMiddleware.ts:15
+     2  src/modules/auth/services/authService.ts:26
+     1  src/modules/dashboard/services/dashboardService.ts:7
+     1  src/modules/export/routes/exportRoutes.ts:3
+     3  src/modules/files/controllers/fileController.ts:1
+     1  src/modules/files/routes/fileRoutes.ts:4
+     2  src/modules/files/services/fileService.ts:12
+     4  src/modules/notifications/controllers/notificationController.ts:13
+     1  src/modules/notifications/services/notificationService.ts:52
+     4  src/modules/projects/controllers/projectController.ts:12
+     1  src/modules/projects/routes/projectRoutes.ts:4
+     1  src/modules/projects/services/projectService.ts:78
+     1  src/modules/search/controllers/searchController.ts:8
+     4  src/modules/settings/controllers/settingController.ts:16
+     5  src/modules/settings/routes/settingRoutes.ts:4
+     3  src/modules/tasks/controllers/taskController.ts:29
+     1  src/modules/tasks/routes/taskRoutes.ts:4
+     4  src/modules/tasks/services/taskService.ts:81
+     6  src/modules/teams/controllers/teamController.ts:12
+     1  src/modules/teams/routes/teamRoutes.ts:4
+     1  src/modules/teams/services/teamService.ts:67
+     6  src/modules/users/controllers/userController.ts:12
+     1  src/modules/users/routes/userRoutes.ts:4
+     2  src/modules/users/services/userService.ts:5
+     3  src/modules/workspaces/controllers/workspaceController.ts:18
+     1  src/modules/workspaces/routes/workspaceRoutes.ts:4
+     1  src/modules/workspaces/services/workspaceService.ts:80
+     5  src/redis/connection.ts:3
+     2  src/server.ts:17
+     5  src/ws/server.ts:147
+                                                                                                                                                                                              
+┌──(root㉿j0k3r-w061d)-[/home/j0k3r/Desktop/workspaces/backend]
+└─# 

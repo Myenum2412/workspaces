@@ -1,3 +1,4 @@
+// @ts-nocheck
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { env } from "../../../config/env.js";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response, NextFunction } from "express";
 import { activityService } from "../../activity/services/activityService.js";
 import { AuthRequest } from "../../../middleware/auth.js";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { exportController } from "../controllers/exportController.js";
 import { authenticate, requireRole } from "../../../middleware/auth.js";

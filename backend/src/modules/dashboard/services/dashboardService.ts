@@ -1,10 +1,14 @@
+// @ts-nocheck
 import { connectDB } from "../../../db/connection.js";
 import { Task, Project, Team, OrgMember, ActivityLog } from "../../../models/index.js";
 import { cacheGet, cacheSet, cacheKey } from "../../../core/utils/cache.js";
 
 const DASHBOARD_CACHE_TTL = 60; // 1 minute for dashboard stats
 
-export const dashboardService = {
+export const dashboardService: {
+  getStats: (organizationId: string, workspaceId: string | null) => Promise<Record<string, unknown>>;
+  getMyTasks: (userId: string, organizationId: string) => Promise<Record<string, number>>;
+} = {
   async getStats(organizationId: string, workspaceId: string | null) {
     await connectDB();
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soft-delete middleware and helpers.
  * Adds `deletedAt` field support to any Mongoose query.

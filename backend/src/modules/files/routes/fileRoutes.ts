@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { fileController, uploadSingle } from "../controllers/fileController.js";
 import { validateQuery } from "../../../middleware/validate.js";

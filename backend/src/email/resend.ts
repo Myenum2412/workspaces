@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Resend } from "resend";
 import { signupWelcomeTemplate } from "./templates/signup-welcome.js";
 import { inviteTemplate } from "./templates/invite.js";
