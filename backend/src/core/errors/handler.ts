@@ -36,12 +36,13 @@ export function globalErrorHandler(err: Error, req: Request, res: Response, _nex
     statusCode = 400;
     code = "VALIDATION_ERROR";
     message = `Invalid value for ${err.path}: ${err.value}`;
-  } else if ((err as Record<string, unknown>).code === 11000) {
+  } else if ((err as unknown as Record<string, unknown>).code === 11000) {
     statusCode = 409;
     code = "CONFLICT";
-    const key = Object.keys((err as Record<string, unknown>).keyValue as Record<string, unknown> || {})[0];
+    const errRecord = err as unknown as Record<string, unknown>;
+    const key = Object.keys((errRecord.keyValue as Record<string, unknown>) || {})[0];
     message = `Duplicate value for: ${key}`;
-    details = { field: key, value: ((err as Record<string, unknown>).keyValue as Record<string, unknown>)?.[key] };
+    details = { field: key, value: (errRecord.keyValue as Record<string, unknown>)?.[key] };
   } else if (err instanceof SyntaxError && "body" in err) {
     statusCode = 400;
     code = "VALIDATION_ERROR";

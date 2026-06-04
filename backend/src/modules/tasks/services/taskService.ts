@@ -3,6 +3,7 @@ import { connectDB } from "../../../db/connection.js";
 import { Task } from "../../../models/index.js";
 import { NotFoundError } from "../../../core/errors/AppError.js";
 import { getAllowedSortField } from "../../../types/shared.js";
+import { cacheGet, cacheSet, cacheKey } from "../../../core/utils/cache.js";
 import type {
   CreateTaskInput,
   UpdateTaskInput,
@@ -12,6 +13,31 @@ import type {
   PaginatedResult,
 } from "../../../types/shared.js";
 
+const TASK_LIST_CACHE_TTL = 30; // 30 seconds for task lists
+
+function buildTaskListCacheKey(
+  organizationId: string,
+  workspaceId: string | null,
+  pagination: PaginationParams,
+  filters: TaskListFilters,
+): string {
+  return cacheKey(
+    "tasks",
+    "list",
+    organizationId,
+    workspaceId ?? "all",
+    `p${pagination.page}`,
+    `l${pagination.limit}`,
+    pagination.sortBy,
+    pagination.sortOrder,
+    filters.status ?? "all",
+    filters.priority ?? "all",
+    filters.assignedTo ?? "all",
+    filters.projectId ?? "all",
+    pagination.search ?? "",
+  );
+}
+
 export const taskService = {
   async list(
     organizationId: string,
@@ -20,6 +46,11 @@ export const taskService = {
     filters: TaskListFilters,
   ): Promise<PaginatedResult<TaskOutput>> {
     await connectDB();
+
+    const cacheK = buildTaskListCacheKey(organizationId, workspaceId, pagination, filters);
+    const cached = await cacheGet<PaginatedResult<TaskOutput>>(cacheK);
+    if (cached) return cached;
+
     const filter: Record<string, unknown> = { organizationId, deletedAt: null };
     if (workspaceId) filter.workspaceId = workspaceId;
     if (filters.status) filter.status = filters.status;
@@ -46,7 +77,7 @@ export const taskService = {
     ]);
 
     const pages = Math.ceil(total / pagination.limit);
-    return {
+    const result: PaginatedResult<TaskOutput> = {
       data: tasks as TaskOutput[],
       total,
       page: pagination.page,
@@ -55,12 +86,21 @@ export const taskService = {
       hasNext: pagination.page * pagination.limit < total,
       hasPrev: pagination.page > 1,
     };
+
+    await cacheSet(cacheK, result, TASK_LIST_CACHE_TTL);
+    return result;
   },
 
   async getById(id: string, organizationId: string): Promise<TaskOutput> {
     await connectDB();
+    const cacheK = cacheKey("tasks", "detail", id, organizationId);
+    const cached = await cacheGet<TaskOutput>(cacheK);
+    if (cached) return cached;
+
     const task = await Task.findOne({ _id: id, organizationId, deletedAt: null }).lean();
     if (!task) throw new NotFoundError("Task", id);
+
+    await cacheSet(cacheK, task as TaskOutput, 120);
     return task as TaskOutput;
   },
 

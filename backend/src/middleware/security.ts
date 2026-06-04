@@ -111,13 +111,13 @@ function sanitizeObject(obj: Record<string, unknown>): void {
 
 export function auditLogger(req: Request, _res: Response, next: NextFunction) {
   const start = Date.now();
-  const originalEnd = res.end.bind(res);
-  res.end = function (chunk?: unknown, encoding?: unknown, cb?: unknown) {
+  const originalEnd = _res.end.bind(_res);
+  _res.end = function (chunk?: unknown, encoding?: unknown, cb?: unknown) {
     const duration = Date.now() - start;
     logger.info({
       method: req.method,
       path: req.path,
-      statusCode: res.statusCode,
+      statusCode: _res.statusCode,
       duration,
       ip: req.ip,
       userAgent: req.headers["user-agent"],

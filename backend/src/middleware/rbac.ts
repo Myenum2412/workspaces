@@ -39,7 +39,7 @@ export function requireWorkspaceAccess(paramKey = "workspaceId") {
 export function enforceTenantIsolation(req: Request, _res: Response, next: NextFunction) {
   const authReq = req as AuthRequest;
   if (!authReq.user) return next(new AuthenticationError());
-  (req as Record<string, unknown>).tenantContext = {
+  (req as unknown as Record<string, unknown>).tenantContext = {
     organizationId: authReq.user.organizationId,
     workspaceId: authReq.user.workspaceId,
     userId: authReq.user.userId,

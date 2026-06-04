@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -34,10 +35,12 @@ export default function RootLayout({
     >
       <head />
       <body className="min-h-full flex flex-col font-poppins">
-        <Providers>
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster position="bottom-right" richColors />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <TooltipProvider>{children}</TooltipProvider>
+            <Toaster position="bottom-right" richColors />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

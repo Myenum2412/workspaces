@@ -1,9 +1,17 @@
 import { connectDB } from "../../../db/connection.js";
 import { Task, Project, Team, OrgMember, ActivityLog } from "../../../models/index.js";
+import { cacheGet, cacheSet, cacheKey } from "../../../core/utils/cache.js";
+
+const DASHBOARD_CACHE_TTL = 60; // 1 minute for dashboard stats
 
 export const dashboardService = {
   async getStats(organizationId: string, workspaceId: string | null) {
     await connectDB();
+
+    const cacheK = cacheKey("dashboard", "stats", organizationId, workspaceId ?? "all");
+    const cached = await cacheGet<Record<string, unknown>>(cacheK);
+    if (cached) return cached;
+
     const base: Record<string, unknown> = { organizationId, deletedAt: null };
     if (workspaceId) base.workspaceId = workspaceId;
 
@@ -46,7 +54,7 @@ export const dashboardService = {
       }),
     ]);
 
-    return {
+    const result = {
       overview: {
         totalTasks,
         totalProjects,
@@ -60,10 +68,18 @@ export const dashboardService = {
       projectsByStatus: Object.fromEntries(projectsByStatus.map((p: { _id: string; count: number }) => [p._id, p.count])),
       recentActivities,
     };
+
+    await cacheSet(cacheK, result, DASHBOARD_CACHE_TTL);
+    return result;
   },
 
   async getMyTasks(userId: string, organizationId: string) {
     await connectDB();
+
+    const cacheK = cacheKey("dashboard", "mytasks", userId, organizationId);
+    const cached = await cacheGet<Record<string, unknown>>(cacheK);
+    if (cached) return cached;
+
     const base: Record<string, unknown> = { organizationId, deletedAt: null };
     const now = new Date();
     const [assigned, created, completed, overdue] = await Promise.all([
@@ -77,6 +93,9 @@ export const dashboardService = {
         status: { $nin: ["completed", "rejected"] },
       }),
     ]);
-    return { assigned, created, completed, overdue };
+
+    const result = { assigned, created, completed, overdue };
+    await cacheSet(cacheK, result, DASHBOARD_CACHE_TTL);
+    return result;
   },
 };

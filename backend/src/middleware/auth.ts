@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
-import { connectDB } from "../db/connection.js";
 import { getRedis, isRedisConnected } from "../db/redis.js";
-import { AuthenticationError, AuthorizationError } from "../core/errors/AppError.js";
+import { AuthenticationError } from "../core/errors/AppError.js";
 import { logger } from "../core/logging/logger.js";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -58,13 +57,6 @@ function extractAccessToken(req: Request): string | null {
   if (cookieToken) return cookieToken;
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) return authHeader.split(" ")[1];
-  return null;
-}
-
-function extractRefreshToken(req: Request): string | null {
-  const cookieToken = req.cookies?.refresh_token;
-  if (cookieToken) return cookieToken;
-  if (typeof req.body?.refreshToken === "string") return req.body.refreshToken;
   return null;
 }
 
@@ -132,7 +124,7 @@ export async function revokeAllUserTokens(userId: string): Promise<number> {
   return count;
 }
 
-export function signTokenPair(payload: AuthPayload, req?: Request): TokenPair {
+export function signTokenPair(payload: AuthPayload, _req?: Request): TokenPair {
   return { accessToken: signAccessToken(payload), refreshToken: "" };
 }
 
