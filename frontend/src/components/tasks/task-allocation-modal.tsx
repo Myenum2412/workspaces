@@ -42,7 +42,7 @@ import type { AssigneeType } from "@/components/task-allocation/types"
 import TableUpload from "@/components/table-upload"
 
 import { taskService, type Task } from "@/lib/services/task-service"
-import { staffService } from "@/lib/services/staff-service"
+import { employeeService } from "@/lib/services/employee-service"
 import { teamService } from "@/lib/services/team-service"
 
 interface TaskDefinition {
@@ -106,9 +106,9 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
   useState(() => {
     if (open) {
       setIsLoadingData(true)
-      Promise.all([staffService.getAllStaff(), teamService.getAllTeams()]).then(([staff, teams]) => {
+      Promise.all([employeeService.getAllEmployees(), teamService.getAllTeams()]).then(([staff, teams]) => {
         setEmployees(staff.map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}`.trim(), role: s.designation ?? "" })))
-        setTeams(teams.map(t => ({ id: t.id, name: t.name, created_by: t.head, memberCount: t.members })))
+        setTeams(teams.map(t => ({ id: t.id, name: t.name, created_by: t.headUserId ?? "", memberCount: t.memberIds?.length ?? 0 })))
         setIsLoadingData(false)
       })
     }
@@ -155,7 +155,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
         description: description.trim(),
         priority,
         status: "Open",
-        assignedTo: selectedAssigneeType === "staff"
+        assignedTo: String(selectedAssigneeType) === "staff"
           ? employees.find(e => e.id === selectedAssignee)?.name || "Unassigned"
           : teams.find(t => t.id === selectedAssignee)?.name || "Unassigned",
         delegatedBy: "Admin",
@@ -164,7 +164,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
         dueDate: dueDate?.toISOString(),
 
         finalStatus: "Open",
-      } as Partial<Task>)
+      } as unknown as Partial<Task>)
 
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       toast.success(`Task "${title}" assigned successfully`)
@@ -275,7 +275,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
               <PrioritySelector
                 selectedPriority={priority}
                 priorities={priorities}
-                onSelect={(val) => {
+                onSelect={(val: string) => {
                   if (val === 'quick-add') {
                     setQuickAddOpen({ type: 'priority', open: true })
                   } else {
@@ -289,10 +289,10 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
               selectedAssigneeType={selectedAssigneeType}
               employees={employees}
               teams={teams}
-              onSelect={(id, type) => {
+              onSelect={(id: string, type: string) => {
                 setSelectedAssignee(id)
-                setSelectedAssigneeType(type)
-                if (type === 'staff') {
+                setSelectedAssigneeType(type as AssigneeType)
+                if (String(type) === 'staff') {
                   setSelectedStaff([id])
                   setSelectedTeams([])
                 } else {
@@ -339,7 +339,7 @@ export function TaskAllocationModal({ open, onClose, taskDefinitions = [], onSav
           <div className="flex justify-between items-center pt-4 border-t sticky bottom-0 bg-background/80">
             <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={isSubmitting} className="px-8 font-bold">
-              {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Assigning...</> : (selectedAssigneeType === "staff" ? "Assign to Staff" : "Assign to Team")}
+              {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Assigning...</> : (String(selectedAssigneeType) === "staff" ? "Assign to Staff" : "Assign to Team")}
             </Button>
           </div>
         </form>

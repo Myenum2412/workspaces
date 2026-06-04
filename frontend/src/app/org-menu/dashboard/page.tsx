@@ -54,9 +54,9 @@ export default function DashboardPage() {
         );
         const pendingInvites = (invitesRes.invitations ?? []).filter((i: any) => i.status === "pending").length;
 
-        // Fetch recent profiles
+        // Fetch recent employee profiles
         const profilesRes = await api.get<{ success: boolean; data: any[] }>(
-          `/api/staff?organizationId=${orgId}&limit=5&sort=createdAt:desc`
+          `/api/members?organizationId=${orgId}&limit=5&sort=createdAt:desc`
         );
         const recent: RecentMember[] = (profilesRes.data ?? []).map((doc: any) => ({
           id: doc._id ?? doc.id ?? "",

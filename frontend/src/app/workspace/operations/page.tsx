@@ -1,81 +1,12 @@
-﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Settings, ClipboardList, TrendingUp, Clock } from "lucide-react"
+﻿import { Settings } from "lucide-react"
+import { ComingSoon } from "@/components/shared/coming-soon"
 
 export default function OperationsPage() {
   return (
-    <section className="space-y-6">
-        <CardHeader>
-          <CardTitle className="text-3xl font-semibold tracking-tight">
-            Operations
-          </CardTitle>
-          <CardDescription>
-            Manage operational tasks, controls, and daily execution.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Quick Stats */}
-          <div className="grid gap-4 sm:grid-cols-4">
-            <Card className="overflow-hidden border-primary/20 bg-card ">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-foreground">
-                  Operations
-                </CardTitle>
-                <Settings className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">Active</div>
-                <p className="text-xs text-foreground mt-1">All systems running</p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-primary/20 bg-card ">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-foreground">
-                  Tasks Completed
-                </CardTitle>
-                <ClipboardList className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">156</div>
-                <p className="text-xs text-foreground mt-1">This week</p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-primary/20 bg-card ">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-foreground">
-                  Efficiency
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">94%</div>
-                <p className="text-xs text-foreground mt-1">+2.5% from last week</p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-primary/20 bg-card ">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-foreground">
-                  Pending Items
-                </CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">8</div>
-                <p className="text-xs text-foreground mt-1">Requires attention</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Placeholder Content */}
-          <Card className="border-dashed bg-muted/50">
-            <CardContent className="text-sm text-slate-400 py-20 flex items-center justify-center italic">
-              Operations management interface is coming soon.
-            </CardContent>
-          </Card>
-        </CardContent>
-    </section>
+    <ComingSoon
+      title="Operations"
+      description="Manage operational tasks, controls, and daily execution."
+      icon={<Settings className="size-6 text-muted-foreground" />}
+    />
   )
 }

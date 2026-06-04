@@ -3,8 +3,8 @@
  */
 import { connectDB } from "../config/connection.js";
 import { UserProfile } from "../models/index.js";
-import { ProfileHistory, IProfileChange } from "../models/profile-history.js";
-import { ProfileActivity } from "../models/profile-activity.js";
+import { ProfileHistory, IProfileChange } from "../models/index.js";
+import { ProfileActivity } from "../models/index.js";
 import { getIO } from "../ws/server.js";
 import type { Request } from "express";
 

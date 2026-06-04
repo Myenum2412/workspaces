@@ -43,7 +43,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
-import { staffService, type UIStaff as User } from "@/lib/services/staff-service"
+import { employeeService, type UIEmployee as User } from "@/lib/services/employee-service"
 
 import { UserDetailModal } from "./user-detail-modal"
 import { DeleteUserDialog } from "./delete-user-dialog"
@@ -426,7 +426,7 @@ function DeletedRecordsTable({ users, onRefetch }: { users: User[]; onRefetch: (
   const handleReactivate = async (user: User) => {
     setReactivatingId(user.id)
     try {
-      await staffService.updateStaff(user.id, { status: "Active" })
+      await employeeService.updateEmployee(user.id, { status: "Active" })
       toast.success(`${user.firstName} ${user.lastName} reactivated successfully`)
       onRefetch()
     } catch {
@@ -599,11 +599,11 @@ function DeletedRecordsTable({ users, onRefetch }: { users: User[]; onRefetch: (
 export function UserTablePage() {
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ["users-all"],
-    queryFn: () => staffService.getAllStaff(),
+    queryFn: () => employeeService.getAllEmployees(),
   })
 
-  const activeUsers = React.useMemo(() => data.filter(u => u.status !== "Deleted"), [data])
-  const deletedUsers = React.useMemo(() => data.filter(u => u.status === "Deleted"), [data])
+  const activeUsers = React.useMemo(() => data.filter(u => (u.status as string) !== "Deleted"), [data])
+  const deletedUsers = React.useMemo(() => data.filter(u => (u.status as string) === "Deleted"), [data])
 
   if (isLoading) {
     return (

@@ -53,7 +53,7 @@ export function SavedTaskTable() {
   const [tasks, setTasks] = React.useState<SavedTask[]>([])
 
   React.useEffect(() => {
-    getSavedTasks().then(setTasks).catch(() => setTasks([]))
+    setTasks(getSavedTasks() || [])
   }, [])
 
   const toggleAll = () => {

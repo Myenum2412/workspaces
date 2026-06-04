@@ -51,9 +51,9 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
         console.warn("Could not create invitation via API");
       }
 
-      // 2. Pre-create staff profile via staff API
+      // 2. Pre-create employee profile via staff API
       try {
-        await api.post("/api/staff", {
+        await api.post("/api/members", {
           firstName: form.firstName,
           lastName: form.lastName,
           email: form.email,
@@ -64,7 +64,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
           status: "pending",
         });
       } catch {
-        console.warn("Could not pre-create staff profile via API");
+        console.warn("Could not pre-create employee profile via API");
       }
 
       // 3. Send invite email
@@ -132,7 +132,7 @@ export function AddUserDialog({ onUserAdded }: { onUserAdded?: () => void }) {
               <Select value={form.role} onValueChange={(v) => update("role", v)}>
                 <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="staff">Employee</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>

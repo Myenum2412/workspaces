@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { MailIcon, PhoneIcon, Building2Icon, BriefcaseIcon, X, Save } from "lucide-react"
-import { staffService } from "@/lib/services/staff-service"
+import { employeeService } from "@/lib/services/employee-service"
 import { toast } from "sonner"
 
 interface UserDetailModalProps {
@@ -56,7 +56,7 @@ export function UserDetailModal({ user, open, onOpenChange, title, initialEditMo
   const handleSave = async () => {
     setSaving(true)
     try {
-      await staffService.updateStaff(user.id, form)
+      await employeeService.updateEmployee(user.id, form)
       toast.success("User updated successfully")
       setIsEditing(false)
       onSave?.()

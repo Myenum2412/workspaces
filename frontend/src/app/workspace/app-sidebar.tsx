@@ -65,7 +65,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
 
   const profile = profileRes?.profile;
 
-  const displayAvatar = profile?.avatarUrl || user.avatar;
+  const displayAvatar = (profile?.avatarUrl as string | undefined) || user.avatar;
   const displayName = profile ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || profile.email : user.name;
 
   const handleToggleStatus = (checked: boolean) => {
@@ -74,14 +74,13 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
   };
 
   const isActiveUrl = (url: string) => {
-    if (!pathname) return false;
-    return url.split("/").filter(Boolean).length <= 1 ? pathname === url : pathname === url || pathname.startsWith(`${url}/`);
+    return pathname === url;
   };
 
   const navMain = [
     { title: "Overview", url: "/workspace", icon: <BarChart3Icon /> },
     { title: "Tasks", url: "/workspace/tasks", icon: <ListChecksIcon />, items: [{ title: "All Tasks", url: "/workspace/tasks" }, { title: "My Tasks", url: "/workspace/my-tasks" }, { title: "Saved Tasks", url: "/workspace/saved-tasks" }] },
-    { title: "Staff", url: "/workspace/staffs", icon: <UsersIcon />, items: [{ title: "All Staff", url: "/workspace/staffs" }] },
+    { title: "Employee", url: "/workspace/employees", icon: <UsersIcon />, items: [{ title: "All Employee", url: "/workspace/employees" }] },
     { title: "Reports", url: "/workspace/reports", icon: <BarChart3Icon /> },
   ];
 
@@ -93,10 +92,10 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
             <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:p-0">
               <Link href="/workspace">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10 shrink-0 overflow-hidden">
-                  {displayAvatar ? (
+                  {(displayAvatar as string) ? (
                     <img 
-                      src={displayAvatar.startsWith("http") ? displayAvatar : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`} 
-                      alt={displayName || "User"}
+                      src={(displayAvatar as string).startsWith("http") ? (displayAvatar as string) : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${displayAvatar}`} 
+                      alt={String(displayName || "User")}
                       className="object-cover size-full" 
                     />
                   ) : (
@@ -104,7 +103,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
                   )}
                 </div>
                 <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold text-sidebar-foreground tracking-tighter text-base">{displayName}</span>
+                  <span className="truncate font-semibold text-sidebar-foreground tracking-tighter text-base">{String(displayName || "Workspace")}</span>
                   <span className="truncate text-[9px] font-semibold uppercase text-muted-foreground tracking-[0.25em] mt-0.5">My Workspace</span>
                 </div>
               </Link>
@@ -119,8 +118,8 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           <SidebarGroupLabel>Apps</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Browse Apps" isActive={isActiveUrl("/workspace/stores")}>
-                <Link href="/workspace/stores"><StoreIcon /><span>Browse Apps</span></Link>
+              <SidebarMenuButton asChild tooltip="Browse Apps" isActive={isActiveUrl("/workspace/apps")}>
+                <Link href="/workspace/apps"><StoreIcon /><span>Browse Apps</span></Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -133,11 +132,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
                 <Link href="/workspace/stores"><StoreIcon /><span>Stores</span></Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Files" isActive={isActiveUrl("/workspace/administration/files")}>
-                <Link href="/workspace/administration/files"><FilesIcon /><span>Files</span></Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Settings" isActive={isActiveUrl("/workspace/settings")}>
                 <Link href="/workspace/settings"><SettingsIcon /><span>Settings</span></Link>

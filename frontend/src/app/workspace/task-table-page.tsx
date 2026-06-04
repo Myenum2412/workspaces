@@ -102,8 +102,8 @@ export function TaskTablePage({
     queryKey: ["tasks", assignedTo ?? "all"],
     queryFn: () => {
       trackEvent('fetch_tasks_start')
-      if (assignedTo) return taskService.getMyTasks(assignedTo)
-      return taskService.getAllTasks()
+      if (assignedTo) return taskService.getMyTasks(assignedTo) as unknown as Promise<Task[]>
+      return taskService.getAllTasks() as unknown as Promise<Task[]>
     },
   })
 
@@ -122,7 +122,7 @@ export function TaskTablePage({
       return
     }
     try {
-      await taskService.updateTaskStatus(task.id, newStatus)
+      await taskService.updateTaskStatus(task.id, newStatus as any)
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
     } catch (error) {
       console.error("Status update failed:", error)

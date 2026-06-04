@@ -26,7 +26,7 @@ export const getSession = cache(async (): Promise<AuthSession | null> => {
     const json = await res.json();
     const user = json.user;
     const org = json.organization as Organization | null;
-    const membership = json.membership as { role: string; organizationId: string } | null;
+    const membership = json.membership as Record<string, unknown> | null;
 
     return {
       user: {
@@ -42,7 +42,7 @@ export const getSession = cache(async (): Promise<AuthSession | null> => {
       },
       profile: null,
       organization: org ? { ...org, id: org._id ?? org.id } : null,
-      membership,
+      membership: membership as AuthSession["membership"],
     };
   } catch {
     return null;

@@ -61,8 +61,8 @@ export default function OrgUsersPage() {
     queryKey: ["org-profiles", orgId],
     queryFn: async () => {
       try {
-        const res = await api.get<{ success: boolean; data: UserProfile[] }>("/api/staff");
-        return res.data;
+        const res = await api.get<{ success: boolean; employees: UserProfile[] }>("/api/members");
+        return res.employees;
       } catch { return []; }
     },
     enabled: !!orgId,

@@ -1,0 +1,561 @@
+[
+  {
+    "db": "workspace",
+    "name": "organizations",
+    "count": 33,
+    "size": 6891,
+    "storageSize": 36864,
+    "avgObjSize": 208,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {
+      "name": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "org-menu",
+          "Test Corp",
+          "Test Corp"
+        ]
+      },
+      "category": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "Software",
+          "Other",
+          "Other"
+        ]
+      },
+      "createdAt": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "2026-05-25T11:26:31.367Z",
+          "Mon May 25 2026 17:10:33 GMT+0530 (India Standard Time)",
+          "Mon May 25 2026 17:10:54 GMT+0530 (India Standard Time)"
+        ]
+      },
+      "companyRange": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "1-10",
+          "10-50",
+          "51-200"
+        ]
+      },
+      "updatedAt": {
+        "types": [
+          "object"
+        ],
+        "sampleValues": [
+          "\"2026-05-25T11:40:33.000Z\"",
+          "\"2026-05-25T11:40:54.000Z\"",
+          "\"2026-05-25T11:41:17.000Z\""
+        ]
+      },
+      "__v": {
+        "types": [
+          "number"
+        ],
+        "sampleValues": [
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    },
+    "testDocIds": [
+      "253261cf-fea7-485b-ad6f-9cb4a8b6e64e",
+      "cb742800-0f2b-4da1-b9cf-d6b3b9e31c9c",
+      "b25823b0-a0f7-4d5a-ae00-7a2cb204d072",
+      "db475aff-0b2c-4ef5-bf8b-5ebee5308cd8",
+      "009860ed-383a-480c-82e6-eed43bf110b9"
+    ],
+    "testDocCount": 5,
+    "duplicateReport": [
+      {
+        "field": "name",
+        "duplicates": [
+          {
+            "_id": "Meenu",
+            "count": 2
+          },
+          {
+            "_id": "Test Corp",
+            "count": 3
+          },
+          {
+            "_id": "myenum",
+            "count": 2
+          },
+          {
+            "_id": "Myenum",
+            "count": 12
+          }
+        ]
+      }
+    ],
+    "sampleCount": 5
+  },
+  {
+    "db": "workspace",
+    "name": "billingusers",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      },
+      {
+        "name": "userId_1",
+        "key": {
+          "userId": 1
+        },
+        "unique": true,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "orginvitations",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "tasks",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "screentimes",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "savedtasks",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "orgmembers",
+    "count": 22,
+    "size": 6033,
+    "storageSize": 36864,
+    "avgObjSize": 274,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {
+      "organizationId": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "6a1431e7d5df7f0dce19e30d",
+          "02320917-db47-4035-bec1-84ee6d2aa576",
+          "59ddca07-ac02-4dc5-bef8-d044f7dbb889"
+        ]
+      },
+      "userId": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "6a1431e7d5df7f0dce19e30c",
+          "3b3fd866-7df6-4d45-a3e5-3c2335228912",
+          "db69d1f8-9bde-4ac9-aad1-3016846e0fdc"
+        ]
+      },
+      "role": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "owner",
+          "owner",
+          "owner"
+        ]
+      },
+      "joinedAt": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "2026-05-25T11:26:31.441Z",
+          "2026-05-25T11:41:17.913Z",
+          "2026-05-25T12:28:16.304Z"
+        ]
+      },
+      "status": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "active",
+          "active",
+          "active"
+        ]
+      },
+      "createdAt": {
+        "types": [
+          "object"
+        ],
+        "sampleValues": [
+          "\"2026-05-25T11:41:17.913Z\"",
+          "\"2026-05-25T12:28:16.304Z\"",
+          "\"2026-05-25T16:49:42.679Z\""
+        ]
+      },
+      "updatedAt": {
+        "types": [
+          "object"
+        ],
+        "sampleValues": [
+          "\"2026-05-25T11:41:17.913Z\"",
+          "\"2026-05-25T12:28:16.304Z\"",
+          "\"2026-05-25T16:49:42.679Z\""
+        ]
+      },
+      "__v": {
+        "types": [
+          "number"
+        ],
+        "sampleValues": [
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    },
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 5
+  },
+  {
+    "db": "workspace",
+    "name": "teams",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "masterdatas",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "branches",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  },
+  {
+    "db": "workspace",
+    "name": "userprofiles",
+    "count": 1,
+    "size": 433,
+    "storageSize": 36864,
+    "avgObjSize": 433,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {
+      "userId": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "89284b07-7d21-4173-b3d9-a15a826f94bc"
+        ]
+      },
+      "firstName": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "Developer"
+        ]
+      },
+      "lastName": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "Admin"
+        ]
+      },
+      "email": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "developer@myenum.in"
+        ]
+      },
+      "passwordHash": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "$2b$12$kBuCaEqwi9nI76/SiEHAHeEm99RUh2.92mTGFIeU7EF4Bqww3./7."
+        ]
+      },
+      "designation": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "Admin"
+        ]
+      },
+      "expertise": {
+        "types": [
+          "Array"
+        ],
+        "sampleValues": [
+          "[]"
+        ]
+      },
+      "organizationId": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "785f83d6-5b0e-4a5f-98b9-7463d6f9ad66"
+        ]
+      },
+      "status": {
+        "types": [
+          "string"
+        ],
+        "sampleValues": [
+          "active"
+        ]
+      },
+      "emailVerified": {
+        "types": [
+          "boolean"
+        ],
+        "sampleValues": [
+          "true"
+        ]
+      },
+      "createdAt": {
+        "types": [
+          "object"
+        ],
+        "sampleValues": [
+          "\"2026-05-26T11:47:26.568Z\""
+        ]
+      },
+      "updatedAt": {
+        "types": [
+          "object"
+        ],
+        "sampleValues": [
+          "\"2026-05-26T11:47:26.568Z\""
+        ]
+      },
+      "__v": {
+        "types": [
+          "number"
+        ],
+        "sampleValues": [
+          "0"
+        ]
+      }
+    },
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 1
+  },
+  {
+    "db": "workspace",
+    "name": "clients",
+    "count": 0,
+    "size": 0,
+    "storageSize": 4096,
+    "avgObjSize": 0,
+    "indexes": [
+      {
+        "name": "_id_",
+        "key": {
+          "_id": 1
+        },
+        "unique": false,
+        "sparse": false
+      }
+    ],
+    "schema": {},
+    "testDocIds": [],
+    "testDocCount": 0,
+    "duplicateReport": [],
+    "sampleCount": 0
+  }
+]

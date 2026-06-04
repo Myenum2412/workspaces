@@ -22,15 +22,12 @@ import { apiResponse } from "./core/utils/apiResponse.js";
 import authRoutes from "./routes/auth.js";
 import inviteRoutes from "./routes/invites.js";
 import setupRoutes from "./routes/setup.js";
-import uploadRoutes from "./routes/upload.js";
-import { auditMiddleware } from "./middleware/audit.js";
-import profileRoutes from "./routes/profile.js";
 import workspaceRoutes from "./routes/workspace.js";
 import fileRoutes from "./routes/file-routes.js";
-import staffRoutes from "./routes/staff.js";
+import memberRoutes from "./routes/members.js";
 import taskRoutes from "./routes/tasks.js";
 
-// Entity routes (replaces generic /api/db proxy)
+// Entity routes
 import teamRoutes from "./routes/team-routes.js";
 import clientRoutes from "./routes/client-routes.js";
 import branchRoutes from "./routes/branch-routes.js";
@@ -39,8 +36,6 @@ import orgRoutes from "./routes/org-routes.js";
 // Branding
 import brandingRoutes from "./routes/branding.js";
 
-// Admin
-import adminRoutes from "./routes/admin.js";
 import { checkHealth } from "./services/health.js";
 
 const app = express();
@@ -102,14 +97,10 @@ app.use("/api/auth/", authLimiter);
 app.use("/api/upload/", uploadLimiter);
 app.use("/api/", apiLimiter);
 
-// ── Audit logging ──────────────────────────────────────────
-app.use("/api", auditMiddleware);
-
 // ── Route Mounting ─────────────────────────────────────────
 // Auth & Users
 app.use("/api/auth", authRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/staff", staffRoutes);
+app.use("/api/members", memberRoutes);
 app.use("/api/invites", inviteRoutes);
 
 // Workspace
@@ -121,21 +112,16 @@ app.use("/api/workspace/files", fileRoutes);
 // Tasks (CRUD + saved templates)
 app.use("/api/tasks", taskRoutes);
 
-// Entities (mounted at their collection paths)
+// Entities
 app.use("/api/teams", teamRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/branches", branchRoutes);
-// Org routes: /api/organizations, /api/members, /api/invitations, /api/master-data
 app.use("/api", orgRoutes);
 
-app.use("/api/upload", uploadRoutes);
 app.use("/api/setup", setupRoutes);
 
 // Branding
 app.use("/api/branding", brandingRoutes);
-
-// Admin
-app.use("/api/admin", adminRoutes);
 
 // ── Static files ───────────────────────────────────────────
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -165,7 +151,11 @@ for (const dir of uploadDirs) {
 httpServer.listen(env.PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${env.PORT} [${env.NODE_ENV}]`);
   connectDB()
-    .then(() => { console.log("✅ MongoDB connected"); })
+    .then(async () => {
+      console.log("✅ MongoDB connected");
+      const { seedDefaultAdmin } = await import("./services/seed.js");
+      await seedDefaultAdmin();
+    })
     .catch((err) => { console.error("❌ Startup failed:", err); process.exit(1); });
 });
 

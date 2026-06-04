@@ -7,9 +7,8 @@ function mapTeam(doc: any): Team {
   return {
     id: doc._id ?? doc.id ?? "",
     name: doc.name ?? "",
-    head: doc.head ?? "",
-    members: doc.members ?? 0,
-    projects: doc.projects ?? 0,
+    headUserId: doc.headUserId ?? doc.head ?? "",
+    memberIds: doc.memberIds ?? doc.members ?? [],
     status: doc.status ?? "Active",
     organizationId: doc.organizationId ?? "",
     createdAt: doc.createdAt,

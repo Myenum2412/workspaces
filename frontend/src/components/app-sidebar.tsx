@@ -12,20 +12,16 @@ import {
 import { sidebarData } from "@/lib/data/sidebar-data"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // Map icons to JSX for sub-components if they expect JSX
-  const teamsWithLogo = sidebarData.teams.map(team => ({
-    ...team,
-    logo: <team.logo />
-  }))
-
   const navMainWithIcon = sidebarData.navMain.map(item => ({
-    ...item,
-    icon: <item.icon />
+    title: item.title,
+    url: item.url,
+    items: item.items,
   }))
 
   const projectsWithIcon = sidebarData.projects.map(project => ({
-    ...project,
-    icon: <project.icon />
+    name: project.name,
+    url: project.url,
+    icon: null as unknown as React.ReactNode,
   }))
 
   return (

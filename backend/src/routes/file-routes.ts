@@ -3,9 +3,10 @@ import { authenticate, AuthRequest } from "../middleware/auth.js";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { apiResponse } from "../core/utils/apiResponse.js";
-import { logAudit } from "../middleware/audit.js";
 import { parsePagination } from "../middleware/pagination.js";
-import { FileRecord } from "../models/file-record.js";
+import { validateBody } from "../middleware/validate.js";
+import { createFileRecordSchema } from "../validators/entity.js";
+import { FileRecord } from "../models/index.js";
 import crypto from "crypto";
 
 const router = Router();
@@ -58,13 +59,11 @@ router.get("/folders", catchAsync(async (req: Request, res: Response) => {
 }));
 
 // ── Create file record (after R2 upload) ──────────────────────
-router.post("/record", catchAsync(async (req: Request, res: Response) => {
+router.post("/record",
+  validateBody(createFileRecordSchema),
+  catchAsync(async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
   const { filename, originalName, mimetype, size, url, key, folder } = req.body;
-
-  if (!filename || !key || !url) {
-    return res.status(400).json({ error: "filename, key, and url required" });
-  }
 
   const record = await FileRecord.create({
     _id: crypto.randomUUID(),
@@ -80,18 +79,7 @@ router.post("/record", catchAsync(async (req: Request, res: Response) => {
     folder: folder || key.split("/")[0] || "files",
   });
 
-  logAudit({
-    organizationId: authReq.user!.organizationId,
-    action: "file_record_create",
-    severity: "info",
-    userId: authReq.user!.userId,
-    userEmail: authReq.user!.email,
-    ipAddress: req.ip || null,
-    userAgent: req.get("user-agent") || null,
-    method: req.method,
-    path: req.originalUrl || req.path,
-    metadata: { fileId: record._id, key },
-  }).catch(() => { /* silent */ });
+  console.log("[Audit] file_record_create:", authReq.user!.userId, key);
 
   apiResponse.success(res, { file: record });
 }));
@@ -122,18 +110,7 @@ router.delete("/:id", catchAsync(async (req: Request, res: Response) => {
     // Continue — DB record already removed
   }
 
-  logAudit({
-    organizationId: orgId,
-    action: "file_delete",
-    severity: "info",
-    userId: authReq.user!.userId,
-    userEmail: authReq.user!.email,
-    ipAddress: req.ip || null,
-    userAgent: req.get("user-agent") || null,
-    method: req.method,
-    path: req.originalUrl || req.path,
-    metadata: { fileId: id, key: record.key },
-  }).catch(() => { /* silent */ });
+  console.log("[Audit] file_delete:", authReq.user!.userId, id);
 
   apiResponse.success(res, { success: true });
 }));

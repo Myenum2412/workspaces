@@ -43,11 +43,11 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
 
   const refresh = async () => {
     try {
-      const result = await api.get<{ success: boolean; user: any; organization: any; membership: any }>("/api/auth/me");
+      const result = await api.get<any>("/api/auth/me");
 
-      const user = result.user;
-      const org = result.organization as Organization | null;
-      const membership = result.membership as { role: string; organizationId: string } | null;
+      const user = result.data?.user || result.user;
+      const org = result.data?.organization || result.organization;
+      const membership = result.data?.membership || result.membership;
 
       setSession({
         user: {
@@ -97,12 +97,10 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
     }
   }, [initialized, loading, session, isAuthPage, router]);
 
-  // Only admin email can access org-menu
+  // Only ORG_ADMIN can access org-menu
   useEffect(() => {
     if (session) {
-      const email = session.user.email?.toLowerCase();
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase();
-      if (!adminEmail || email !== adminEmail) {
+      if (session.user.role !== "ORG_ADMIN") {
         router.replace("/workspace");
       }
     }

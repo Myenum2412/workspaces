@@ -61,13 +61,13 @@ export function ShiftManagement() {
   })
   
   React.useEffect(() => {
-    if (shiftsData?.success) setShifts(shiftsData.shifts || [])
+    if (shiftsData?.success) setShifts((shiftsData.shifts as Shift[]) || [])
   }, [shiftsData])
 
   const createMutation = useMutation({
     mutationFn: (data: any) => workspaceApi.createShift(data),
     onSuccess: (res) => {
-      setShifts((prev) => [...prev, res.shift])
+      setShifts((prev) => [...prev, res.shift as unknown as Shift])
       toast.success("Shift created successfully")
       setIsDialogOpen(false)
       resetForm()

@@ -1,1 +1,0 @@
-{"type":"skill","name":"cloudflare","digest":"{\"skill\":\"cloudflare\",\"args\":\"Fix Cloudflare Pages deployment. The build runs `npx wrangler deploy` ","timestamp":"2026-06-01T13:10:20Z"}

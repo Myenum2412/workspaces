@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
-import { authenticate, AuthRequest, requireRole } from "../middleware/auth.js";
+import { authenticate, AuthRequest } from "../middleware/auth.js";
+import { requireRole } from "../middleware/rbac.js";
 import { OrgInvitation, OrgMember } from "../models/index.js";
 import { sendInviteEmail } from "../email/resend.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
@@ -12,7 +13,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post("/send",
-  requireRole("admin", "owner"),
+  requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"),
   validateBody(createInvitationSchema),
   catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;

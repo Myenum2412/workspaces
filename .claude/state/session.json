@@ -1,1 +1,44 @@
-{"changes_this_session":[],"cwd":"/home/j0k3r/Desktop/workspaces","event_seq":73,"fork_count":0,"git":{"branch":"main","last_commit":"b45f15f","uncommitted_changes":0},"harness_mem":{"healthy":true,"last_checked":"2026-06-02T14:21:36Z","last_error":""},"intent":"literal","last_event_id":"event-000073","last_message_hash":"72abc1177edb485c","last_message_length":2637,"orchestration":{"max_state_retries":3,"retry_backoff_seconds":10},"parent_session_id":null,"plans":{"completed_tasks":0,"exists":false,"last_modified":0,"pending_tasks":0,"todo_tasks":0,"wip_tasks":0},"project_name":"workspaces","prompt_seq":2,"resume_token":"resume-1780410096330740414","session_id":"session-1780410096330734711","started_at":"2026-06-02T14:21:36Z","state":"initialized","state_version":1,"updated_at":"2026-06-02T16:15:00Z"}
+{
+  "changes_this_session": [],
+  "cwd": "/home/j0k3r/Desktop/workspaces",
+  "duration_minutes": 0,
+  "ended_at": "2026-06-04T06:59:18Z",
+  "event_seq": 34,
+  "fork_count": 0,
+  "git": {
+    "branch": "main",
+    "last_commit": "9bf0e24",
+    "uncommitted_changes": 0
+  },
+  "harness_mem": {
+    "healthy": true,
+    "last_checked": "2026-06-04T06:59:04Z",
+    "last_error": ""
+  },
+  "intent": "literal",
+  "last_event_id": "event-000034",
+  "last_message_hash": "bec5d18edc4968b3",
+  "last_message_length": 32027,
+  "memory_logged": true,
+  "orchestration": {
+    "max_state_retries": 3,
+    "retry_backoff_seconds": 10
+  },
+  "parent_session_id": null,
+  "plans": {
+    "completed_tasks": 0,
+    "exists": false,
+    "last_modified": 0,
+    "pending_tasks": 0,
+    "todo_tasks": 0,
+    "wip_tasks": 0
+  },
+  "project_name": "workspaces",
+  "prompt_seq": 5,
+  "resume_token": "resume-1780556344297648622",
+  "session_id": "session-1780556344297642230",
+  "started_at": "2026-06-04T06:59:04Z",
+  "state": "stopped",
+  "state_version": 1,
+  "updated_at": "2026-06-04T08:05:42Z"
+}

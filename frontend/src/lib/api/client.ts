@@ -1,40 +1,16 @@
-/**
- * Shared API client — cookie-based auth.
- * Relies on httpOnly cookies set by the backend (no localStorage tokens).
- * Sends credentials: 'include' for cross-origin cookie forwarding.
- * Falls back to Authorization header for Socket.IO connections (can't send cookies via WS).
- */
-
 import { API_BASE_URL } from "./config";
 
-// ── Token helpers (kept for Socket.IO auth only) ───────────────
-
 export function getToken(): string | null {
-  // Read from cookie for Socket.IO fallback
   if (typeof window === "undefined") return null;
   const match = document.cookie.match(/(?:^|; )access_token=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
-
-export function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (!payload.exp) return false;
-    return Date.now() >= payload.exp * 1000;
-  } catch {
-    return true;
-  }
-}
-
-// ── CSRF Token helper ──────────────────────────────────────────
 
 function getCsrfToken(): string | null {
   if (typeof window === "undefined") return null;
   const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
-
-// ── Error type ─────────────────────────────────────────────────
 
 export class ApiError extends Error {
   status: number;
@@ -49,8 +25,6 @@ export class ApiError extends Error {
   }
 }
 
-// ── Core fetch — cookie-based, no manual token attachment ──────
-
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
@@ -60,12 +34,10 @@ export async function apiFetch<T>(
     ...(options.headers as Record<string, string>),
   };
 
-  // For FormData (file uploads), let the browser set Content-Type with boundary
   if (options.body instanceof FormData) {
     delete headers["Content-Type"];
   }
 
-  // Add CSRF token for state-changing requests
   if (options.method && !["GET", "HEAD", "OPTIONS"].includes(options.method.toUpperCase())) {
     const csrfToken = getCsrfToken();
     if (csrfToken) {
@@ -76,15 +48,13 @@ export async function apiFetch<T>(
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
-    credentials: "include", // Send httpOnly cookies
+    credentials: "include",
   });
 
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
-    // If 401, session expired — redirect to login
     if (res.status === 401 && typeof window !== "undefined") {
-      // Try refresh first
       if (!path.includes("/api/auth/refresh")) {
         try {
           const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
@@ -93,41 +63,32 @@ export async function apiFetch<T>(
             headers: { "Content-Type": "application/json" },
           });
           if (refreshRes.ok) {
-            // Retry original request with new cookies
             const retryRes = await fetch(`${API_BASE_URL}${path}`, {
               ...options,
               headers,
               credentials: "include",
             });
             if (retryRes.ok) return (await retryRes.json()) as T;
-            // Retry failed with non-2xx — fall through to throw below
             const retryJson = await retryRes.json().catch(() => null);
-            const errorMsg = typeof retryJson?.error === "string" ? retryJson.error : retryJson?.error?.message;
             throw new ApiError(
-              errorMsg || retryJson?.message || `Request failed: ${retryRes.status}`,
+              retryJson?.error?.message || retryJson?.message || `Request failed: ${retryRes.status}`,
               retryRes.status,
               retryJson?.error?.code || retryJson?.code || "API_ERROR",
               retryJson?.error?.details || retryJson?.details
             );
           }
-          // Refresh returned non-2xx — fall through to redirect (don't catch)
         } catch (refreshErr) {
-          // Only redirect if refresh itself failed (network error, etc.)
-          // Don't redirect on retry request failures — throw those instead
           if (refreshErr instanceof ApiError) throw refreshErr;
-          // Refresh network failure — fall through to redirect
         }
       }
-      // All refresh attempts failed — redirect to login, but not if already on an auth page
       const currentPath = window.location.pathname;
       if (!currentPath.startsWith("/login") && !currentPath.startsWith("/signup") && !currentPath.startsWith("/forgot-password") && !currentPath.startsWith("/reset-password")) {
         window.location.href = "/login?reason=session_expired";
       }
     }
 
-    const errorMsg = typeof json?.error === "string" ? json.error : json?.error?.message;
     throw new ApiError(
-      errorMsg || json?.message || `Request failed: ${res.status}`,
+      json?.error?.message || json?.message || `Request failed: ${res.status}`,
       res.status,
       json?.error?.code || json?.code || "API_ERROR",
       json?.error?.details || json?.details
@@ -136,8 +97,6 @@ export async function apiFetch<T>(
 
   return json as T;
 }
-
-// ── Convenience methods ────────────────────────────────────────
 
 export const api = {
   get: <T>(path: string) => apiFetch<T>(path),
@@ -154,8 +113,6 @@ export const api = {
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };
 
-// ── Auth API ──────────────────────────────────────────────────
-
 export const authApi = {
   logout: async () => {
     try {
@@ -163,31 +120,29 @@ export const authApi = {
     } catch { /* ignore */ }
   },
   refresh: async () => {
-    return apiFetch("/api/auth/refresh", { method: "POST", body: "{}" });
+    return apiFetch<Record<string, unknown>>("/api/auth/refresh", { method: "POST", body: "{}" });
   },
   getMe: () => api.get<{
     success: boolean;
-    user: any;
-    organization: any;
-    membership: any;
+    user: Record<string, unknown>;
+    organization: Record<string, unknown> | null;
+    membership: Record<string, unknown> | null;
   }>("/api/auth/me"),
 };
 
-// ── Profile API ──────────────────────────────────────────────
-
 export const profileApi = {
-  get: () => api.get<{ success: boolean; profile: any }>("/api/profile"),
+  get: () => api.get<{ success: boolean; profile: Record<string, unknown> }>("/api/profile"),
   update: (data: Record<string, unknown>) =>
-    api.patch<{ success: boolean; profile: any }>("/api/profile", data),
+    api.patch<{ success: boolean; profile: Record<string, unknown> }>("/api/profile", data),
   getHistory: (page = 1, limit = 20) =>
-    api.get<{ success: boolean; entries: any[]; total: number; page: number; limit: number; pages: number }>(
+    api.get<{ success: boolean; entries: unknown[]; total: number; page: number; limit: number; pages: number }>(
       `/api/profile/history?page=${page}&limit=${limit}`
     ),
   getActivity: (days?: number) =>
-    api.get<{ success: boolean; activity: any[] }>(
+    api.get<{ success: boolean; activity: unknown[] }>(
       `/api/profile/activity${days ? `?days=${days}` : ""}`
     ),
-  export: () => api.get<any>("/api/profile/export"),
+  export: () => api.get<Record<string, unknown>>("/api/profile/export"),
   adminListUsers: (params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }) => {
     const q = new URLSearchParams();
     if (params?.page) q.set("page", String(params.page));
@@ -196,10 +151,10 @@ export const profileApi = {
     if (params?.status) q.set("status", params.status);
     if (params?.sortBy) q.set("sortBy", params.sortBy);
     if (params?.sortOrder) q.set("sortOrder", params.sortOrder);
-    return api.get<{ success: boolean; profiles: any[]; total: number; page: number; pages: number }>(`/api/profile/admin/users?${q}`);
+    return api.get<{ success: boolean; profiles: unknown[]; total: number; page: number; pages: number }>(`/api/profile/admin/users?${q}`);
   },
   adminSetStatus: (userId: string, status: string, reason?: string) =>
-    api.patch<{ success: boolean; profile: any }>(`/api/profile/admin/users/${userId}/status`, { status, reason }),
+    api.patch<{ success: boolean; profile: Record<string, unknown> }>(`/api/profile/admin/users/${userId}/status`, { status, reason }),
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -220,94 +175,9 @@ export const profileApi = {
   },
 };
 
-// ── Contacts API ──────────────────────────────────────────────
-
-export const contactsApi = {
-  list: (params?: { search?: string; isBlocked?: boolean; page?: number; limit?: number }) => {
-    const q = new URLSearchParams();
-    if (params?.search) q.set("search", params.search);
-    if (params?.isBlocked !== undefined) q.set("isBlocked", String(params.isBlocked));
-    if (params?.page) q.set("page", String(params.page));
-    if (params?.limit) q.set("limit", String(params.limit));
-    return api.get<{ total: number; page: number; limit: number; contacts: any[] }>(`/api/contacts?${q}`);
-  },
-  get: (id: string) => api.get<any>(`/api/contacts/${id}`),
-  import: (contacts: any[]) => api.post<{ upserted: number; modified: number }>("/api/contacts/import", { contacts }),
-  block: (id: string) => api.post<any>(`/api/contacts/${id}/block`, {}),
-  unblock: (id: string) => api.delete<any>(`/api/contacts/${id}/block`),
-  delete: (id: string) => api.delete<{ success: boolean }>(`/api/contacts/${id}`),
-};
-
-// ── Webhooks API ──────────────────────────────────────────────
-
-export const webhooksApi = {
-  list: () => api.get<{ webhooks: any[] }>("/api/webhooks"),
-  create: (data: { url: string; events?: string[]; secret?: string; headers?: Record<string, string>; retryCount?: number; sessionId?: string }) =>
-    api.post<any>("/api/webhooks", data),
-  update: (id: string, data: Partial<{ url: string; events: string[]; secret: string; headers: Record<string, string>; retryCount: number; active: boolean }>) =>
-    api.put<any>(`/api/webhooks/${id}`, data),
-  delete: (id: string) => api.delete<{ success: boolean }>(`/api/webhooks/${id}`),
-  test: (id: string) => api.post<{ success: boolean; statusCode?: number; error?: string }>(`/api/webhooks/${id}/test`, {}),
-};
-
-// ── Templates API ─────────────────────────────────────────────
-
-export const templatesApi = {
-  list: (params?: { category?: string; search?: string; page?: number; limit?: number }) => {
-    const q = new URLSearchParams();
-    if (params?.category) q.set("category", params.category);
-    if (params?.search) q.set("search", params.search);
-    if (params?.page) q.set("page", String(params.page));
-    if (params?.limit) q.set("limit", String(params.limit));
-    return api.get<{ total: number; page: number; limit: number; templates: any[] }>(`/api/templates?${q}`);
-  },
-  get: (id: string) => api.get<any>(`/api/templates/${id}`),
-  create: (data: { name: string; category?: string; language?: string; body: string; variables?: string[]; header?: string; headerType?: string; footer?: string; buttons?: any[] }) =>
-    api.post<any>("/api/templates", data),
-  update: (id: string, data: any) => api.put<any>(`/api/templates/${id}`, data),
-  delete: (id: string) => api.delete<{ success: boolean }>(`/api/templates/${id}`),
-};
-
-// ── Campaigns API ─────────────────────────────────────────────
-
-export const campaignsApi = {
-  list: (params?: { status?: string; page?: number; limit?: number }) => {
-    const q = new URLSearchParams();
-    if (params?.status) q.set("status", params.status);
-    if (params?.page) q.set("page", String(params.page));
-    if (params?.limit) q.set("limit", String(params.limit));
-    return api.get<{ total: number; campaigns: any[] }>(`/api/campaigns?${q}`);
-  },
-  get: (id: string) => api.get<any>(`/api/campaigns/${id}`),
-  create: (data: { name: string; description?: string; templateId?: string; audienceType?: string; audienceFilter?: any; scheduledAt?: string }) =>
-    api.post<any>("/api/campaigns", data),
-  update: (id: string, data: any) => api.put<any>(`/api/campaigns/${id}`, data),
-  delete: (id: string) => api.delete<{ success: boolean }>(`/api/campaigns/${id}`),
-  execute: (id: string) => api.post<any>(`/api/campaigns/${id}/execute`, {}),
-  pause: (id: string) => api.post<any>(`/api/campaigns/${id}/pause`, {}),
-  resume: (id: string) => api.post<any>(`/api/campaigns/${id}/resume`, {}),
-  stats: (id: string) => api.get<any>(`/api/campaigns/${id}/stats`),
-};
-
-// ── Audit API ─────────────────────────────────────────────────
-
-export const auditApi = {
-  list: (params?: { action?: string; severity?: string; page?: number; limit?: number }) => {
-    const q = new URLSearchParams();
-    if (params?.action) q.set("action", params.action);
-    if (params?.severity) q.set("severity", params.severity);
-    if (params?.page) q.set("page", String(params.page));
-    if (params?.limit) q.set("limit", String(params.limit));
-    return api.get<{ total: number; logs: any[] }>(`/api/audit?${q}`);
-  },
-  stats: () => api.get<any>("/api/audit/stats"),
-};
-
-// ── Workspace API ─────────────────────────────────────────────
-
 export const workspaceApi = {
-  getHrSettings: () => api.get<{ success: boolean; hrSettings: any }>("/api/workspace/hr-settings"),
-  updateHrSettings: (data: any) => api.put<{ success: boolean; hrSettings: any }>("/api/workspace/hr-settings", data),
+  getHrSettings: () => api.get<{ success: boolean; hrSettings: Record<string, unknown> }>("/api/workspace/hr-settings"),
+  updateHrSettings: (data: Record<string, unknown>) => api.put<{ success: boolean; hrSettings: Record<string, unknown> }>("/api/workspace/hr-settings", data),
   uploadImage: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -326,13 +196,11 @@ export const workspaceApi = {
     }
     return res.json() as Promise<{ success: boolean; url: string }>;
   },
-  getShifts: () => api.get<{ success: boolean; shifts: any[] }>("/api/workspace/shifts"),
-  createShift: (data: any) => api.post<{ success: boolean; shift: any }>("/api/workspace/shifts", data),
-  updateShift: (id: string, data: any) => api.put<{ success: boolean; shift: any }>(`/api/workspace/shifts/${id}`, data),
+  getShifts: () => api.get<{ success: boolean; shifts: unknown[] }>("/api/workspace/shifts"),
+  createShift: (data: Record<string, unknown>) => api.post<{ success: boolean; shift: Record<string, unknown> }>("/api/workspace/shifts", data),
+  updateShift: (id: string, data: Record<string, unknown>) => api.put<{ success: boolean; shift: Record<string, unknown> }>(`/api/workspace/shifts/${id}`, data),
   deleteShift: (id: string) => api.delete<{ success: boolean }>(`/api/workspace/shifts/${id}`),
 };
-
-// ── Upload API ──────────────────────────────────────────────
 
 export const uploadApi = {
   uploadFile: async (file: File) => {
@@ -355,21 +223,19 @@ export const uploadApi = {
   },
 };
 
-// ── Files API ────────────────────────────────────────────────
-
 export const filesApi = {
   list: (params?: { folder?: string; page?: number; limit?: number }) => {
     const q = new URLSearchParams();
     if (params?.folder) q.set("folder", params.folder);
     if (params?.page) q.set("page", String(params.page));
     if (params?.limit) q.set("limit", String(params.limit));
-    return api.get<{ success: boolean; files: any[]; total: number; page: number; limit: number; pages: number }>(`/api/workspace/files?${q}`);
+    return api.get<{ success: boolean; files: unknown[]; total: number; page: number; limit: number; pages: number }>(`/api/workspace/files?${q}`);
   },
 
   listFolders: () => api.get<{ success: boolean; folders: string[] }>("/api/workspace/files/folders"),
 
   createRecord: (data: { filename: string; originalName: string; mimetype: string; size: number; url: string; key: string; folder: string }) =>
-    api.post<{ success: boolean; file: any }>("/api/workspace/files/record", data),
+    api.post<{ success: boolean; file: Record<string, unknown> }>("/api/workspace/files/record", data),
 
   delete: (id: string) => api.delete<{ success: boolean }>(`/api/workspace/files/${id}`),
 
@@ -389,4 +255,3 @@ export const filesApi = {
     return recordResult;
   },
 };
-

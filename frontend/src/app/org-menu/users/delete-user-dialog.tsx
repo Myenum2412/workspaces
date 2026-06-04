@@ -22,8 +22,8 @@ export function DeleteUserDialog({
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      // Soft-delete: set staff status to removed
-      await api.put(`/api/staff/${userId}`, { status: "removed" });
+      // Soft-delete: set employee status to removed
+      await api.put(`/api/members/${userId}`, { status: "removed" });
       toast.success(`${userName} has been removed.`);
       setOpen(false);
       onDeleted?.();

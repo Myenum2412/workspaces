@@ -55,7 +55,7 @@ export const getPendingInvites = cache(async (organizationId: string): Promise<n
 export const getRecentMembers = cache(async (organizationId: string, limit = 5): Promise<UserProfile[]> => {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/staff?organizationId=${organizationId}&limit=${limit}&sort=createdAt:desc`, {
+    const res = await fetch(`${API_BASE_URL}/api/members?organizationId=${organizationId}&limit=${limit}&sort=createdAt:desc`, {
       headers,
       next: { revalidate: 60 },
     });
@@ -105,7 +105,7 @@ export const getExecutiveMembers = cache(async (organizationId: string) => {
 
     const [membersRes, profilesRes] = await Promise.all([
       fetch(`${API_BASE_URL}/api/members?organizationId=${organizationId}`, { headers }),
-      fetch(`${API_BASE_URL}/api/staff?organizationId=${organizationId}`, { headers, next: { revalidate: 60 } }),
+      fetch(`${API_BASE_URL}/api/members?organizationId=${organizationId}`, { headers, next: { revalidate: 60 } }),
     ]);
 
     const membersJson = membersRes.ok ? await membersRes.json() : { members: [] };

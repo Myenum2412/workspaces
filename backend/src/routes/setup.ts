@@ -2,13 +2,13 @@ import { Router, Request, Response } from "express";
 import { env } from "../config/env.js";
 import { isSuperAdmin } from "../config/env.js";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
-import { requireRole } from "../middleware/auth.js";
+import { requireRole } from "../middleware/rbac.js";
 
 const router = Router();
 
 // Only super-admins can access setup endpoints
 router.use(authenticate);
-router.use(requireRole("admin", "owner"));
+router.use(requireRole("ORG_ADMIN"));
 
 // Verify super-admin email as additional guard
 function requireSuperAdmin(req: Request, res: Response, next: Function) {

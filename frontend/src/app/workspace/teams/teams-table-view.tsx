@@ -39,15 +39,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-export interface Team {
-  id: string
-  name: string
-  head: string
-  members: number
-  projects: number
-  status: "Active" | "Inactive"
-}
-
 export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => void }) {
   const { data: teams = [], isLoading } = useQuery({
     queryKey: ["teams"],
@@ -79,14 +70,14 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
     let result = teams
 
     if (filterStatus !== "All") {
-      result = result.filter((t) => t.status === filterStatus)
+      result = result.filter((t) => t.status === filterStatus.toLowerCase())
     }
 
     if (!query) return result
 
     return result.filter((t) =>
       t.name.toLowerCase().includes(query) ||
-      t.head.toLowerCase().includes(query) ||
+      (t.headUserId ?? "").toLowerCase().includes(query) ||
       t.id.toLowerCase().includes(query)
     )
   }, [filterStatus, searchQuery])
@@ -218,31 +209,23 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                       </TableHead>
                       <TableHead
                         className="px-4 py-4 font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
-                        onClick={() => handleSort("head")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Department Head
-                          <SortIcon columnKey="head" />
+                        onClick={() => handleSort("headUserId")}
+                       >
+                         <div className="flex items-center gap-2">
+                           Department Head
+                           <SortIcon columnKey="headUserId" />
                         </div>
                       </TableHead>
                       <TableHead
                         className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
-                        onClick={() => handleSort("members")}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          Members
-                          <SortIcon columnKey="members" />
+                        onClick={() => handleSort("memberIds")}
+                       >
+                         <div className="flex items-center justify-center gap-2">
+                           Members
+                           <SortIcon columnKey="memberIds" />
                         </div>
                       </TableHead>
-                      <TableHead
-                        className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
-                        onClick={() => handleSort("projects")}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          Projects
-                          <SortIcon columnKey="projects" />
-                        </div>
-                      </TableHead>
+
                       <TableHead
                         className="px-4 py-4 text-center font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors group"
                         onClick={() => handleSort("status")}
@@ -270,25 +253,20 @@ export function TeamsTableView({ onTeamClick }: { onTeamClick: (team: any) => vo
                             <span className="font-medium">{team.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-muted-foreground">{team.head}</TableCell>
+                        <TableCell className="px-4 py-4 text-muted-foreground">{team.headUserId ?? "—"}</TableCell>
                         <TableCell className="px-4 py-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             <UsersIcon className="size-3.5 text-slate-600" />
-                            <span className="font-medium">{team.members}</span>
+                            <span className="font-medium">{team.memberIds?.length ?? 0}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <BarChart3Icon className="size-3.5 text-slate-600" />
-                            <span className="font-medium">{team.projects}</span>
-                          </div>
-                        </TableCell>
+
                         <TableCell className="px-4 py-4 text-center">
                           <Badge
-                            variant={team.status === "Active" ? "default" : "secondary"}
-                            className={cn(
-                              "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
-                              team.status === "Active" ? "bg-bg-primary text-primary-foreground" : "bg-emerald-200 text-slate-700"
+                            variant={team.status === "active" ? "default" : "secondary"}
+                             className={cn(
+                               "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
+                               team.status === "active" ? "bg-bg-primary text-primary-foreground" : "bg-emerald-200 text-slate-700"
                             )}
                           >
                             {team.status}

@@ -38,11 +38,7 @@ export function NavMain({
   label?: string
 }) {
   const pathname = usePathname()
-  const isRootSection = (url: string) => url.split("/").filter(Boolean).length <= 1
-  const isActiveUrl = (url: string) =>
-    isRootSection(url)
-      ? pathname === url
-      : pathname === url || pathname.startsWith(`${url}/`)
+  const isActiveUrl = (url: string) => pathname === url
 
   // Track which collapsibles are open
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
@@ -70,7 +66,6 @@ export function NavMain({
         {items.map((item) => {
           const isActive =
             isActiveUrl(item.url) ||
-            item.items?.some((subItem) => isActiveUrl(subItem.url)) ||
             (item.isActive && pathname === item.url)
 
           if (!item.items?.length) {
@@ -98,7 +93,7 @@ export function NavMain({
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title} isActive={isActive} asChild>
+                  <SidebarMenuButton tooltip={item.title} isActive={false} asChild>
                     <Link href={item.url}>
                       {item.icon}
                       <span>{item.title}</span>

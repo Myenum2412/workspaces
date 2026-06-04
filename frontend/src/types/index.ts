@@ -1,14 +1,30 @@
-/**
- * Shared TypeScript types for all domain entities.
- * Single source of truth — mirrors backend Mongoose schemas.
- *
- * Replaces: src/lib/appwrite/types.ts
- */
+export const ROLES = {
+  ORG_ADMIN: "ORG_ADMIN",
+  WORKSPACE_MANAGER: "WORKSPACE_MANAGER",
+  MEMBER: "MEMBER",
+} as const;
 
-// ── Org ────────────────────────────────────────────────────────
+export type RoleName = (typeof ROLES)[keyof typeof ROLES];
+
+export const ROLE_HIERARCHY: Record<RoleName, number> = {
+  [ROLES.MEMBER]: 1,
+  [ROLES.WORKSPACE_MANAGER]: 3,
+  [ROLES.ORG_ADMIN]: 4,
+};
+
+export const ROLE_DISPLAY: Record<RoleName, string> = {
+  [ROLES.ORG_ADMIN]: "Organization Admin",
+  [ROLES.WORKSPACE_MANAGER]: "Workspace Manager",
+  [ROLES.MEMBER]: "Member",
+};
 
 export type OrgRole = "owner" | "admin" | "manager" | "staff" | "member" | "operator" | "viewer";
-export type MemberStatus = "active" | "inactive" | "pending" | "suspended";
+
+export type EmployeeStatus =
+  | "active" | "inactive" | "suspended" | "terminated" | "archived";
+
+export type EmploymentType =
+  | "full_time" | "part_time" | "contract" | "intern" | "freelance";
 
 export interface Organization {
   id: string;
@@ -22,6 +38,7 @@ export interface Organization {
   logoUrl?: string;
   industry?: string;
   size?: string;
+  status: "active" | "suspended" | "archived";
   hrSettings?: Record<string, unknown>;
   themeSettings?: Record<string, unknown>;
   createdAt?: string;
@@ -29,67 +46,53 @@ export interface Organization {
   deletedAt?: string | null;
 }
 
-// ── User / Staff ───────────────────────────────────────────────
-
-export type StaffStatus = "active" | "inactive" | "suspended" | "pending" | "removed" | "Deleted" | "Active" | "On Leave" | string;
-export type EmploymentType = "Full Time" | "Part Time" | "Contract" | "Intern" | "Freelance" | string;
-
 export interface UserProfile {
   id: string;
   userId: string;
-  firstName: string;
-  lastName?: string | null;
+  organizationId: string;
+  workspaceId?: string | null;
+  roleId?: string;
+  role: RoleName;
   email: string;
-  phone?: string | null;
-  designation?: string | null;
-  department?: string | null;
-  avatarUrl?: string | null;
-  bio?: string | null;
+  firstName: string;
+  lastName: string;
+  name: string;
+  phone?: string;
+  designation?: string;
+  department?: string;
+  avatarUrl?: string;
+  bio?: string;
   expertise?: string[];
-  organizationId?: string | null;
-  role?: string | null;
-  status?: StaffStatus | null;
-  nickname?: string | null;
-  empId?: string | null;
-  joiningDate?: string | null;
-  mobile?: string | null;
-  employmentType?: EmploymentType | null;
-  currentExperience?: string | null;
-  totalExperience?: string | null;
-  dob?: string | null;
-  gender?: string | null;
-  maritalStatus?: string | null;
-  sourceOfHire?: string | null;
-  pan?: string | null;
-  aadhaar?: string | null;
-  uan?: string | null;
-  presentAddress?: string | null;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postalCode?: string;
-  };
-  permanentAddress?: string | null;
-  personalPhone?: string | null;
-  personalEmail?: string | null;
-  emailVerified?: boolean;
-  phoneVerified?: boolean;
-  profileCompletion?: number;
-  lastLogin?: string;
+  empId?: string;
+  employmentType?: EmploymentType;
+  status: EmployeeStatus;
+  teamIds?: string[];
+  joiningDate?: string;
+  terminationDate?: string | null;
+  terminationReason?: string | null;
+  lastLogin?: string | null;
   loginCount?: number;
+  emailVerified?: boolean;
+  profileCompletion?: number;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
 }
 
+export interface EmployeeStats {
+  totalEmployees: number;
+  activeNow: number;
+  onLeave: number;
+  assignedTasks: number;
+}
+
 export interface OrgMember {
   id: string;
   organizationId: string;
+  workspaceId?: string | null;
   userId: string;
-  role: OrgRole;
-  status: MemberStatus;
+  role: RoleName;
+  status: string;
   invitedBy?: string;
   joinedAt?: string;
   createdAt?: string;
@@ -109,34 +112,32 @@ export interface OrgInvitation {
   deletedAt?: string | null;
 }
 
-export interface UIStaff extends UserProfile {
-  avatar?: string | null;
-  orgId?: string | null;
-  joinedAt?: string | null;
-  category?: string | null;
-  activeHours?: string | null;
-  screenTime?: string | null;
-  workExperience?: unknown[];
-  educationDetails?: unknown[];
-  dependentDetails?: unknown[];
-  socialLinks?: Record<string, string>;
-  exitDate?: string | null;
-  [key: string]: unknown;
-}
+export type TaskStatus =
+  | "pending" | "assigned" | "in_progress" | "under_review"
+  | "completed" | "rejected" | "on_hold";
 
-// ── Task ───────────────────────────────────────────────────────
+export type TaskPriority = "low" | "medium" | "high" | "urgent";
+export type TaskAssignType = "member" | "team";
 
 export interface Task {
   id: string;
-  taskNo: string;
-  task: string;
-  assignedTo: string;
-  delegatedBy: string;
-  status: string;
-  priority: string;
-  dueDate: string;
-  finalStatus: string;
   organizationId: string;
+  workspaceId?: string;
+  taskNo: string;
+  title: string;
+  description?: string;
+  assignedType: TaskAssignType;
+  assignedTo: string;
+  assignedBy: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  startDate?: string;
+  dueDate?: string;
+  completedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  tags?: string[];
+  createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
@@ -144,14 +145,15 @@ export interface Task {
 
 export interface SavedTask {
   id: string;
-  title: string;
-  description: string;
-  priority: string;
-  taskType: string;
-  assignedType: string;
-  estimatedTime: string;
-  templateCategory: string;
   organizationId: string;
+  workspaceId?: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  taskType?: string;
+  assignedType?: string;
+  estimatedTime?: string;
+  templateCategory?: string;
   createdAt?: string;
   deletedAt?: string | null;
 }
@@ -164,39 +166,40 @@ export interface TaskStats {
   postponedTask: number;
   repeatedTask: number;
   overdueTask: number;
+  totalTask?: number;
 }
-
-// ── Team ───────────────────────────────────────────────────────
 
 export interface Team {
   id: string;
-  name: string;
-  head: string;
-  members: number;
-  projects: number;
-  status: string;
   organizationId: string;
+  workspaceId?: string;
+  name: string;
+  description?: string;
+  headUserId?: string;
+  memberIds?: string[];
+  status: "active" | "inactive" | "archived";
   createdAt?: string;
+  updatedAt?: string;
   deletedAt?: string | null;
 }
 
-// ── Branch ─────────────────────────────────────────────────────
-
 export interface Branch {
   id: string;
+  organizationId: string;
+  workspaceId?: string;
   name: string;
   address?: string;
   managerName?: string;
   status: string;
-  organizationId: string;
   createdAt?: string;
+  updatedAt?: string;
   deletedAt?: string | null;
 }
 
-// ── Client ─────────────────────────────────────────────────────
-
 export interface Client {
   id: string;
+  organizationId: string;
+  workspaceId?: string;
   name: string;
   contactPerson?: string;
   email?: string;
@@ -204,49 +207,36 @@ export interface Client {
   status: string;
   industry?: string;
   location?: string;
-  logoId?: string;
-  organizationId: string;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
 }
 
-// ── Master Data ────────────────────────────────────────────────
-
 export interface MasterData {
   id: string;
+  organizationId: string;
+  workspaceId?: string;
   name: string;
   values: string[];
-  organizationId: string;
   createdAt?: string;
   deletedAt?: string | null;
 }
 
-// ── File ───────────────────────────────────────────────────────
-
 export interface FileRecord {
   id: string;
-  fileName: string;
-  originalName: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedBy: string;
   organizationId: string;
-  storageKey: string;
+  workspaceId?: string;
+  userId: string;
+  userName?: string;
+  filename: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  url: string;
+  key: string;
+  folder: string;
   createdAt?: string;
 }
-
-// ── Presence ───────────────────────────────────────────────────
-
-export interface UserPresence {
-  userId: string;
-  status: "Online" | "Offline" | "Away" | "Leave";
-  lastSeen?: string;
-  device?: string;
-  ipAddress?: string;
-}
-
-// ── Auth session ───────────────────────────────────────────────
 
 export interface AuthSession {
   user: {
@@ -257,15 +247,43 @@ export interface AuthSession {
     name: string;
     avatarUrl?: string;
     emailVerified?: boolean;
-    role?: string;
+    role: RoleName;
     organizationId?: string;
+    workspaceId?: string | null;
   };
   profile?: UserProfile | null;
   organization: Organization | null;
-  membership: { role: string; organizationId: string } | null;
+  membership: {
+    role: RoleName;
+    organizationId: string;
+    workspaceId?: string | null;
+  } | null;
 }
 
-// ── API response wrappers ──────────────────────────────────────
+export interface UIEmployee extends UserProfile {
+  avatar?: string | null;
+  orgId?: string | null;
+  joinedAt?: string | null;
+  nickname?: string | null;
+  category?: string | null;
+  activeHours?: string | null;
+  screenTime?: string | null;
+  mobile?: string | null;
+  workExperience?: unknown[];
+  educationDetails?: unknown[];
+  dependentDetails?: unknown[];
+  socialLinks?: Record<string, string>;
+  exitDate?: string | null;
+  [key: string]: unknown;
+}
+
+export interface UserPresence {
+  userId: string;
+  status: "Online" | "Offline" | "Away" | "Leave";
+  lastSeen?: string;
+  device?: string;
+  ipAddress?: string;
+}
 
 export interface PaginatedResponse<T> {
   success: boolean;
@@ -274,9 +292,52 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   pages: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
 }
 
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
+  meta?: {
+    requestId?: string;
+    timestamp: string;
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+}
+
+export interface OrgDashboard {
+  workspaces: { total: number; active: number; suspended: number };
+  members: { total: number; active: number; terminated: number; statusBreakdown: Record<string, number> };
+  teams: { total: number };
+  projects: { total: number; active: number };
+  tasks: { total: number; completed: number; inProgress: number; overdue: number; pending: number; completionRate: number };
+  recentActivity: unknown[];
+}
+
+export interface WorkspaceDashboard {
+  members: { total: number; active: number };
+  teams: { total: number };
+  projects: { total: number; active: number };
+  tasks: { total: number; byStatus: Record<string, number>; overdue: number };
+  topMembers: unknown[];
+  recentActivity: unknown[];
+  overdueTasks: Task[];
+}
+
+export interface MemberDashboard {
+  user: UserProfile;
+  tasks: { total: number; byStatus: Record<string, number>; overdue: number; upcoming: Task[] };
+  teams: Team[];
+  projects: unknown[];
+  attendance?: unknown;
+  notifications: { unread: number };
+  recentActivity: unknown[];
 }

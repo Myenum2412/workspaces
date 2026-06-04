@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { authenticate, AuthRequest, requireRole } from "../middleware/auth.js";
+import { authenticate, AuthRequest } from "../middleware/auth.js";
+import { requireRole } from "../middleware/rbac.js";
 import { Branch, OrgMember } from "../models/index.js";
 import { catchAsync } from "../core/utils/catchAsync.js";
 import { NotFoundError } from "../core/errors/AppError.js";
@@ -28,7 +29,7 @@ router.get("/:id", catchAsync(async (req, res) => {
 }));
 
 router.post("/",
-  requireRole("admin", "owner"),
+  requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"),
   validateBody(createBranchSchema),
   catchAsync(async (req, res) => {
     const oid = await orgId((req as AuthRequest).user!.userId);
@@ -38,7 +39,7 @@ router.post("/",
 );
 
 router.put("/:id",
-  requireRole("admin", "owner"),
+  requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"),
   validateBody(updateBranchSchema),
   catchAsync(async (req, res) => {
     const branch = await Branch.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: req.body }, { new: true, runValidators: true }).lean();
@@ -48,7 +49,7 @@ router.put("/:id",
 );
 
 router.delete("/:id",
-  requireRole("admin", "owner"),
+  requireRole("ORG_ADMIN", "WORKSPACE_MANAGER"),
   catchAsync(async (req, res) => {
     const branch = await Branch.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { $set: { deletedAt: new Date().toISOString() } }, { new: true }).lean();
     if (!branch) throw new NotFoundError("Branch");

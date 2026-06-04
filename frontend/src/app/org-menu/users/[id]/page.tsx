@@ -27,7 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
-import { staffService, type UIStaff } from "@/lib/services/staff-service"
+import { employeeService, type UIEmployee } from "@/lib/services/employee-service"
 
 import { DeleteUserDialog } from "../delete-user-dialog"
 import { toast } from "sonner"
@@ -68,18 +68,18 @@ function ProfileField({ label, value, field, isEditing, onChange, type = "text" 
   )
 }
 
-export default function StaffProfilePage() {
+export default function EmployeeProfilePage() {
   const params = useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
   const userId = params.id as string
 
   const [isEditing, setIsEditing] = React.useState(false)
-  const [editedUser, setEditedUser] = React.useState<UIStaff | null>(null)
+  const [editedUser, setEditedUser] = React.useState<UIEmployee | null>(null)
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users-all"],
-    queryFn: () => staffService.getAllStaff(),
+    queryFn: () => employeeService.getAllEmployees(),
   })
 
   const user = React.useMemo(() => users.find((u) => u.id === userId), [users, userId])
@@ -97,7 +97,7 @@ export default function StaffProfilePage() {
   const handleSave = async () => {
     if (!editedUser) return
     try {
-      await staffService.updateStaff(userId, editedUser as Record<string, any>)
+      await employeeService.updateEmployee(userId, editedUser as Record<string, any>)
       toast.success("Profile updated successfully")
       setIsEditing(false)
       queryClient.invalidateQueries({ queryKey: ["users-all"] })
@@ -213,9 +213,9 @@ export default function StaffProfilePage() {
               <ProfileField label="Designation" value={editedUser.designation} field="designation" isEditing={isEditing} onChange={handleChange} />
               <ProfileField label="Department" value={editedUser.department} field="department" isEditing={isEditing} onChange={handleChange} />
               <ProfileField label="Employment Type" value={editedUser.employmentType} field="employmentType" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Source of Hire" value={editedUser.sourceOfHire} field="sourceOfHire" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Current Experience" value={editedUser.currentExperience} field="currentExperience" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Total Experience" value={editedUser.totalExperience} field="totalExperience" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Source of Hire" value={editedUser.sourceOfHire as string | null} field="sourceOfHire" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Current Experience" value={editedUser.currentExperience as string | null} field="currentExperience" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Total Experience" value={editedUser.totalExperience as string | null} field="totalExperience" isEditing={isEditing} onChange={handleChange} />
             </CardContent>
           </Card>
 
@@ -230,8 +230,8 @@ export default function StaffProfilePage() {
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <ProfileField label="Work Email" value={editedUser.email} field="email" isEditing={isEditing} onChange={handleChange} type="email" />
               <ProfileField label="Work Phone" value={editedUser.mobile} field="mobile" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Personal Email" value={editedUser.personalEmail} field="personalEmail" isEditing={isEditing} onChange={handleChange} type="email" />
-              <ProfileField label="Personal Phone" value={editedUser.personalPhone} field="personalPhone" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Personal Email" value={editedUser.personalEmail as string | null} field="personalEmail" isEditing={isEditing} onChange={handleChange} type="email" />
+              <ProfileField label="Personal Phone" value={editedUser.personalPhone as string | null} field="personalPhone" isEditing={isEditing} onChange={handleChange} />
             </CardContent>
           </Card>
 
@@ -247,17 +247,17 @@ export default function StaffProfilePage() {
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Present Address</p>
                 {isEditing ? (
-                  <Textarea value={editedUser.presentAddress ?? ""} onChange={(e) => handleChange("presentAddress", e.target.value)} className="text-sm min-h-[80px]" />
+                  <Textarea value={(editedUser.presentAddress as string | null | undefined) ?? ""} onChange={(e) => handleChange("presentAddress", e.target.value)} className="text-sm min-h-[80px]" />
                 ) : (
-                  <p className="text-sm font-semibold">{editedUser.presentAddress}</p>
+                  <p className="text-sm font-semibold">{editedUser.presentAddress as React.ReactNode}</p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Permanent Address</p>
                 {isEditing ? (
-                  <Textarea value={editedUser.permanentAddress ?? ""} onChange={(e) => handleChange("permanentAddress", e.target.value)} className="text-sm min-h-[80px]" />
+                  <Textarea value={(editedUser.permanentAddress as string | null | undefined) ?? ""} onChange={(e) => handleChange("permanentAddress", e.target.value)} className="text-sm min-h-[80px]" />
                 ) : (
-                  <p className="text-sm font-semibold">{editedUser.permanentAddress}</p>
+                  <p className="text-sm font-semibold">{editedUser.permanentAddress as React.ReactNode}</p>
                 )}
               </div>
             </CardContent>
@@ -272,9 +272,9 @@ export default function StaffProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <ProfileField label="Date of Birth" value={editedUser.dob} field="dob" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Gender" value={editedUser.gender} field="gender" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Marital Status" value={editedUser.maritalStatus} field="maritalStatus" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Date of Birth" value={editedUser.dob as string | null} field="dob" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Gender" value={editedUser.gender as string | null} field="gender" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Marital Status" value={editedUser.maritalStatus as string | null} field="maritalStatus" isEditing={isEditing} onChange={handleChange} />
               <ProfileField label="Joining Date" value={user.joiningDate} field="joiningDate" isEditing={false} onChange={handleChange} />
             </CardContent>
           </Card>
@@ -288,9 +288,9 @@ export default function StaffProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <ProfileField label="PAN" value={editedUser.pan} field="pan" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="Aadhaar" value={editedUser.aadhaar} field="aadhaar" isEditing={isEditing} onChange={handleChange} />
-              <ProfileField label="UAN" value={editedUser.uan} field="uan" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="PAN" value={editedUser.pan as string | null} field="pan" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="Aadhaar" value={editedUser.aadhaar as string | null} field="aadhaar" isEditing={isEditing} onChange={handleChange} />
+              <ProfileField label="UAN" value={editedUser.uan as string | null} field="uan" isEditing={isEditing} onChange={handleChange} />
             </CardContent>
           </Card>
 

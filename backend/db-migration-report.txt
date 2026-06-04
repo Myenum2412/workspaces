@@ -1,0 +1,224 @@
+======================================================================
+  MONGODB CLUSTER — FINAL POST-MIGRATION REPORT
+======================================================================
+
+  Cluster: MongoDB 8.0.24 (Atlas)
+  Database: workspace
+  Total Collections: 23
+  Report Generated: 2026-06-04T06:45:32.201Z
+
+──────────────────────────────────────────────────────────────────────
+  COLLECTIONS STATUS
+──────────────────────────────────────────────────────────────────────
+
+  📁 auditlogs
+     Documents: 0 | Indexes: 5 | Size: 0.0 KB
+       _id_: {"_id":1}
+       createdAt_ttl: {"createdAt":1} [TTL(7776000s)]
+       organizationId_1: {"organizationId":1}
+       action_1: {"action":1}
+       orgId_createdAt_-1: {"organizationId":1,"createdAt":-1}
+
+  📁 billingusers
+     Documents: 0 | Indexes: 4 | Size: 0.0 KB
+       _id_: {"_id":1}
+       userId_1: {"userId":1} [UNIQUE]
+       organizationId_1: {"organizationId":1}
+       deletedAt_1: {"deletedAt":1}
+
+  📁 branches
+     Documents: 0 | Indexes: 4 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       deletedAt_1: {"deletedAt":1}
+
+  📁 brandingconfigs
+     Documents: 0 | Indexes: 2 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_unique: {"organizationId":1} [UNIQUE]
+
+  📁 brandinghistories
+     Documents: 0 | Indexes: 2 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+
+  📁 clients
+     Documents: 0 | Indexes: 4 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       deletedAt_1: {"deletedAt":1}
+
+  📁 filerecords
+     Documents: 0 | Indexes: 5 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       folder_1: {"folder":1}
+       orgId_folder_1: {"organizationId":1,"folder":1}
+
+  📁 logins
+     Documents: 0 | Indexes: 2 | Size: 0.0 KB
+       _id_: {"_id":1}
+       userId_createdAt_-1: {"userId":1,"createdAt":-1}
+
+  📁 masterdatas
+     Documents: 0 | Indexes: 4 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       deletedAt_1: {"deletedAt":1}
+
+  📁 organizations
+     Documents: 26 | Indexes: 2 | Size: 9.0 KB
+       _id_: {"_id":1}
+       status_1: {"status":1}
+     Sample data:
+       {"_id":"6a1431e7d5df7f0dce19e30d","name":"org-menu","category":"Software","createdAt":"2026-05-25T11:26:31.367Z","companyRange":"1-10","deletedAt":"null","hrSettings":"{}","industry":"","logoUrl":"","ownerEmail":"","ownerId":"","settings":"{}","size":"","status":"active","themeSettings":"{}"}
+       {"_id":"02320917-db47-4035-bec1-84ee6d2aa576","name":"Final Corp","category":"Other","companyRange":"10-50","createdAt":"Mon May 25 2026 17:11:17 GMT+0530 (India Standard ","updatedAt":"\"2026-05-25T11:41:17.000Z\"","deletedAt":"null","hrSettings":"{}","industry":"","logoUrl":"","ownerEmail":"","ownerId":"","settings":"{}","size":"","status":"active","themeSettings":"{}"}
+
+  📁 orginvitations
+     Documents: 0 | Indexes: 3 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       token_unique: {"token":1} [UNIQUE]
+
+  📁 orgmembers
+     Documents: 19 | Indexes: 4 | Size: 5.7 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       orgId_userId_unique: {"organizationId":1,"userId":1} [UNIQUE]
+     Sample data:
+       {"_id":"6a1431e7d5df7f0dce19e30e","organizationId":"6a1431e7d5df7f0dce19e30d","userId":"6a1431e7d5df7f0dce19e30c","role":"ORG_ADMIN","joinedAt":"2026-05-25T11:26:31.441Z","status":"active","deletedAt":"null","invitedBy":"","workspaceId":"null"}
+       {"_id":"6ab64944-50ae-494f-86af-75daefd527a1","organizationId":"02320917-db47-4035-bec1-84ee6d2aa576","userId":"3b3fd866-7df6-4d45-a3e5-3c2335228912","role":"ORG_ADMIN","status":"active","joinedAt":"2026-05-25T11:41:17.913Z","createdAt":"\"2026-05-25T11:41:17.913Z\"","updatedAt":"\"2026-05-25T11:41:17.913Z\"","deletedAt":"null","invitedBy":"","workspaceId":"null"}
+
+  📁 profileactivities
+     Documents: 0 | Indexes: 3 | Size: 0.0 KB
+       _id_: {"_id":1}
+       userId_1: {"userId":1}
+       userId_timestamp_-1: {"userId":1,"timestamp":-1}
+
+  📁 profilehistories
+     Documents: 0 | Indexes: 3 | Size: 0.0 KB
+       _id_: {"_id":1}
+       userId_1: {"userId":1}
+       userId_createdAt_-1: {"userId":1,"createdAt":-1}
+
+  📁 savedtasks
+     Documents: 0 | Indexes: 4 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       deletedAt_1: {"deletedAt":1}
+
+  📁 screentimes
+     Documents: 0 | Indexes: 5 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       userId_1: {"userId":1}
+       org_ws_user_date_unique: {"organizationId":1,"workspaceId":1,"userId":1,"date":1} [UNIQUE]
+
+  📁 tasks
+     Documents: 0 | Indexes: 7 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       ws_status_1: {"workspaceId":1,"status":1}
+       ws_assignedTo_1: {"workspaceId":1,"assignedTo":1}
+       ws_taskNo_unique: {"workspaceId":1,"taskNo":1} [UNIQUE]
+       deletedAt_1: {"deletedAt":1}
+
+  📁 teams
+     Documents: 0 | Indexes: 4 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       deletedAt_1: {"deletedAt":1}
+
+  📁 userprofiles
+     Documents: 1 | Indexes: 8 | Size: 0.6 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       workspaceId_1: {"workspaceId":1}
+       userId_unique: {"userId":1} [UNIQUE]
+       org_ws_status_1: {"organizationId":1,"workspaceId":1,"status":1}
+       orgId_email_unique: {"organizationId":1,"email":1} [UNIQUE]
+       empId_unique: {"empId":1} [UNIQUE]
+       deletedAt_1: {"deletedAt":1}
+     Sample data:
+       {"_id":"89284b07-7d21-4173-b3d9-a15a826f94bc","userId":"89284b07-7d21-4173-b3d9-a15a826f94bc","firstName":"Developer","lastName":"Admin","email":"developer@myenum.in","passwordHash":"***","designation":"Admin","expertise":"[]","organizationId":"785f83d6-5b0e-4a5f-98b9-7463d6f9ad66","status":"active","emailVerified":"true","createdAt":"\"2026-05-26T11:47:26.568Z\"","updatedAt":"\"2026-05-26T11:47:26.568Z\"","avatarUrl":"","bio":"","deletedAt":"null","department":"","employmentType":"full_time","joiningDate":"","lastLogin":"null","loginCount":"0","phone":"","teamIds":"[]","terminationDate":"null","terminationReason":"null","workspaceId":"null"}
+
+  📁 users
+     Documents: 0 | Indexes: 2 | Size: 0.0 KB
+       _id_: {"_id":1}
+       email_unique: {"email":1} [UNIQUE]
+
+  📁 userstatus
+     Documents: 0 | Indexes: 3 | Size: 0.0 KB
+       _id_: {"_id":1}
+       userId_unique: {"userId":1} [UNIQUE]
+       status_1: {"status":1}
+
+  📁 userstatushistories
+     Documents: 0 | Indexes: 2 | Size: 0.0 KB
+       _id_: {"_id":1}
+       userId_loginTimestamp_-1: {"userId":1,"loginTimestamp":-1}
+
+  📁 workspaces
+     Documents: 0 | Indexes: 3 | Size: 0.0 KB
+       _id_: {"_id":1}
+       organizationId_1: {"organizationId":1}
+       deletedAt_1: {"deletedAt":1}
+
+──────────────────────────────────────────────────────────────────────
+  DATA INTEGRITY CHECKS
+──────────────────────────────────────────────────────────────────────
+
+  Organizations (26):
+    All have status field: ✅
+    All have ownerEmail: ✅
+    All have ownerId: ✅
+    No __v field: ✅
+    Active: 26 | Other: 0
+
+  Org Members (19):
+    All roles valid: ❌
+    All have workspaceId: ✅
+    All have invitedBy: ✅
+    No __v field: ✅
+    Role distribution: {"ORG_ADMIN":15,"staff":4}
+
+  User Profiles (1):
+    Has all model fields: ✅
+    No __v field: ✅
+    Email: developer@myenum.in | Status: active | Org: 785f83d6-5b0e-4a5f-98b9-7463d6f9ad66
+
+  Test data remaining: ✅ None
+
+──────────────────────────────────────────────────────────────────────
+  MIGRATION SUMMARY
+──────────────────────────────────────────────────────────────────────
+  Total collections: 23
+  Total documents: 46
+  Total indexes: 85
+  Collections created: 11 (workspaces, users, logins, userstatus, userstatushistories, auditlogs, brandingconfigs, brandinghistories, filerecords, profilehistories, profileactivities)
+  Indexes created: 60
+  Test orgs removed: 7
+  Members removed: 3
+  Docs migrated: 46 (organizations:26, orgmembers:19, userprofiles:1)
+  Schema fixes: role "owner"→"ORG_ADMIN" (15 docs), added missing fields, removed __v
+
+──────────────────────────────────────────────────────────────────────
+  RECOMMENDATIONS
+──────────────────────────────────────────────────────────────────────
+  1. Run seed service to create default admin org/user if not exists
+  2. Verify application connects and CRUD operations work
+  3. Set up MongoDB Atlas backups if not already configured
+  4. Monitor slow queries via Atlas Performance Advisor
+  5. Consider adding schema validation rules at DB level
+  6. Set up TTL index monitoring for auditlogs cleanup
+
+======================================================================

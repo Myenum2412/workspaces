@@ -146,32 +146,34 @@ export default function ProfilePage() {
     enabled: !!sessionData,
   });
 
-  const profileRaw = profileRes?.profile;
+  const profileRaw = profileRes?.profile as Record<string, unknown> | undefined;
 
   // ── Flatten profile for form ──
   const profile: ProfileForm = React.useMemo(() => {
     if (!profileRaw) return emptyProfile;
+    const p = profileRaw as Record<string, unknown>;
+    const addr = p.address as Record<string, unknown> | undefined;
     return {
-      firstName: profileRaw.firstName ?? "",
-      lastName: profileRaw.lastName ?? "",
-      email: profileRaw.email ?? "",
-      phone: profileRaw.phone ?? "",
-      designation: profileRaw.designation ?? "",
-      department: profileRaw.department ?? "",
-      bio: profileRaw.bio ?? "",
-      personalEmail: profileRaw.personalEmail ?? "",
-      personalPhone: profileRaw.personalPhone ?? "",
-      avatarUrl: profileRaw.avatarUrl ?? "",
-      gender: profileRaw.gender ?? "",
-      maritalStatus: profileRaw.maritalStatus ?? "",
-      dob: profileRaw.dob ?? "",
-      addressStreet: profileRaw.address?.street ?? "",
-      addressCity: profileRaw.address?.city ?? "",
-      addressState: profileRaw.address?.state ?? "",
-      addressCountry: profileRaw.address?.country ?? "",
-      addressPostalCode: profileRaw.address?.postalCode ?? "",
-      permanentAddress: profileRaw.permanentAddress ?? "",
-      expertise: Array.isArray(profileRaw.expertise) ? profileRaw.expertise.join(", ") : "",
+      firstName: (p.firstName as string) ?? "",
+      lastName: (p.lastName as string) ?? "",
+      email: (p.email as string) ?? "",
+      phone: (p.phone as string) ?? "",
+      designation: (p.designation as string) ?? "",
+      department: (p.department as string) ?? "",
+      bio: (p.bio as string) ?? "",
+      personalEmail: (p.personalEmail as string) ?? "",
+      personalPhone: (p.personalPhone as string) ?? "",
+      avatarUrl: (p.avatarUrl as string) ?? "",
+      gender: (p.gender as string) ?? "",
+      maritalStatus: (p.maritalStatus as string) ?? "",
+      dob: (p.dob as string) ?? "",
+      addressStreet: (addr?.street as string) ?? "",
+      addressCity: (addr?.city as string) ?? "",
+      addressState: (addr?.state as string) ?? "",
+      addressCountry: (addr?.country as string) ?? "",
+      addressPostalCode: (addr?.postalCode as string) ?? "",
+      permanentAddress: (p.permanentAddress as string) ?? "",
+      expertise: Array.isArray(p.expertise) ? (p.expertise as string[]).join(", ") : "",
     };
   }, [profileRaw]);
 
@@ -181,7 +183,7 @@ export default function ProfilePage() {
   }, [profile]);
 
   // ── Profile completion ──
-  const completion = profileRaw?.profileCompletion ?? 0;
+  const completion = (profileRaw?.profileCompletion as number) ?? 0;
 
   // ── Status history ──
   const { data: statusHistory } = useQuery({
@@ -483,9 +485,9 @@ export default function ProfilePage() {
                       <Badge variant={isEmailVerified || otpSuccess ? "secondary" : "outline"}>
                         {(isEmailVerified || otpSuccess) ? "Email verified" : "Email not verified"}
                       </Badge>
-                      {profileRaw?.status && (
-                        <Badge variant={profileRaw.status === "active" ? "secondary" : profileRaw.status === "suspended" ? "destructive" : "outline"}>
-                          {profileRaw.status}
+                      {(profileRaw?.status as string) && (
+                        <Badge variant={(profileRaw?.status as string) === "active" ? "secondary" : (profileRaw?.status as string) === "suspended" ? "destructive" : "outline"}>
+                          {(profileRaw?.status as string)}
                         </Badge>
                       )}
                     </div>
@@ -534,8 +536,8 @@ export default function ProfilePage() {
                     <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-primary capitalize">{profileRaw?.status ?? "active"}</div>
-                    <p className="text-xs text-foreground mt-1 font-medium">Created {formatDate(profileRaw?.createdAt)}</p>
+                    <div className="text-2xl font-bold text-primary capitalize">{(profileRaw?.status as string) ?? "active"}</div>
+                    <p className="text-xs text-foreground mt-1 font-medium">Created {formatDate(profileRaw?.createdAt as string)}</p>
                   </CardContent>
                 </Card>
                 <Card className="overflow-hidden border-primary/20 bg-card">
@@ -544,8 +546,8 @@ export default function ProfilePage() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-primary">{formatDate(profileRaw?.lastLogin)}</div>
-                    <p className="text-xs text-foreground mt-1 font-medium">{profileRaw?.loginCount ?? 0} total logins</p>
+                    <div className="text-2xl font-bold text-primary">{formatDate(profileRaw?.lastLogin as string)}</div>
+                    <p className="text-xs text-foreground mt-1 font-medium">{(profileRaw?.loginCount as number) ?? 0} total logins</p>
                   </CardContent>
                 </Card>
                 <Card className="overflow-hidden border-primary/20 bg-card">
@@ -566,8 +568,8 @@ export default function ProfilePage() {
                     <History className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-primary">v{profileRaw?.profileVersion ?? 1}</div>
-                    <p className="text-xs text-foreground mt-1 font-medium">Updated {formatDate(profileRaw?.updatedAt)}</p>
+                    <div className="text-2xl font-bold text-primary">v{(profileRaw?.profileVersion as number) ?? 1}</div>
+                    <p className="text-xs text-foreground mt-1 font-medium">Updated {formatDate(profileRaw?.updatedAt as string)}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -711,7 +713,7 @@ export default function ProfilePage() {
               </Card>
 
               {/* Device Info */}
-              {profileRaw?.deviceInfo && profileRaw.deviceInfo.length > 0 && (
+              {(profileRaw?.deviceInfo as unknown[] | undefined)?.length ? (
                 <Card className="border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><SmartphoneIcon className="h-4 w-4" /> Devices</CardTitle>
@@ -719,7 +721,7 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {profileRaw.deviceInfo.slice(-5).reverse().map((d: any, i: number) => (
+                      {(profileRaw?.deviceInfo as unknown[]).slice(-5).reverse().map((d: any, i: number) => (
                         <div key={i} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
                           <SmartphoneIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -732,7 +734,7 @@ export default function ProfilePage() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>

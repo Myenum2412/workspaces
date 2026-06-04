@@ -8,6 +8,7 @@ import mongoSanitize from "express-mongo-sanitize";
 import { AuthRequest } from "./auth.js";
 import { isSuperAdmin } from "../config/env.js";
 import { AuthorizationError } from "../core/errors/AppError.js";
+// Note: requireRole is NOT defined here — use requireRole from rbac.ts or auth.ts
 import { env } from "../config/env.js";
 
 // ── Helmet ────────────────────────────────────────────────────
@@ -123,41 +124,13 @@ export function mongoSanitizeMiddleware(req: Request, _res: Response, next: Next
   })(req, _res, next);
 }
 
-// ── RBAC ──────────────────────────────────────────────────────
-
-const ROLE_HIERARCHY: Record<string, number> = {
-  viewer: 0,
-  member: 1,
-  operator: 2,
-  admin: 3,
-  owner: 4,
-};
-
-export function requireRole(...allowedRoles: string[]) {
-  return (req: Request, _res: Response, next: NextFunction) => {
-    const authReq = req as AuthRequest;
-    if (!authReq.user) {
-      return next(new AuthorizationError("Authentication required"));
-    }
-    const userLevel = ROLE_HIERARCHY[authReq.user.role] ?? -1;
-    const minLevel = Math.min(...allowedRoles.map((r) => ROLE_HIERARCHY[r] ?? 999));
-    if (userLevel < minLevel) {
-      return next(new AuthorizationError(
-        `Required role: ${allowedRoles.join(" or ")}. Your role: ${authReq.user.role}`
-      ));
-    }
-    next();
-  };
-}
-
-// ── Organization access check ─────────────────────────────────
+// ── Organization access check (super-admin bypass) ─────────────
 
 export function requireOrgAccess(req: Request, _res: Response, next: NextFunction) {
   const authReq = req as AuthRequest;
   if (!authReq.user) {
     return next(new AuthorizationError("Authentication required"));
   }
-  // Super admin bypass — uses env-based check
   if (isSuperAdmin(authReq.user.email)) return next();
   next();
 }

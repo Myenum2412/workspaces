@@ -38,7 +38,7 @@ export default function CeoPage() {
     queryKey: ["org-profiles", orgId],
     queryFn: async () => {
       try {
-        const res = await api.get<{ success: boolean; data: UserProfile[] }>("/api/staff");
+        const res = await api.get<{ success: boolean; data: UserProfile[] }>("/api/members"); // returns employees
         return res.data;
       } catch { return []; }
     },

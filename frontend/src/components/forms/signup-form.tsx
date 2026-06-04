@@ -96,7 +96,17 @@ export function SignupForm() {
       return
     }
 
-    mutation.mutate({ firstName, lastName, companyName, companyRange, email })
+    // Get CSRF token first, then submit
+    fetch(`${API_BASE_URL}/api/auth/csrf-token`, {
+      method: "GET",
+      credentials: "include",
+    }).then(() => {
+      // CSRF cookie is now set — proceed with registration
+      mutation.mutate({ firstName, lastName, companyName, companyRange, email })
+    }).catch(() => {
+      // Even if CSRF fetch fails, try submitting (backend may not require CSRF for register)
+      mutation.mutate({ firstName, lastName, companyName, companyRange, email })
+    })
   }
 
   // Success state — show password + countdown

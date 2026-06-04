@@ -10,6 +10,7 @@ export interface AuthPayload {
   userId: string;
   email: string;
   organizationId: string;
+  workspaceId: string | null;
   role: string;
 }
 
@@ -109,6 +110,7 @@ export function signRefreshToken(payload: AuthPayload, req?: Request): string {
     userId: payload.userId,
     email: payload.email,
     organizationId: payload.organizationId,
+    workspaceId: payload.workspaceId,
     role: payload.role,
     deviceInfo: req?.headers["user-agent"] || null,
     ipAddress: req?.ip || null,
@@ -165,6 +167,7 @@ export async function verifyRefreshToken(token: string): Promise<{ payload: Auth
       userId: record.userId as string,
       email: record.email as string,
       organizationId: record.organizationId as string,
+      workspaceId: (record as any).workspaceId ?? null,
       role: record.role as string,
     },
     tokenId: decoded.tokenId,
@@ -302,31 +305,9 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
   next();
 }
 
-/** Require specific roles (hierarchical) */
-export function requireRole(...allowedRoles: string[]): (req: Request, _res: Response, next: NextFunction) => void {
-  const ROLE_HIERARCHY: Record<string, number> = {
-    viewer: 0,
-    member: 1,
-    operator: 2,
-    admin: 3,
-    owner: 4,
-  };
-
-  return (req: Request, _res: Response, next: NextFunction) => {
-    const authReq = req as AuthRequest;
-    if (!authReq.user) {
-      return next(new AuthenticationError());
-    }
-
-    const userLevel = ROLE_HIERARCHY[authReq.user.role] ?? -1;
-    const minLevel = Math.min(...allowedRoles.map((r) => ROLE_HIERARCHY[r] ?? 999));
-
-    if (userLevel < minLevel) {
-      return next(new AuthorizationError(
-        `Required role: ${allowedRoles.join(" or ")}. Your role: ${authReq.user.role}`
-      ));
-    }
-
-    next();
-  };
-}
+/**
+ * Require specific roles (hierarchical).
+ * Hierarchy: MEMBER (1) < WORKSPACE_MANAGER (3) < ORG_ADMIN (4)
+ * Re-exported from rbac.ts for convenience — single source of truth.
+ */
+export { requireRole } from "./rbac.js";

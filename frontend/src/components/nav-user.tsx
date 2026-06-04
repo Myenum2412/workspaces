@@ -47,14 +47,19 @@ export function NavUser({
     staleTime: 30_000,
   });
 
-  const profile = profileRes?.profile;
+  const profile = profileRes?.profile as Record<string, unknown> | undefined;
 
   // Use profile data if available, else fallback to props
+  const p = profile ?? {};
+  const firstName = (p.firstName as string) ?? "";
+  const lastName = (p.lastName as string) ?? "";
+  const email = (p.email as string) ?? "";
+  const avatarUrl = (p.avatarUrl as string) ?? "";
   const displayName = profile
-    ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || profile.email
+    ? `${firstName} ${lastName}`.trim() || email
     : propUser.name;
-  const displayEmail = profile?.email ?? propUser.email;
-  const displayAvatar = profile?.avatarUrl ?? propUser.avatar;
+  const displayEmail = email || propUser.email;
+  const displayAvatar = avatarUrl || propUser.avatar;
 
   // Listen for global avatar update events from profile page
   useEffect(() => {

@@ -131,30 +131,30 @@ export const updateSavedTaskSchema = z.object({
   templateCategory: z.string().max(100).optional(),
 }).strict();
 
-// ── Staff ─────────────────────────────────────────────────────
+// ── Employee ───────────────────────────────────────────────────
 
-export const createStaffSchema = z.object({
+export const createEmployeeSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(8).max(128).optional(),
   firstName: z.string().min(1).max(100),
   lastName: z.string().max(100).default(""),
   phone: z.string().max(20).optional(),
-  designation: z.string().max(100).default("Staff"),
+  designation: z.string().max(100).default("Employee"),
   department: z.string().max(100).optional(),
-  role: z.enum(["viewer", "member", "operator", "admin", "owner", "staff"]).default("staff"),
+  role: z.enum(["viewer", "member", "operator", "admin", "owner", "employee"]).default("employee"),
   empId: z.string().max(50).optional(),
   employmentType: z.string().max(50).default("Full Time"),
   status: z.string().max(50).default("active"),
 }).strict();
 
-export const updateStaffSchema = z.object({
+export const updateEmployeeSchema = z.object({
   email: z.string().email().max(255).optional(),
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().max(100).optional(),
   phone: z.string().max(20).optional(),
   designation: z.string().max(100).optional(),
   department: z.string().max(100).optional(),
-  role: z.enum(["viewer", "member", "operator", "admin", "owner", "staff"]).optional(),
+  role: z.enum(["viewer", "member", "operator", "admin", "owner", "employee"]).optional(),
   status: z.string().max(50).optional(),
 }).strict();
 
@@ -256,4 +256,59 @@ export const updateMasterDataSchema = z.object({
 export const createInvitationSchema = z.object({
   email: z.string().email().max(255),
   role: z.enum(["viewer", "member", "operator", "admin"]).default("member"),
+}).strict();
+
+// ── Workspace HR Settings ─────────────────────────────────────
+
+export const hrSettingsSchema = z.object({
+  shifts: z.array(z.object({
+    id: z.string(),
+    name: z.string().max(200),
+    startTime: z.string(),
+    endTime: z.string(),
+  })).optional(),
+  attendanceGraceMinutes: z.number().int().min(0).max(60).optional(),
+  overtimeMultiplier: z.number().min(1).max(3).optional(),
+  timezone: z.string().max(100).optional(),
+  weekStartDay: z.number().int().min(0).max(6).optional(),
+}).strict().passthrough();
+
+export const themeSettingsSchema = z.object({
+  sidebarColor: z.string().max(50).optional(),
+  headerColor: z.string().max(50).optional(),
+  accentColor: z.string().max(50).optional(),
+  layout: z.enum(["default", "compact", "comfortable"]).optional(),
+  sidebarCollapsed: z.boolean().optional(),
+  logoPosition: z.enum(["top", "left", "center"]).optional(),
+  hideLogo: z.boolean().optional(),
+  fontFamily: z.string().max(200).optional(),
+  fontSize: z.number().int().min(10).max(24).optional(),
+  borderRadius: z.string().max(10).optional(),
+  animationEnabled: z.boolean().optional(),
+  darkMode: z.boolean().optional(),
+  customCSS: z.string().max(10000).optional(),
+}).strict().passthrough();
+
+export const createShiftSchema = z.object({
+  name: z.string().min(1).max(200),
+  startTime: z.string().min(1).max(50),
+  endTime: z.string().min(1).max(50),
+}).strict();
+
+export const updateShiftSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  startTime: z.string().min(1).max(50).optional(),
+  endTime: z.string().min(1).max(50).optional(),
+}).strict();
+
+// ── File Record ───────────────────────────────────────────────
+
+export const createFileRecordSchema = z.object({
+  filename: z.string().min(1).max(500),
+  originalName: z.string().max(500).optional(),
+  mimetype: z.string().max(200).optional(),
+  size: z.number().int().min(0).optional(),
+  url: z.string().min(1).max(2000),
+  key: z.string().min(1).max(1000),
+  folder: z.string().max(500).optional(),
 }).strict();

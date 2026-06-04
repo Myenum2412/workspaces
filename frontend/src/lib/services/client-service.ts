@@ -17,7 +17,6 @@ function mapClient(doc: any): Client {
     status: doc.status ?? "",
     industry: doc.industry,
     location: doc.location,
-    logoId: doc.logoId,
     organizationId: doc.organizationId ?? "",
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
@@ -34,7 +33,6 @@ function toPayload(data: Partial<Client>): Record<string, unknown> {
     status: data.status ?? "Active",
     industry: data.industry ?? "",
     location: data.location ?? "",
-    logoId: data.logoId ?? "",
     organizationId: data.organizationId ?? "",
   };
 }

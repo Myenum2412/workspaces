@@ -167,9 +167,11 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
             await OrgMember.create({
               _id: crypto.randomUUID(),
               organizationId: orgId,
+              workspaceId: null,
               userId,
-              role: "owner",
+              role: "ORG_ADMIN",
               status: "active",
+              invitedBy: "",
               joinedAt: new Date().toISOString(),
             });
             user = await UserProfile.findOne({ email }).lean() as any;
@@ -193,7 +195,7 @@ router.get(
   (req: Request, res: Response) => {
     const user = req.user as any;
     const tokens = signTokenPair(
-      { userId: user._id.toString(), email: user.email, organizationId: user.organizationId ?? "", role: "owner" },
+      { userId: user._id.toString(), email: user.email, organizationId: user.organizationId ?? "", workspaceId: user.workspaceId ?? null, role: "ORG_ADMIN" },
       req
     );
     // Set httpOnly cookies
@@ -230,6 +232,7 @@ router.post(
     const userId = crypto.randomUUID();
     const orgId = crypto.randomUUID();
 
+    const now = new Date().toISOString();
     const session = await UserProfile.startSession();
     try {
       await session.withTransaction(async () => {
@@ -238,26 +241,63 @@ router.post(
           name: companyName,
           category: category || "Other",
           companyRange: companyRange || "1-10",
+          email: normalizedEmail,
+          ownerEmail: normalizedEmail,
+          ownerId: userId,
+          logoUrl: "",
+          industry: "",
+          size: "",
+          status: "active",
+          settings: {},
+          hrSettings: {},
+          themeSettings: {},
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
         }], { session });
 
         await UserProfile.create([{
           _id: userId,
           userId,
-          email: normalizedEmail,
+          organizationId: orgId,
+          workspaceId: null,
           firstName,
           lastName,
+          email: normalizedEmail,
           passwordHash,
-          organizationId: orgId,
-          designation: "workspace",
+          phone: "",
+          designation: "Owner",
+          department: "",
+          avatarUrl: "",
+          bio: "",
+          expertise: [],
+          empId: `EMP-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+          joiningDate: now,
+          employmentType: "full_time",
+          status: "active",
+          terminationDate: null,
+          terminationReason: null,
+          lastLogin: null,
+          loginCount: 0,
+          emailVerified: true,
+          teamIds: [],
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
         }], { session });
 
         await OrgMember.create([{
           _id: crypto.randomUUID(),
           organizationId: orgId,
+          workspaceId: null,
           userId,
-          role: "owner",
+          role: "ORG_ADMIN",
           status: "active",
-          joinedAt: new Date().toISOString(),
+          invitedBy: "",
+          joinedAt: now,
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
         }], { session });
       });
     } finally {
@@ -265,7 +305,7 @@ router.post(
     }
 
     const tokens = signTokenPair(
-      { userId, email: normalizedEmail, organizationId: orgId, role: "owner" },
+      { userId, email: normalizedEmail, organizationId: orgId, workspaceId: null, role: "ORG_ADMIN" },
       req
     );
 
@@ -301,47 +341,79 @@ router.post(
     const normalizedEmail = email.toLowerCase().trim();
 
     await connectDB();
-
     await checkAccountLockout(normalizedEmail);
 
-    const profile = await UserProfile.findOne({ email: normalizedEmail }).lean() as any;
-    if (!profile) {
-      await recordFailedLogin(normalizedEmail);
-      throw new AuthenticationError("Invalid email or password");
-    }
+    const { User } = await import("../models/index.js");
+    const { LoginActivity } = await import("../models/index.js");
 
-    const valid = await bcrypt.compare(password, profile.passwordHash ?? "");
-    if (!valid) {
-      await recordFailedLogin(normalizedEmail);
-      throw new AuthenticationError("Invalid email or password");
-    }
+    let orgUser = await User.findOne({ email: normalizedEmail }).lean() as any;
+    let valid = false;
+    let userId = "";
+    let role = "member";
+    let orgId = "";
+    let responseData: any = {};
 
-    await clearLoginAttempts(normalizedEmail);
+    if (orgUser) {
+      valid = await bcrypt.compare(password, orgUser.passwordHash);
+      if (!valid) {
+        await recordFailedLogin(normalizedEmail);
+        await LoginActivity.create({
+          userId: orgUser._id.toString(),
+          email: normalizedEmail,
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"] ?? "",
+          status: "failed",
+          failureReason: "Invalid password"
+        });
+        throw new AuthenticationError("Invalid email or password");
+      }
+      userId = orgUser._id.toString();
+      role = orgUser.role;
+      orgId = "admin-org";
+      
+      await User.findByIdAndUpdate(userId, { lastLogin: new Date() });
+      await LoginActivity.create({
+          userId,
+          email: normalizedEmail,
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"] ?? "",
+          status: "success",
+      });
 
-    const member = await OrgMember.findOne({ userId: profile._id.toString() }).lean() as any;
-    const userId = profile._id.toString();
+      responseData = {
+        user: {
+          $id: userId,
+          email: orgUser.email,
+          name: orgUser.name,
+          firstName: orgUser.name.split(" ")[0],
+          lastName: orgUser.name.split(" ").slice(1).join(" "),
+          role: role,
+          organizationId: orgId,
+        }
+      };
+    } else {
+      const profile = await UserProfile.findOne({ email: normalizedEmail }).lean() as any;
+      if (!profile) {
+        await recordFailedLogin(normalizedEmail);
+        throw new AuthenticationError("Invalid email or password");
+      }
 
-    const { ProfileService } = await import("../services/profile.js");
-    ProfileService.updateLoginInfo(userId, req).catch(() => {});
-    ProfileService.logActivity({ userId, action: "user_login", req }).catch(() => {});
+      valid = await bcrypt.compare(password, profile.passwordHash ?? "");
+      if (!valid) {
+        await recordFailedLogin(normalizedEmail);
+        throw new AuthenticationError("Invalid email or password");
+      }
 
-    const tokens = signTokenPair(
-      {
-        userId,
-        email: profile.email,
-        organizationId: member?.organizationId ?? profile.organizationId ?? "",
-        role: member?.role ?? "member",
-      },
-      req
-    );
+      const member = await OrgMember.findOne({ userId: profile._id.toString() }).lean() as any;
+      userId = profile._id.toString();
+      role = member?.role ?? "member";
+      orgId = member?.organizationId ?? profile.organizationId ?? "";
 
-    // Set httpOnly cookies
-    setAuthCookies(res, tokens);
-    setCsrfCookie(req, res);
+      const { ProfileService } = await import("../services/profile.js");
+      ProfileService.updateLoginInfo(userId, req).catch(() => {});
+      ProfileService.logActivity({ userId, action: "user_login", req }).catch(() => {});
 
-    apiResponse.success(
-      res,
-      {
+      responseData = {
         user: {
           $id: userId,
           email: profile.email,
@@ -350,13 +422,24 @@ router.post(
           name: `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim(),
           avatarUrl: profile.avatarUrl,
           emailVerified: profile.emailVerified,
-          role: member?.role ?? "member",
-          organizationId: member?.organizationId ?? profile.organizationId ?? "",
-        },
-      },
-      200,
-      req.requestId
-    );
+          role: role,
+          organizationId: orgId,
+        }
+      };
+    }
+
+    await clearLoginAttempts(normalizedEmail);
+
+    // Extract workspaceId from the user's membership
+    // Legacy users (UserProfile/OrgMember) won't have workspaceId — set to null for role-based routing
+    const workspaceId: string | null = null;
+
+    const tokens = signTokenPair({ userId, email: normalizedEmail, organizationId: orgId, workspaceId, role }, req);
+
+    setAuthCookies(res, tokens);
+    setCsrfCookie(req, res);
+
+    apiResponse.success(res, responseData, 200, req.requestId);
   })
 );
 
@@ -459,6 +542,30 @@ router.get(
     ]);
 
     if (!profile) {
+      // Check if it's an ORG_ADMIN user
+      const { User } = await import("../models/index.js");
+      const orgUser = await User.findById(authReq.user!.userId).lean() as any;
+      if (orgUser) {
+        apiResponse.success(
+          res,
+          {
+            user: {
+              $id: orgUser._id.toString(),
+              email: orgUser.email,
+              name: orgUser.name,
+              firstName: orgUser.name.split(" ")[0],
+              lastName: orgUser.name.split(" ").slice(1).join(" "),
+              role: orgUser.role,
+              organizationId: "admin-org",
+            },
+            organization: null,
+            membership: null,
+          },
+          200,
+          req.requestId
+        );
+        return;
+      }
       throw new NotFoundError("User");
     }
 

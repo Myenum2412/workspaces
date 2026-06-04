@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { TeamFlow } from "./team-flow"
-import { TeamsTableView, type Team } from "./teams-table-view"
+import type { Team } from "@/types"
+import { TeamsTableView } from "./teams-table-view"
 import { AddTeamDialog } from "./add-team-dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"

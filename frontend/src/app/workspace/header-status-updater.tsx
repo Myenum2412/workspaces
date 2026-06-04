@@ -47,8 +47,7 @@ export function HeaderStatusUpdater() {
     let destroyed = false
 
     async function init() {
-      const hasCookie = document.cookie.includes("access_token=")
-      if (!hasCookie || destroyed) return
+      if (destroyed) return
 
       try {
         // Fetch user
@@ -62,10 +61,7 @@ export function HeaderStatusUpdater() {
         const uid = data.user.$id
         userIdRef.current = uid
 
-        // Read token from cookie for Socket.IO auth
-        const match = document.cookie.match(/(?:^|; )access_token=([^;]*)/);
-        const cookieToken = match ? decodeURIComponent(match[1]) : null;
-        if (!cookieToken || destroyed) return;
+
 
         // Always start as Online on fresh login — user can change manually
         const savedStatus = "Online"
@@ -74,7 +70,6 @@ export function HeaderStatusUpdater() {
 
         // Connect socket
         const s = io(API_BASE_URL, {
-          auth: { token: cookieToken },
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionAttempts: 10,

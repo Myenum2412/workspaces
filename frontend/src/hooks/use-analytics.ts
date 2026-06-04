@@ -1,25 +1,20 @@
 "use client"
 
-import * as React from "react"
+type TrackEvent = (name: string, data?: Record<string, unknown>) => void
+type TrackInteraction = (element: string, action: string, data?: Record<string, unknown>) => void
 
-/**
- * Analytics hook for tracking user interactions.
- * Currently a no-op — integrate with your analytics provider (GA4, Mixpanel, etc.)
- */
-export function useAnalytics(componentName: string) {
-  React.useEffect(() => {
-    // TODO: Replace with real analytics provider
-    // analytics.pageView(componentName)
-  }, [componentName])
+export function useAnalytics(_pageName: string) {
+  const trackEvent: TrackEvent = (name, data) => {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[analytics] ${_pageName}: ${name}`, data)
+    }
+  }
 
-  const trackEvent = React.useCallback((_eventName: string, _properties?: Record<string, unknown>) => {
-    // TODO: Replace with real analytics provider
-    // analytics.track(eventName, { component: componentName, ...properties })
-  }, [componentName])
-
-  const trackInteraction = React.useCallback((elementId: string, action: string) => {
-    trackEvent('user_interaction', { elementId, action })
-  }, [trackEvent])
+  const trackInteraction: TrackInteraction = (element, action, data) => {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[analytics] ${_pageName}: ${element} ${action}`, data)
+    }
+  }
 
   return { trackEvent, trackInteraction }
 }

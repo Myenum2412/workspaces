@@ -1,10 +1,10 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { PlusIcon, CheckIcon, Building2Icon, UserCogIcon, UsersIcon } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { branchService } from "@/lib/services/branch-service"
-import { staffService, type UIStaff } from "@/lib/services/staff-service"
+import { employeeService, type UIEmployee } from "@/lib/services/employee-service"
 
 import {
   Dialog,
@@ -43,7 +43,7 @@ export function AddTeamDialog() {
 
   const { data: staff = [], isLoading: isLoadingStaff } = useQuery({
     queryKey: ["staff-by-branch", selectedBranchId],
-    queryFn: () => staffService.getAllStaff(),
+    queryFn: () => employeeService.getAllEmployees(),
     enabled: !!selectedBranchId,
   })
 
