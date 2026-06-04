@@ -2,7 +2,7 @@
   "name": "workspaces",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install --legacy-peer-deps && npm run build",
-    "deploy": "cd frontend && npx wrangler pages deploy .next/standalone --project-name workspaces-frontend"
+    "build": "cd frontend && npm install --legacy-peer-deps && npx @cloudflare/next-on-pages@1",
+    "deploy": "cd frontend && npx wrangler pages deploy .vercel/output/static --project-name workspaces-frontend"
   }
 }

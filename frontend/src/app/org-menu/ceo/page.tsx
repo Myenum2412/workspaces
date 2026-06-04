@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useOrgAuth } from "../layout";
+import { useOrgAuth } from "../auth-context";
 import { api } from "@/lib/api/client";
 import type { OrgMember, UserProfile } from "@/types";
 

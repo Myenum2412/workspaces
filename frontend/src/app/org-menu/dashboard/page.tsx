@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, UserCheck, UserPlus, Building2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrgAuth } from "../layout";
+import { useOrgAuth } from "../auth-context";
 import { api } from "@/lib/api/client";
 
 interface DashboardStats {

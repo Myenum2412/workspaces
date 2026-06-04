@@ -180,7 +180,7 @@ export const profileApi = {
       pages: number;
     }>(`/api/profile/history?page=${page}&limit=${limit}`),
 
-  getActivity = (days?: number) =>
+  getActivity: (days?: number) =>
     apiFetch<{ success: boolean; activity: unknown[] }>(
       `/api/profile/activity${days ? `?days=${days}` : ""}`,
     ),

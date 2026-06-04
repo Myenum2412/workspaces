@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useOrgAuth } from "../layout";
+import { useOrgAuth } from "../auth-context";
 import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 import type { OrgRole } from "@/types";

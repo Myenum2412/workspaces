@@ -24,21 +24,15 @@ export function DataState({
   error,
 }: DataStateProps) {
   if (isLoading) {
-    return (
-      <>{loadingComponent || <DefaultLoading />}
-    );
+    return loadingComponent ? <>{loadingComponent}</> : <DefaultLoading />;
   }
 
   if (isError) {
-    return (
-      <>{errorComponent || <DefaultError error={error} />}</>
-    );
+    return errorComponent ? <>{errorComponent}</> : <DefaultError error={error} />;
   }
 
   if (isEmpty) {
-    return (
-      <>{emptyComponent || <DefaultEmpty />}</>
-    );
+    return emptyComponent ? <>{emptyComponent}</> : <DefaultEmpty />;
   }
 
   return <>{children}</>;

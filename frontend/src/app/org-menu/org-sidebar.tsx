@@ -26,7 +26,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useOrgAuth } from "./layout";
+import { useOrgAuth } from "./auth-context";
 import { cn } from "@/lib/utils";
 
 const data = {
@@ -47,9 +47,7 @@ export function OrgSidebar({ className, ...props }: React.ComponentProps<typeof 
   const pathname = usePathname();
   const { session } = useOrgAuth();
   const orgName = session?.organization?.name ?? "Organization";
-  const userName = session?.profile
-    ? `${session.profile.firstName ?? ""} ${session.profile.lastName ?? ""}`.trim()
-    : session?.user.name ?? "User";
+  const userName = session?.user.name ?? "User";
   const email = session?.user.email ?? "user@example.com";
 
   const isActiveUrl = (url: string) => {

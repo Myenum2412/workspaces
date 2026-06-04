@@ -1,36 +1,16 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api, authApi } from "@/lib/api/client";
 import { OrgSidebar } from "./org-sidebar";
+import { AuthContext } from "./auth-context";
 import { toast } from "sonner";
 import { LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
-
-// ── Auth Context ──────────────────────────────────────────────
-
-interface AuthContextType {
-  session: AuthSession | null;
-  loading: boolean;
-  refresh: () => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  loading: true,
-  refresh: async () => {},
-  logout: async () => {},
-});
-
-export function useOrgAuth() {
-  return useContext(AuthContext);
-}
-
-// ── Layout ────────────────────────────────────────────────────
+import type { AuthSession } from "@/types/shared";
 
 export default function OrgMenuLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -59,6 +39,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
           avatarUrl: user.avatarUrl,
           emailVerified: user.emailVerified ?? false,
           role: membership?.role ?? user.role,
+          status: user.status ?? "active",
           organizationId: membership?.organizationId ?? user.organizationId,
         },
         organization: org ? { ...org, id: org._id ?? org.id } : null,
@@ -72,7 +53,9 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await authApi.logout();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     setSession(null);
     toast.success("Signed out");
@@ -97,7 +80,6 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
     }
   }, [initialized, loading, session, isAuthPage, router]);
 
-  // Only ORG_ADMIN can access org-menu
   useEffect(() => {
     if (session) {
       if (session.user.role !== "ORG_ADMIN") {

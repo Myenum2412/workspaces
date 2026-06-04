@@ -117,6 +117,7 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
+  name: string;
   avatarUrl: string;
   role: string;
   status: string;
@@ -197,6 +198,7 @@ export interface Task {
   reviewedBy: string | null;
   reviewNotes: string | null;
   tags: string[];
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
