@@ -161,13 +161,13 @@ export function initSocketServer(httpServer: HTTPServer): Server {
 
   io.on("connection", (socket) => {
     const user = (socket as AuthenticatedSocket).user;
-    console.log(`[Socket] Connected: ${socket.id} (user: ${user?.userId})`);
+    console.warn(`[Socket] Connected: ${socket.id} (user: ${user?.userId})`);
 
     if (user?.organizationId) {
-      socket.join(`org:${user.organizationId}`);
+      void socket.join(`org:${user.organizationId}`);
     }
     if (user?.userId) {
-      socket.join(`user:${user.userId}`);
+      void socket.join(`user:${user.userId}`);
     }
 
     // ── Identify ──────────────────────────────────────────────

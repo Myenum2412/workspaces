@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { env } from "../../../config/env.js";
 import { connectDB } from "../../../db/connection.js";
-import { User, OrgMember, Organization, Workspace } from "../../../models/index.js";
+import { User, OrgMember } from "../../../models/index.js";
 import { NotFoundError, ConflictError } from "../../../core/errors/AppError.js";
 import { logger } from "../../../core/logging/logger.js";
 import { getAllowedSortField } from "../../../types/shared.js";

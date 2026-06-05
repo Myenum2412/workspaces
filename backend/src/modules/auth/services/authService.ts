@@ -22,7 +22,6 @@ import {
 } from "../../../core/errors/AppError.js";
 import { logger } from "../../../core/logging/logger.js";
 import { sendSignupWelcomeEmail } from "../../../email/resend.js";
-import type { AuthPayload } from "../../../middleware/auth.js";
 import type {
   RegisterInput,
 } from "../../../types/shared.js";

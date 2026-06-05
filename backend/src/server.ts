@@ -128,7 +128,7 @@ for (const dir of uploadDirs) {
 httpServer.listen(env.PORT, () => {
   logger.info(`🚀 Server running on port ${env.PORT} [${env.NODE_ENV}]`);
   logger.info(`📡 API base: ${env.API_BASE_URL}/api/${env.API_VERSION}`);
-  connectDB().then(() => { seedDefaultAdmin(); }).catch((err) => { logger.error({ err }, "DB connection failed"); process.exit(1); });
+  void connectDB().then(() => { seedDefaultAdmin(); }).catch((err) => { logger.error({ err }, "DB connection failed"); process.exit(1); });
 });
 
 // ── Graceful shutdown ──────────────────────────────────────────
@@ -139,14 +139,14 @@ async function shutdown(signal: string) {
   logger.info(`Received ${signal}. Shutting down...`);
   httpServer.close(() => {
     logger.info("HTTP server closed");
-    Promise.all([disconnectDB(), disconnectRedis()]).then(() => { logger.info("All connections closed"); process.exit(0); });
+    void Promise.all([disconnectDB(), disconnectRedis()]).then(() => { logger.info("All connections closed"); process.exit(0); });
   });
   setTimeout(() => { logger.error("Forced shutdown"); process.exit(1); }, 30000);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => { void shutdown("SIGTERM"); });
+process.on("SIGINT", () => { void shutdown("SIGINT"); });
 process.on("unhandledRejection", (reason: unknown) => { logger.error({ reason }, "Unhandled rejection"); });
-process.on("uncaughtException", (err: Error) => { logger.error({ err }, "Uncaught exception"); shutdown("uncaughtException"); });
+process.on("uncaughtException", (err: Error) => { logger.error({ err }, "Uncaught exception"); void shutdown("uncaughtException"); });
 
 export { app, httpServer };
