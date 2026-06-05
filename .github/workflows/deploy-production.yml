@@ -77,6 +77,8 @@ jobs:
           REDIS_URL: redis://localhost:6379
           JWT_ACCESS_SECRET: test-access-secret-min-32-chars-long!!!
           JWT_REFRESH_SECRET: test-refresh-secret-min-32-chars-long!!!
+          APP_URL: http://localhost:3000
+          NODE_ENV: development
         run: npm run test
 
   # ── Deploy ────────────────────────────────────────────────────

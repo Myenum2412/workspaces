@@ -144,7 +144,7 @@ export const authService = {
         to: email,
         name: input.firstName,
         password: input.password,
-        verifyUrl: `${env.APP_URL || "http://localhost:3000"}/login`, // Using login as fallback until verify route exists
+        verifyUrl: `${env.APP_URL}/login`,
       });
     } catch (emailErr) {
       logger.error({ err: emailErr, email }, "Failed to send signup welcome email");

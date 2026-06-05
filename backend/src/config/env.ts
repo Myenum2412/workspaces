@@ -42,6 +42,9 @@ const envSchema = z.object({
   CORS_ORIGINS: z.string().default("https://myenum.in,https://www.myenum.in"),
 
   IP_WHITELIST: z.string().default(""),
+
+  APP_URL: z.string().default("http://localhost:3000"),
+  RESEND_API_KEY: z.string().optional(),
 });
 
 const result = envSchema.safeParse(process.env);
