@@ -41,5 +41,10 @@
     "nodemailer": "^8.0.10",
     "typescript": "^5",
     "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "@cloudflare/next-on-pages": {
+      "next": "$next"
+    }
   }
 }
