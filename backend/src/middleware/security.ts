@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import hpp from "hpp";
-import { env, getCorsOrigins, getIpWhitelist } from "../config/env.js";
+import { env, getIpWhitelist } from "../config/env.js";
 import { logger } from "../core/logging/logger.js";
 
 // ── Helmet ────────────────────────────────────────────────────

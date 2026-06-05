@@ -3,7 +3,7 @@
  * Soft-delete middleware and helpers.
  * Adds `deletedAt` field support to any Mongoose query.
  */
-import { Schema, Document, Query, Model, Types } from "mongoose";
+import { Schema, Document, Query, Model } from "mongoose";
 
 // ── Schema plugin ─────────────────────────────────────────────
 export function softDeletePlugin(schema: Schema) {

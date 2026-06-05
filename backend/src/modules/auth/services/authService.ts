@@ -25,7 +25,6 @@ import { sendSignupWelcomeEmail } from "../../../email/resend.js";
 import type { AuthPayload } from "../../../middleware/auth.js";
 import type {
   RegisterInput,
-  LoginInput,
 } from "../../../types/shared.js";
 import { LoginActivity } from "../../../models/LoginActivity.js";
 
@@ -222,13 +221,6 @@ export const authService = {
       status: "active",
       deletedAt: null,
     }).lean();
-    const payload: AuthPayload = {
-      userId,
-      email,
-      organizationId: membership?.organizationId || "",
-      workspaceId: membership?.workspaceId || null,
-      role,
-    };
 
     await User.findByIdAndUpdate(userId, {
       lastLoginAt: new Date(),

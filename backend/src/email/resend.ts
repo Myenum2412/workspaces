@@ -31,7 +31,7 @@ export async function sendInviteEmail(params: InviteEmailParams) {
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] INVITE → ${to} | org: ${organizationName} | role: ${role} | url: ${inviteUrl}`);
+    console.warn(`[Email] INVITE → ${to} | org: ${organizationName} | role: ${role} | url: ${inviteUrl}`);
     return;
   }
 
@@ -57,7 +57,7 @@ export async function sendSignupWelcomeEmail(params: SignupWelcomeEmailParams) {
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] SIGNUP WELCOME → ${to} | name: ${name} | login: ${loginUrl}`);
+    console.warn(`[Email] SIGNUP WELCOME → ${to} | name: ${name} | login: ${loginUrl}`);
     return;
   }
 
@@ -81,7 +81,7 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] FORGOT PASSWORD → ${to} | reset: ${resetUrl}`);
+    console.warn(`[Email] FORGOT PASSWORD → ${to} | reset: ${resetUrl}`);
     return;
   }
 
@@ -99,7 +99,7 @@ export async function sendVerificationEmail(params: ForgotPasswordEmailParams) {
 
   const resend = getResend();
   if (!resend) {
-    console.log(`[Email] EMAIL VERIFICATION → ${to} | reset: ${resetUrl}`);
+    console.warn(`[Email] EMAIL VERIFICATION → ${to} | reset: ${resetUrl}`);
     return;
   }
 
