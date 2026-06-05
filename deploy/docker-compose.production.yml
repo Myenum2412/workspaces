@@ -1,15 +1,20 @@
-# Production docker-compose for Digital Ocean Droplet
+# ═══════════════════════════════════════════════════════════════
+# Production Docker Compose — workspaceapi.myenum.in
 # Usage: docker compose -f deploy/docker-compose.production.yml --env-file .env up -d
+# ═══════════════════════════════════════════════════════════════
 
 services:
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
+      target: production
+    image: workspace-api:${GIT_SHA:-latest}
+    container_name: workspace-api
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     env_file:
-      - .env
+      - ../.env
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -18,12 +23,36 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    volumes:
+      - upload_data:/app/uploads
+      - ../logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
+    container_name: workspace-cloudflared
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     env_file:
-      - .env
+      - ../.env
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+volumes:
+  upload_data:

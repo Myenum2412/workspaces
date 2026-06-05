@@ -1,0 +1,70 @@
+# ═══════════════════════════════════════════════════════════════
+# Staging Environment — workspaceapi.myenum.in
+# Usage: docker compose -f deploy/docker-compose.staging.yml --env-file .env up -d
+# Port: 4001 (production uses 4000 via Cloudflare Tunnel)
+# ═══════════════════════════════════════════════════════════════
+
+services:
+  mongodb-staging:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_staging_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries:5
+
+  redis-staging:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_staging_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-staging:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    ports:
+      - "4001:4000"
+    environment:
+      NODE_ENV: staging
+      PORT: 4000
+      MONGODB_URI: mongodb://mongodb-staging:27017/workspace_staging
+      REDIS_URL: redis://redis-staging:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-staging-access-secret-min-32-chars!!}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-staging-refresh-secret-min-32-chars!!}
+      API_BASE_URL: http://localhost:4001
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      EMAIL_FROM: noreply@myenum.in
+      LOG_LEVEL: debug
+    depends_on:
+      mongodb-staging:
+        condition: service_healthy
+      redis-staging:
+        condition: service_healthy
+    volumes:
+      - upload_staging_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongo_staging_data:
+  redis_staging_data:
+  upload_staging_data:

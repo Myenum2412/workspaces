@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-06-04T19:43:42Z",
-  "changed_file": "src/core/utils/cache.ts",
+  "timestamp": "2026-06-05T02:49:15Z",
+  "changed_file": "/home/j0k3r/Desktop/workspaces/frontend/next.config.js",
   "test_command": "npx vitest run --reporter=verbose",
   "related_test": "",
   "recommendation": "テストの実行を推奨します"

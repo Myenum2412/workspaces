@@ -1,125 +1,171 @@
-# Production Deployment
-
-API URL: **https://workspaceapi.myenum.in**
+# Production Deployment — workspaces
 
 ## Architecture
 
 ```
-User ── https://workspaceapi.myenum.in ──┐
-                                 ├── Cloudflare Tunnel ── Digital Ocean Droplet
-Cloudflare Pages (frontend)  ────┘                        ├── Backend (Express, :4000)
-                                                          └── MongoDB Atlas
+User → https://workspaceapi.myenum.in → Cloudflare Tunnel → DO Droplet
+                                                       ├── Backend (Express, :4000)
+                                                       ├── MongoDB Atlas
+                                                       └── Redis
+
+Frontend → Cloudflare Pages → https://myenum.in
+         └── API calls → https://workspaceapi.myenum.in
 ```
 
-Frontend calls `https://workspaceapi.myenum.in` → Cloudflare DNS → Cloudflare Tunnel → Backend on DO
+## Environments
 
-## Prerequisites
+| Environment | Branch | URL | Port |
+|-------------|--------|-----|------|
+| Production | `main` | `https://workspaceapi.myenum.in` | 4000 |
+| Staging | `develop` | `http://<droplet-ip>:4001` | 4001 |
+| Development | local | `http://localhost:4000` | 4000 |
 
-- Cloudflare account with `myenum.in` DNS managed by Cloudflare
-- Digital Ocean account
-- MongoDB Atlas (connection string in `.env`)
-- Resend API key (transactional email)
+## Auto-Deploy Flow
 
-## Setup (one-time, in order)
+```
+git push origin main
+  → GitHub Actions: lint + test
+  → SSH to Droplet
+  → deploy-production.sh (zero-downtime)
+  → Health check (12 attempts, 60s)
+  → Purge Cloudflare cache
+  → Discord notification
+```
+
+## Setup (One-Time)
 
 ### 1. Create Droplet
 
-Create an Ubuntu 24.04 Droplet (minimum 2GB RAM, 2 CPU). Then:
+Ubuntu 24.04, min 2GB RAM. Then:
 
 ```bash
 ssh root@<droplet-ip>
 curl -fsSL https://raw.githubusercontent.com/Myenum2412/workspaces/main/deploy/setup-droplet.sh | bash
 ```
 
-This installs Docker, creates `deploy` user, clones repo, generates `.env`.
+### 2. Cloudflare Tunnel
 
-### 2. Configure tunnel + DNS
-
-Run on your **local machine**:
+On local machine:
 
 ```bash
 # Install cloudflared
 # macOS: brew install cloudflare/cloudflare/cloudflared
 # Linux: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
 
-# Login to Cloudflare
 cloudflared tunnel login
-
-# Create tunnel + DNS for workspaceapi.myenum.in
 bash deploy/config-tunnel.sh
+# → Outputs TUNNEL_TOKEN
 ```
 
-This creates:
-- Named tunnel `workspace-backend`
-- DNS CNAME `workspaceapi.myenum.in` → tunnel
-- Outputs `TUNNEL_TOKEN` — copy this
-
-### 3. Finish Droplet setup
+On Droplet:
 
 ```bash
 ssh deploy@<droplet-ip>
-
-# Paste TUNNEL_TOKEN into .env
 nano /opt/workspaces/.env
-# Add: TUNNEL_TOKEN=<paste-from-step-2>
+# Add: TUNNEL_TOKEN=<from above>
+```
 
-# Fill in other secrets:
-#   MONGODB_URI, JWT_SECRET, RESEND_API_KEY, COOKIE_SECRET
-#   R2_*, GOOGLE_CLIENT_*, SUPER_ADMIN_EMAILS
+### 3. GitHub Secrets
 
-# Start
+```bash
+# On local machine:
+gh secret set DO_SSH_KEY < /home/deploy/.ssh/deploy_key
+gh secret set DO_HOST --body "<droplet-ip>"
+gh secret set DO_USER --body "deploy"
+gh secret set DO_DOMAIN --body "workspaceapi.myenum.in"
+gh secret set CF_ZONE_ID --body "<cloudflare-zone-id>"
+gh secret set CF_API_TOKEN --body "<cloudflare-api-token>"
+gh secret set CF_ACCOUNT_ID --body "<cloudflare-account-id>"
+# Optional:
+gh secret set DISCORD_WEBHOOK_URL --body "<webhook-url>"
+```
+
+### 4. Start
+
+```bash
+ssh deploy@<droplet-ip>
+cd /opt/workspaces
 docker compose -f deploy/docker-compose.production.yml --env-file .env up -d
 ```
 
-### 4. Verify
+### 5. Verify
 
 ```bash
 curl https://workspaceapi.myenum.in/api/health
-# → {"success":true,"status":"healthy","uptime":...}
+# → {"success":true,"status":"healthy",...}
 ```
 
-### 5. Auto-deploy from GitHub
+## GitHub Secrets Reference
 
-```bash
-# On your local machine:
-chmod +x deploy/setup-github-secrets.sh
-./deploy/setup-github-secrets.sh
-```
+| Secret | Description |
+|--------|-------------|
+| `DO_HOST` | Droplet IP |
+| `DO_SSH_KEY` | SSH private key (ed25519) |
+| `DO_USER` | `deploy` |
+| `DO_DOMAIN` | `workspaceapi.myenum.in` |
+| `CF_ZONE_ID` | Cloudflare zone ID for `myenum.in` |
+| `CF_API_TOKEN` | Cloudflare API token (Zone.Cache Purge) |
+| `CF_ACCOUNT_ID` | Cloudflare account ID |
+| `DISCORD_WEBHOOK_URL` | Discord webhook for notifications (optional) |
 
-Then every `git push` to `main` touching `backend/` auto-deploys.
-
-## Secrets Reference
-
-| Secret | Where | Source |
-|--------|-------|--------|
-| `DO_HOST` | GitHub | Droplet IP |
-| `DO_SSH_KEY` | GitHub | `/home/deploy/.ssh/deploy_key` on Droplet |
-| `DO_USER` | GitHub | `deploy` |
-| `DO_DOMAIN` | GitHub | `workspaceapi.myenum.in` |
-| `TUNNEL_TOKEN` | Droplet `.env` | `deploy/config-tunnel.sh` output |
-| `MONGODB_URI` | Droplet `.env` | MongoDB Atlas |
-| `JWT_SECRET` | Droplet `.env` | `openssl rand -hex 32` |
-| `RESEND_API_KEY` | Droplet `.env` | Resend dashboard |
-| `COOKIE_SECRET` | Droplet `.env` | `openssl rand -hex 32` |
-
-## Maintenance
+## Manual Operations
 
 ```bash
 # View logs
-ssh deploy@<droplet-ip>
-docker compose -f /opt/workspaces/deploy/docker-compose.production.yml logs -f backend
-docker compose -f /opt/workspaces/deploy/docker-compose.production.yml logs -f cloudflared
+docker compose -f deploy/docker-compose.production.yml logs -f backend
+docker compose -f deploy/docker-compose.production.yml logs -f cloudflared
 
-# Manual deploy
-git push  # triggers GitHub Actions
+# Rollback
+bash deploy/deploy-rollback.sh
 
-# Or SSH + manual
-ssh deploy@<droplet-ip>
-cd /opt/workspaces && git pull && docker compose -f deploy/docker-compose.production.yml up -d --build
+# Staging
+docker compose -f deploy/docker-compose.staging.yml --env-file .env up -d
+curl http://localhost:4001/api/health
+
+# Trigger deploy manually
+gh workflow run deploy-production.yml
 ```
+
+## Zero-Downtime Deploy
+
+1. Build new container alongside old
+2. Health check new container (port 4000)
+3. If healthy: stop old, switch traffic
+4. If failed: keep old running, notify failure
+
+## Rollback
+
+```bash
+bash deploy/deploy-rollback.sh
+```
+
+Restores previous Docker image from backup. Health check after rollback.
 
 ## Security
 
-- **Zero open ports**: Cloudflare Tunnel connects outbound from the Droplet — no firewall rules needed
-- Backend only listens on localhost (no public IP exposure)
-- `COOKIE_SECURE=true` in production (HTTPS-only cookies)
+- **Zero open ports**: Cloudflare Tunnel connects outbound — no public ports needed
+- Backend only listens on localhost
+- SSH key-only auth, fail2ban enabled
+- Deploy user: `docker` group only, no sudo
+- `COOKIE_SECURE=true` in production
+- GitHub Actions: `concurrency` prevents parallel deploys
+- Secrets never logged (`set +x` in scripts)
+
+## File Structure
+
+```
+deploy/
+  deploy-production.sh        # Zero-downtime deploy
+  deploy-rollback.sh          # Rollback to previous version
+  purge-cloudflare-cache.sh   # Cloudflare cache purge
+  docker-compose.production.yml
+  docker-compose.staging.yml
+  nginx.conf                  # Reverse proxy config
+  ecosystem.config.js         # PM2 config (alternative to Docker)
+  setup-droplet.sh            # One-time Droplet setup
+  setup-server.sh             # Server hardening
+  setup-tunnel.sh             # Cloudflare Tunnel setup
+  setup-github-secrets.sh     # GitHub secrets helper
+  config-tunnel.sh            # Tunnel creation
+  README.md
+```

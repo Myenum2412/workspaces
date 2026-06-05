@@ -5,7 +5,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   API_VERSION: z.string().default("v1"),
   API_BASE_URL: z.string().url().default("https://workspaceapi.myenum.in"),
-  FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+  FRONTEND_URL: z.string().url().default("https://myenum.in"),
 
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
 
@@ -39,7 +39,7 @@ const envSchema = z.object({
 
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
-  CORS_ORIGINS: z.string().default("http://localhost:3000"),
+  CORS_ORIGINS: z.string().default("https://myenum.in,https://www.myenum.in"),
 
   IP_WHITELIST: z.string().default(""),
 });
