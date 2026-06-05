@@ -1,9 +1,0 @@
-{"event":"task_completed","teammate":"","task_id":"1","subject":"Create deploy-production.yml workflow","description":"GitHub Actions workflow for zero-downtime production deploy with health check, cache purge, rollback","timestamp":"2026-06-05T02:38:06Z"}
-{"event":"task_completed","teammate":"","task_id":"2","subject":"Create deploy-staging.yml workflow","description":"GitHub Actions workflow for staging environment deploy","timestamp":"2026-06-05T02:38:07Z"}
-{"event":"task_completed","teammate":"","task_id":"3","subject":"Create deploy-frontend.yml workflow","description":"GitHub Actions workflow for frontend deploy to Cloudflare Pages","timestamp":"2026-06-05T02:38:07Z"}
-{"event":"task_completed","teammate":"","task_id":"4","subject":"Write deploy-production.sh (zero-downtime)","description":"Server-side blue-green deploy script with health check and rollback support","timestamp":"2026-06-05T02:39:54Z"}
-{"event":"task_completed","teammate":"","task_id":"5","subject":"Write deploy-rollback.sh","description":"Rollback script to restore previous Docker image","timestamp":"2026-06-05T02:39:55Z"}
-{"event":"task_completed","teammate":"","task_id":"6","subject":"Write purge-cloudflare-cache.sh","description":"Cloudflare cache purge script using API","timestamp":"2026-06-05T02:39:55Z"}
-{"event":"task_completed","teammate":"","task_id":"7","subject":"Create staging docker-compose + env template","description":"docker-compose.staging.yml and .env.proroduction template","timestamp":"2026-06-05T02:43:10Z"}
-{"event":"task_completed","teammate":"","task_id":"8","subject":"Update frontend .env + nginx + README","description":"Fix frontend backend URL, update nginx config, rewrite README","timestamp":"2026-06-05T02:46:43Z"}
-{"event":"task_completed","teammate":"","task_id":"9","subject":"Clean up old workflow files","description":"Remove/replace old ci-cd.yml and deploy-backend.yml","timestamp":"2026-06-05T02:49:31Z"}
