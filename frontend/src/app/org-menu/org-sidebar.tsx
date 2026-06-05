@@ -36,7 +36,6 @@ const data = {
     { title: "Users", url: "/org-menu/users", icon: <UsersIcon />, items: [
       { title: "All Users", url: "/org-menu/users", icon: <UsersIcon /> },
     ]},
-    { title: "Invitations", url: "/org-menu/invitations", icon: <Mail /> },
   ],
   bottomNav: [
     { title: "Settings", url: "/org-menu/settings", icon: <SettingsIcon /> },
@@ -58,7 +57,13 @@ export function OrgSidebar({ className, ...props }: React.ComponentProps<typeof 
   return (
     <Sidebar
       collapsible="icon"
-      className={cn("[&_[data-sidebar=menu-button]]:h-10 [&_[data-sidebar=menu-button]]:gap-3 [&_[data-sidebar=menu-button]_svg]:!size-5", className)}
+      className={cn(
+        "[--sidebar:white] [--sidebar-foreground:#0F1A18] [--sidebar-border:#BDCFC5]",
+        "[--sidebar-accent:#40D1C5] [--sidebar-accent-foreground:#0F1A18]",
+        "[--sidebar-primary:#40D1C5] [--sidebar-primary-foreground:#0F1A18]",
+        "[&_[data-sidebar=menu-button]]:h-10 [&_[data-sidebar=menu-button]]:gap-3 [&_[data-sidebar=menu-button]_svg]:!size-5", 
+        className
+      )}
       {...props}
     >
       <SidebarHeader>
@@ -66,12 +71,12 @@ export function OrgSidebar({ className, ...props }: React.ComponentProps<typeof 
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:p-0">
               <Link href="/org-menu/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#40D1C5] text-[#0F1A18] group-data-[collapsible=icon]:size-10">
                   <Building2 className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold text-foreground tracking-tighter text-base">{orgName}</span>
-                  <span className="truncate text-[9px] font-semibold uppercase text-slate-400 tracking-[0.25em] mt-0.5">Organization Portal</span>
+                  <span className="truncate font-semibold text-[#0F1A18] tracking-tighter text-base">{orgName}</span>
+                  <span className="truncate text-[9px] font-semibold uppercase text-[#8F9792] tracking-[0.25em] mt-0.5">Organization Portal</span>
                 </div>
               </Link>
             </SidebarMenuButton>

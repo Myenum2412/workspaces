@@ -16,12 +16,13 @@ import type {
 
 export const userService = {
   async list(
-    organizationId: string,
+    organizationId: string | undefined,
     pagination: PaginationParams,
     filters: { status?: string; role?: string },
   ): Promise<PaginatedResult<Record<string, unknown>>> {
     await connectDB();
-    const filter: Record<string, unknown> = { organizationId, deletedAt: null };
+    const filter: Record<string, unknown> = { deletedAt: null };
+    if (organizationId) filter.organizationId = organizationId;
     if (filters.status) filter.status = filters.status;
     if (filters.role) filter.role = filters.role;
     if (pagination.search) {

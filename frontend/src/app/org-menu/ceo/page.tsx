@@ -71,62 +71,62 @@ export default function CeoPage() {
 
   const getRoleBadge = (role: string) => {
     const r = role.toLowerCase();
-    if (r === "ceo" || r === "owner") return <Badge className="bg-amber-100 text-amber-800 border-amber-300 capitalize"><Crown className="mr-1 h-3 w-3" />{role}</Badge>;
-    if (r === "admin") return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 capitalize">{role}</Badge>;
-    return <Badge variant="outline" className="capitalize">{role}</Badge>;
+    if (r === "ceo" || r === "owner") return <Badge className="bg-[#40D1C5]/20 text-[#0F1A18] border-[#40D1C5]/30 capitalize hover:bg-[#40D1C5]/30"><Crown className="mr-1 h-3 w-3" />{role}</Badge>;
+    if (r === "admin") return <Badge variant="outline" className="bg-[#3FACAE]/10 text-[#244E4B] border-[#3FACAE]/30 capitalize">{role}</Badge>;
+    return <Badge variant="outline" className="border-[#BDCFC5] text-[#0F1A18] capitalize">{role}</Badge>;
   };
 
   return (
     <section className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Executive Management</h1>
-        <p className="text-sm text-slate-500 mt-1">View and manage C-level executives and organization owners.</p>
+        <h1 className="text-2xl font-bold text-[#0F1A18]">Executive Management</h1>
+        <p className="text-sm text-[#8F9792] mt-1">View and manage C-level executives and organization owners.</p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border bg-background">
-        <div className="border-b bg-amber-50/70 p-6">
+      <div className="overflow-hidden rounded-[20px] border border-[#BDCFC5]/30 bg-white/40 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="border-b border-[#BDCFC5]/30 bg-[#244E4B] p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="shrink-0 space-y-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-amber-950">CEO & Executive Table</h2>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-amber-100 px-2 text-xs font-bold text-slate-900">{total}</span>
+                <h2 className="text-xl font-bold text-white">CEO & Executive Table</h2>
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#40D1C5] px-2 text-xs font-bold text-[#0F1A18] shadow-sm">{total}</span>
               </div>
-              <p className="hidden text-xs text-slate-900/75 xl:block">CEO, Owner, and Admin members of your organization.</p>
+              <p className="hidden text-xs text-[#BDCFC5] xl:block">CEO, Owner, and Admin members of your organization.</p>
             </div>
             <div className="relative flex-1 px-4 lg:max-w-md">
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-8 size-5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} placeholder="Search executives..." className="h-12 bg-background pl-12 focus-visible:ring-amber-500" />
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-8 size-5 -translate-y-1/2 text-[#8F9792]" />
+              <Input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} placeholder="Search executives..." className="h-12 bg-white/80 border-[#BDCFC5]/40 pl-12 text-[#0F1A18] focus-visible:ring-[#3FACAE] placeholder:text-[#8F9792]" />
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          <div className="overflow-hidden rounded-xl border bg-background/70">
+          <div className="overflow-hidden rounded-xl border border-[#BDCFC5]/40 bg-white/60">
             <Table>
               <TableHeader>
-                <TableRow className="bg-amber-50/70 hover:bg-amber-50/70">
-                  <TableHead className="px-4 py-4 font-semibold text-amber-950">Executive</TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-amber-950">Role</TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-amber-950">Status</TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-amber-950">Department</TableHead>
-                  <TableHead className="px-4 py-4 font-semibold text-amber-950">Joined</TableHead>
+                <TableRow className="bg-[#0F1A18] hover:bg-[#0F1A18] border-b-0">
+                  <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4]">Executive</TableHead>
+                  <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4]">Role</TableHead>
+                  <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4]">Status</TableHead>
+                  <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4]">Department</TableHead>
+                  <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4]">Joined</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedRows.map(({ profile, member }) => (
-                  <TableRow key={profile.id} className="transition-colors hover:bg-amber-50/30">
+                  <TableRow key={profile.id} className="transition-colors even:bg-[#BDCFC5]/10 odd:bg-transparent hover:bg-[#40D1C5]/10 border-b border-[#BDCFC5]/30">
                     <TableCell className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">{profile.firstName?.[0] ?? "?"}{profile.lastName?.[0] ?? ""}</div>
-                        <div className="flex flex-col"><span className="font-bold text-amber-950">{profile.firstName} {profile.lastName}</span><span className="text-xs text-muted-foreground">{profile.email}</span></div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3FACAE]/20 text-sm font-bold text-[#244E4B]">{profile.firstName?.[0] ?? "?"}{profile.lastName?.[0] ?? ""}</div>
+                        <div className="flex flex-col"><span className="font-bold text-[#0F1A18]">{profile.firstName} {profile.lastName}</span><span className="text-xs text-[#8F9792]">{profile.email}</span></div>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-4">{getRoleBadge(member.role)}</TableCell>
                     <TableCell className="px-4 py-4">
-                      <Badge variant="outline" className={member.status === "active" ? "bg-primary/5 text-primary border-emerald-200" : member.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member.status}</Badge>
+                      <Badge variant="outline" className={member.status === "active" ? "bg-[#40D1C5]/10 text-[#35848D] border-[#40D1C5]/40" : member.status === "suspended" ? "bg-[#35848D]/10 text-[#35848D] border-[#35848D]/40" : "bg-[#8F9792]/10 text-[#8F9792] border-[#8F9792]/30"}>{member.status}</Badge>
                     </TableCell>
-                    <TableCell className="px-4 py-4 text-sm text-slate-600">{profile.department ?? "—"}</TableCell>
-                    <TableCell className="px-4 py-4 text-sm text-slate-500">{member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}</TableCell>
+                    <TableCell className="px-4 py-4 text-sm text-[#8F9792]">{profile.department ?? "—"}</TableCell>
+                    <TableCell className="px-4 py-4 text-sm text-[#8F9792]">{member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}</TableCell>
                   </TableRow>
                 ))}
                 {paginatedRows.length === 0 && !isLoading && (

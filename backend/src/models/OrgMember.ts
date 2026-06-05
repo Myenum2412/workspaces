@@ -24,7 +24,7 @@ const OrgMemberSchema = new Schema<IOrgMemberDocument>({
   userId: { type: String, required: true },
   role: {
     type: String,
-    enum: ["ORG_ADMIN", "WORKSPACE_MANAGER", "MEMBER"],
+    enum: ["SUPER_ADMIN", "ORG_ADMIN", "WORKSPACE_MANAGER", "MEMBER"],
     default: "MEMBER",
   },
   status: { type: String, default: "active" },

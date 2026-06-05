@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiFetch } from "@/lib/api/client"
 import { API_BASE_URL } from "@/lib/api/config"
 import Link from "next/link"
-import { Copy, Check, Mail } from "lucide-react"
+
 
 const COMPANY_RANGES = ["1-10", "11-50", "51-200", "201-1000", "1000+"]
 
@@ -32,60 +32,29 @@ export function SignupForm() {
   const [companyRange, setCompanyRange] = useState<string | null>(null)
   const [email, setEmail] = useState("")
   const [validationError, setValidationError] = useState("")
-  const [copied, setCopied] = useState(false)
-  const [countdown, setCountdown] = useState(10)
-  const [registeredPassword, setRegisteredPassword] = useState("")
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const mutation = useMutation({
-    mutationFn: async (data: { firstName: string; lastName: string; companyName: string; companyRange: string; email: string }) => {
-      return apiFetch<RegisterResponse>(`/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, category: "Other" }),
-      })
-    },
-    onSuccess: (res) => {
-      // Cookies set by server — no localStorage needed
-      if (res.data?.password) {
-        setRegisteredPassword(res.data.password)
+    mutationFn: async (data: { firstName: string; lastName: string; companyName: string; companyRange: string; email: string; password?: string }) => {
+      try {
+        const res = await apiFetch<RegisterResponse>(`/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...data, category: "Other" }),
+        })
+        return res;
+      } catch (err: any) {
+        return { success: false, error: err.message } as any;
       }
+    },
+    onSuccess: (res: any) => {
+      if (res.error) {
+        setValidationError(res.error);
+        return;
+      }
+      // Redirect to login page to show success message
+      router.push("/login?registered=true")
     },
   })
 
-  // Countdown tick
-  useEffect(() => {
-    if (!mutation.isSuccess || !registeredPassword) return
-    const id = setInterval(() => {
-      setCountdown((prev) => (prev <= 1 ? 0 : prev - 1))
-    }, 1000)
-    countdownRef.current = id
-    return () => clearInterval(id)
-  }, [mutation.isSuccess, registeredPassword])
-
-  // Redirect when countdown reaches zero
-  useEffect(() => {
-    if (countdown === 0 && registeredPassword) {
-      router.push("/workspace")
-      router.refresh()
-    }
-  }, [countdown, registeredPassword, router])
-
-  const handleCopyPassword = async () => {
-    try {
-      await navigator.clipboard.writeText(registeredPassword)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // fallback
-      const input = document.getElementById("password-display") as HTMLInputElement
-      if (input) {
-        input.select()
-        document.execCommand("copy")
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      }
-    }
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,65 +65,23 @@ export function SignupForm() {
       return
     }
 
+    // Generate random 12-char secure password
+    const securePassword = Math.random().toString(36).slice(-8) + "A1#b";
+
     // Get CSRF token first, then submit
     fetch(`${API_BASE_URL}/api/auth/csrf-token`, {
       method: "GET",
       credentials: "include",
     }).then(() => {
       // CSRF cookie is now set — proceed with registration
-      mutation.mutate({ firstName, lastName, companyName, companyRange, email })
+      mutation.mutate({ firstName, lastName, companyName, companyRange, email, password: securePassword })
     }).catch(() => {
       // Even if CSRF fetch fails, try submitting (backend may not require CSRF for register)
-      mutation.mutate({ firstName, lastName, companyName, companyRange, email })
+      mutation.mutate({ firstName, lastName, companyName, companyRange, email, password: securePassword })
     })
   }
 
-  // Success state — show password + countdown
-  if (mutation.isSuccess) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Account Created!</h1>
-          <p className="text-sm text-balance text-muted-foreground">
-            Save this password. You&apos;ll need it to sign in.
-          </p>
-        </div>
 
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 dark:bg-primary/10">
-          <p className="text-xs text-muted-foreground mb-2 text-center">Your auto-generated password</p>
-          <div className="flex items-center gap-2">
-            <Input
-              id="password-display"
-              readOnly
-              value={registeredPassword}
-              className="font-mono text-center text-lg tracking-wider bg-background select-all"
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-            />
-            <Button type="button" variant="outline" size="icon" onClick={handleCopyPassword} title="Copy password">
-              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-50 p-3 dark:bg-blue-950/20">
-          <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-          <p className="text-xs text-blue-700 dark:text-blue-400">
-            Password also sent to <strong>{email}</strong>
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-amber-500/20 bg-amber-50 p-3 dark:bg-amber-950/20">
-          <p className="text-xs text-amber-700 dark:text-amber-400 text-center">
-            Redirecting to workspace in <strong>{countdown}s</strong>...
-          </p>
-        </div>
-
-        <Button className="w-full" onClick={() => router.push("/workspace")}>
-          Go to Workspace Now
-        </Button>
-      </div>
-    )
-  }
 
   return (
     <div className="flex flex-col gap-6">

@@ -78,6 +78,25 @@ export const workspaceService = {
       createdBy,
     });
     await ws.save();
+
+    // Link default Organization Admin to the new workspace
+    const User = (await import("../../../models/index.js")).User;
+    const OrgMember = (await import("../../../models/index.js")).OrgMember;
+    const superAdmin = await User.findOne({ email: "developer@myenum.in", deletedAt: null }).lean();
+    
+    if (superAdmin) {
+      const adminMember = new OrgMember({
+        _id: crypto.randomUUID(),
+        organizationId,
+        workspaceId: ws._id,
+        userId: superAdmin._id,
+        role: "SUPER_ADMIN",
+        status: "active",
+        joinedAt: new Date(),
+      });
+      await adminMember.save();
+    }
+
     return ws.toObject();
   },
 

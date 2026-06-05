@@ -11,8 +11,10 @@ export const userController = {
     const authReq = req as AuthRequest;
     const params = parsePagination(req.query as Record<string, unknown>);
     const q = req.query as Record<string, unknown>;
+    const orgId = authReq.user!.role === "SUPER_ADMIN" ? undefined : authReq.user!.organizationId;
+    
     const { data: users, total } = await userService.list(
-      authReq.user!.organizationId,
+      orgId,
       params,
       { status: q.status as string, role: q.role as string },
     );

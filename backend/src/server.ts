@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import { env, getCorsOrigins } from "./config/env.js";
 import { logger } from "./core/logging/logger.js";
 import { connectDB, disconnectDB } from "./db/connection.js";
+import { seedDefaultAdmin } from "./db/seedAdmin.js";
 import { disconnectRedis } from "./db/redis.js";
 
 import { requestIdMiddleware } from "./core/middleware/requestId.js";
@@ -85,19 +86,24 @@ app.get("/api/health", async (_req, res) => {
 
 // ── API v1 ────────────────────────────────────────────────────
 const v1 = "/api/v1";
-app.use(`${v1}/auth`, authRoutes);
-app.use(`${v1}/users`, userRoutes);
-app.use(`${v1}/workspaces`, workspaceRoutes);
-app.use(`${v1}/teams`, teamRoutes);
-app.use(`${v1}/projects`, projectRoutes);
-app.use(`${v1}/tasks`, taskRoutes);
-app.use(`${v1}/notifications`, notificationRoutes);
-app.use(`${v1}/files`, fileRoutes);
-app.use(`${v1}/activity`, activityRoutes);
-app.use(`${v1}/dashboard`, dashboardRoutes);
-app.use(`${v1}/settings`, settingRoutes);
-app.use(`${v1}/search`, searchRoutes);
-app.use(`${v1}/export`, exportRoutes);
+const mountRoutes = (prefix: string) => {
+  app.use(`${prefix}/auth`, authRoutes);
+  app.use(`${prefix}/users`, userRoutes);
+  app.use(`${prefix}/workspaces`, workspaceRoutes);
+  app.use(`${prefix}/teams`, teamRoutes);
+  app.use(`${prefix}/projects`, projectRoutes);
+  app.use(`${prefix}/tasks`, taskRoutes);
+  app.use(`${prefix}/notifications`, notificationRoutes);
+  app.use(`${prefix}/files`, fileRoutes);
+  app.use(`${prefix}/activity`, activityRoutes);
+  app.use(`${prefix}/dashboard`, dashboardRoutes);
+  app.use(`${prefix}/settings`, settingRoutes);
+  app.use(`${prefix}/search`, searchRoutes);
+  app.use(`${prefix}/export`, exportRoutes);
+};
+
+mountRoutes(v1);
+mountRoutes("/api");
 
 // ── Static ────────────────────────────────────────────────────
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -122,7 +128,7 @@ for (const dir of uploadDirs) {
 httpServer.listen(env.PORT, () => {
   logger.info(`🚀 Server running on port ${env.PORT} [${env.NODE_ENV}]`);
   logger.info(`📡 API base: ${env.API_BASE_URL}/api/${env.API_VERSION}`);
-  connectDB().catch((err) => { logger.error({ err }, "DB connection failed"); process.exit(1); });
+  connectDB().then(() => { seedDefaultAdmin(); }).catch((err) => { logger.error({ err }, "DB connection failed"); process.exit(1); });
 });
 
 // ── Graceful shutdown ──────────────────────────────────────────

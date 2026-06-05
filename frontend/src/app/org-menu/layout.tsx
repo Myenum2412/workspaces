@@ -82,7 +82,7 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (session) {
-      if (session.user.role !== "ORG_ADMIN") {
+      if (session.user.role !== "ORG_ADMIN" && session.user.role !== "SUPER_ADMIN") {
         router.replace("/workspace");
       }
     }
@@ -109,28 +109,28 @@ export default function OrgMenuLayout({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ session, loading, refresh, logout }}>
       <SidebarProvider>
-        <div className="flex h-screen w-full bg-background">
+        <div className="flex h-screen w-full bg-[#FAF3E4]">
           <OrgSidebar />
-          <SidebarInset className="flex-1 flex flex-col overflow-hidden">
-            <header className="flex h-16 shrink-0 items-center justify-between border-b bg-white px-6">
+          <SidebarInset className="flex-1 flex flex-col overflow-hidden bg-[#FAF3E4]">
+            <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#BDCFC5]/30 bg-gradient-to-br from-[#0F1A18] to-[#244E4B] px-6 text-[#FAF3E4]">
               <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-2 mr-2" />
-                <h1 className="text-lg font-semibold text-foreground">
+                <SidebarTrigger className="-ml-2 mr-2 text-white hover:bg-white/10 hover:text-white" />
+                <h1 className="text-lg font-semibold text-white">
                   {session.organization?.name ?? "Organization Portal"}
                 </h1>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-white">
                     {session.user.firstName} {session.user.lastName}
                   </p>
-                  <p className="text-xs text-slate-500">{session.user.email}</p>
+                  <p className="text-xs text-[#BDCFC5]">{session.user.email}</p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                <div className="w-8 h-8 rounded-full bg-[#40D1C5] flex items-center justify-center text-sm font-bold text-[#0F1A18] shadow-sm">
                   {(session.user.firstName?.[0] ?? "?")}
                   {(session.user.lastName?.[0] ?? "")}
                 </div>
-                <Button variant="ghost" size="sm" onClick={logout} title="Sign out">
+                <Button variant="ghost" size="sm" onClick={logout} title="Sign out" className="text-white hover:bg-white/10 hover:text-white">
                   <LogOut className="w-4 h-4" />
                 </Button>
               </div>

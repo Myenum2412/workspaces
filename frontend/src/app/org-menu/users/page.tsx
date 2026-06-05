@@ -5,8 +5,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronDownIcon,
   ChevronLeftIcon, ChevronRightIcon, FilterIcon, MoreHorizontalIcon,
-  SearchIcon, RefreshCw, Users,
+  SearchIcon, RefreshCw, Users, UserCheck, UserPlus, UserX
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -46,34 +47,23 @@ export default function OrgUsersPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = React.useState(false);
   const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" | null }>({ key: "", direction: null });
 
-  const { data: members = [], isLoading } = useQuery({
-    queryKey: ["org-members", orgId],
+  const { data: userList = [], isLoading } = useQuery({
+    queryKey: ["org-users", orgId],
     queryFn: async () => {
       try {
-        const res = await api.get<{ success: boolean; members: any[] }>("/api/members");
-        return res.members as OrgMember[];
-      } catch { return []; }
-    },
-    enabled: !!orgId,
-  });
-
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["org-profiles", orgId],
-    queryFn: async () => {
-      try {
-        const res = await api.get<{ success: boolean; employees: UserProfile[] }>("/api/members");
-        return res.employees;
-      } catch { return []; }
+        const res = await api.get<{ success: boolean; data: any[] }>(`/api/users?limit=1000`);
+        return res.data || [];
+      } catch (err) { console.error("Error fetching users:", err); return []; }
     },
     enabled: !!orgId,
   });
 
   const data: UserRow[] = React.useMemo(
-    () => profiles.map((profile) => ({
-      profile: { ...profile, id: profile.id },
-      member: members.find((m) => m.userId === profile.userId),
+    () => userList.map((user) => ({
+      profile: { ...user, id: user._id || user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
+      member: { role: user.role, status: user.status, joinedAt: user.createdAt } as any,
     })),
-    [profiles, members]
+    [userList]
   );
 
   const handleSort = (key: string) => {
@@ -128,8 +118,7 @@ export default function OrgUsersPage() {
   };
 
   const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["org-members", orgId] });
-    queryClient.invalidateQueries({ queryKey: ["org-profiles", orgId] });
+    queryClient.invalidateQueries({ queryKey: ["org-users", orgId] });
   };
 
   const SortIcon = ({ columnKey }: { columnKey: string }) => {
@@ -139,26 +128,81 @@ export default function OrgUsersPage() {
     return <ArrowUpDownIcon className="size-3.5 opacity-30" />;
   };
 
+  const stats = React.useMemo(() => {
+    return {
+      total: data.length,
+      active: data.filter(d => d.member?.status === "active").length,
+      pending: data.filter(d => d.member?.status === "pending" || !d.member?.status).length,
+      suspended: data.filter(d => d.member?.status === "suspended").length,
+    };
+  }, [data]);
+
   return (
     <section className="space-y-6">
-      <div className="overflow-hidden rounded-2xl border bg-background">
-        <div className="border-b bg-primary/10 p-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[#0F1A18]">Users Overview</h1>
+        <p className="text-sm text-[#8F9792] mt-1">High-level metrics for your organization members</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="overflow-hidden rounded-[20px] border border-[#BDCFC5]/30 bg-white/40 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-[#8F9792]">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-[#35848D]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#0F1A18]">{isLoading ? "—" : stats.total}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden rounded-[20px] border border-[#BDCFC5]/30 bg-white/40 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-[#8F9792]">Active Users</CardTitle>
+            <UserCheck className="h-4 w-4 text-[#40D1C5]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#0F1A18]">{isLoading ? "—" : stats.active}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden rounded-[20px] border border-[#BDCFC5]/30 bg-white/40 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-[#8F9792]">Pending Invites</CardTitle>
+            <UserPlus className="h-4 w-4 text-[#3FACAE]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#0F1A18]">{isLoading ? "—" : stats.pending}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden rounded-[20px] border border-[#BDCFC5]/30 bg-white/40 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-[#8F9792]">Suspended</CardTitle>
+            <UserX className="h-4 w-4 text-red-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#0F1A18]">{isLoading ? "—" : stats.suspended}</div>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="overflow-hidden rounded-[20px] border border-[#BDCFC5]/30 bg-white/40 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="border-b border-[#BDCFC5]/30 bg-[#244E4B] p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="shrink-0 space-y-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-primary">User Management</h2>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-bold text-foreground">{total}</span>
+                <h2 className="text-xl font-bold text-white">User Management</h2>
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#40D1C5] px-2 text-xs font-bold text-[#0F1A18] shadow-sm">{total}</span>
               </div>
-              <p className="hidden text-xs text-foreground/75 xl:block">Manage organization members, roles, and access.</p>
+              <p className="hidden text-xs text-[#BDCFC5] xl:block">Manage organization members, roles, and access.</p>
             </div>
             <div className="relative flex-1 px-4 lg:max-w-2xl">
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-8 size-5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} placeholder="Search by name, email..." className="h-12 bg-background pl-12 focus-visible:ring-primary" />
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-8 size-5 -translate-y-1/2 text-[#8F9792]" />
+              <Input value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }} placeholder="Search by name, email..." className="h-12 bg-white/80 border-[#BDCFC5]/40 pl-12 text-[#0F1A18] focus-visible:ring-[#3FACAE] placeholder:text-[#8F9792]" />
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-border bg-background text-primary hover:bg-primary/10">
+                  <Button variant="outline" className="border-white/20 bg-[#35848D] text-white hover:bg-[#3FACAE] hover:text-white">
                     <FilterIcon className="mr-2 size-4" />Status: {filterStatus === "all" ? "All" : filterStatus}
                   </Button>
                 </DropdownMenuTrigger>
@@ -170,11 +214,11 @@ export default function OrgUsersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button type="button" variant="outline" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="border-border bg-background text-primary hover:bg-primary/10">
+              <Button type="button" variant="outline" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="border-white/20 bg-[#35848D] text-white hover:bg-[#3FACAE] hover:text-white">
                 <ChevronDownIcon className={cn("size-4 transition-transform duration-300", isExpanded ? "rotate-0" : "-rotate-90")} />
               </Button>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={refresh} className="border-border bg-background text-primary hover:bg-primary/10">
+                <Button variant="outline" size="icon" onClick={refresh} className="border-white/20 bg-[#35848D] text-white hover:bg-[#3FACAE] hover:text-white">
                   <RefreshCw className={cn("size-4", isLoading && "animate-spin")} />
                 </Button>
                 <AddUserDialog onUserAdded={refresh} />
@@ -191,33 +235,35 @@ export default function OrgUsersPage() {
                 <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-primary-foreground hover:bg-primary/80">Clear selection</Button>
               </div>
             )}
-            <div className="overflow-hidden rounded-xl border bg-background/70">
+            <div className="overflow-hidden rounded-xl border border-[#BDCFC5]/40 bg-white/60">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-primary/10 hover:bg-primary/10">
+                  <TableRow className="bg-[#0F1A18] hover:bg-[#0F1A18] border-b-0">
                     <TableHead className="w-[50px] px-4 py-4 text-center"><Checkbox checked={paginatedRows.length > 0 && selectedIds.size === paginatedRows.length} onChange={toggleAll} /></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("name")}><div className="flex items-center gap-2">Member <SortIcon columnKey="name" /></div></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("role")}><div className="flex items-center gap-2">Role <SortIcon columnKey="role" /></div></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("status")}><div className="flex items-center gap-2">Status <SortIcon columnKey="status" /></div></TableHead>
-                    <TableHead className="px-4 py-4 font-semibold text-primary cursor-pointer group" onClick={() => handleSort("joined")}><div className="flex items-center gap-2">Joined <SortIcon columnKey="joined" /></div></TableHead>
-                    <TableHead className="px-4 py-4 text-center font-semibold text-primary">Actions</TableHead>
+                    <TableHead className="w-[60px] px-4 py-4 font-semibold text-[#FAF3E4]">S.no</TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4] cursor-pointer group" onClick={() => handleSort("name")}><div className="flex items-center gap-2">Member <SortIcon columnKey="name" /></div></TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4] cursor-pointer group" onClick={() => handleSort("role")}><div className="flex items-center gap-2">Role <SortIcon columnKey="role" /></div></TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4] cursor-pointer group" onClick={() => handleSort("status")}><div className="flex items-center gap-2">Status <SortIcon columnKey="status" /></div></TableHead>
+                    <TableHead className="px-4 py-4 font-semibold text-[#FAF3E4] cursor-pointer group" onClick={() => handleSort("joined")}><div className="flex items-center gap-2">Joined <SortIcon columnKey="joined" /></div></TableHead>
+                    <TableHead className="px-4 py-4 text-center font-semibold text-[#FAF3E4]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedRows.map(({ profile, member }) => (
-                    <TableRow key={profile.id} className={cn("cursor-pointer transition-colors hover:bg-primary/5", selectedIds.has(profile.id) && "bg-muted/50")} onClick={() => { setSelectedUser({ ...profile, role: member?.role, memberStatus: member?.status, joinedAt: member?.joinedAt }); setIsDetailModalOpen(true); }}>
+                  {paginatedRows.map(({ profile, member }, index) => (
+                    <TableRow key={profile.id} className={cn("cursor-pointer transition-colors even:bg-[#BDCFC5]/10 odd:bg-transparent hover:bg-[#40D1C5]/10 border-b border-[#BDCFC5]/30", selectedIds.has(profile.id) && "bg-[#40D1C5]/20")} onClick={() => { setSelectedUser({ ...profile, role: member?.role, memberStatus: member?.status, joinedAt: member?.joinedAt }); setIsDetailModalOpen(true); }}>
                       <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.has(profile.id)} onChange={() => toggleRow(profile.id)} /></TableCell>
+                      <TableCell className="px-4 py-4 text-sm font-medium text-[#8F9792]">{startIndex + index + 1}</TableCell>
                       <TableCell className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">{profile.firstName?.[0] ?? "?"}{profile.lastName?.[0] ?? ""}</div>
-                          <div className="flex flex-col"><span className="font-bold text-primary">{profile.firstName} {profile.lastName}</span><span className="text-xs text-muted-foreground">{profile.email}</span></div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3FACAE]/20 text-sm font-bold text-[#244E4B]">{profile.firstName?.[0] ?? "?"}{profile.lastName?.[0] ?? ""}</div>
+                          <div className="flex flex-col"><span className="font-bold text-[#0F1A18]">{profile.firstName} {profile.lastName}</span><span className="text-xs text-[#8F9792]">{profile.email}</span></div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-4 capitalize">{member?.role ?? "—"}</TableCell>
+                      <TableCell className="px-4 py-4 capitalize text-[#8F9792]">{member?.role ?? "—"}</TableCell>
                       <TableCell className="px-4 py-4">
-                        <Badge variant="outline" className={member?.status === "active" ? "bg-primary/5 text-primary border-primary/20" : member?.status === "suspended" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}>{member?.status ?? "pending"}</Badge>
+                        <Badge variant="outline" className={member?.status === "active" ? "bg-[#40D1C5]/10 text-[#35848D] border-[#40D1C5]/40" : member?.status === "suspended" ? "bg-[#35848D]/10 text-[#35848D] border-[#35848D]/40" : "bg-[#8F9792]/10 text-[#8F9792] border-[#8F9792]/30"}>{member?.status ?? "pending"}</Badge>
                       </TableCell>
-                      <TableCell className="px-4 py-4 text-sm text-muted-foreground">{member?.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell className="px-4 py-4 text-sm text-[#8F9792]">{member?.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : "—"}</TableCell>
                       <TableCell className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontalIcon className="size-4" /></Button></DropdownMenuTrigger>
@@ -232,7 +278,7 @@ export default function OrgUsersPage() {
                     </TableRow>
                   ))}
                   {paginatedRows.length === 0 && !isLoading && (
-                    <TableRow><TableCell colSpan={6} className="py-12 text-center"><Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" /><p className="text-sm text-muted-foreground">No members found.</p></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="py-12 text-center"><Users className="h-10 w-10 text-[#BDCFC5] mx-auto mb-3" /><p className="text-sm text-[#8F9792]">No members found.</p></TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

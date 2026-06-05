@@ -50,6 +50,7 @@ export function enforceTenantIsolation(req: Request, _res: Response, next: NextF
 }
 
 export function buildTenantFilter(authReq: AuthRequest, includeWorkspace = false): Record<string, unknown> {
+  if (authReq.user!.role === "SUPER_ADMIN") return {};
   const filter: Record<string, unknown> = { organizationId: authReq.user!.organizationId };
   if (authReq.user!.role === "ORG_ADMIN" && !includeWorkspace) return filter;
   if (authReq.user!.workspaceId) filter.workspaceId = authReq.user!.workspaceId;

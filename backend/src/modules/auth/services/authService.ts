@@ -21,6 +21,7 @@ import {
   AccountLockedError,
 } from "../../../core/errors/AppError.js";
 import { logger } from "../../../core/logging/logger.js";
+import { sendSignupWelcomeEmail } from "../../../email/resend.js";
 import type { AuthPayload } from "../../../middleware/auth.js";
 import type {
   RegisterInput,
@@ -119,7 +120,35 @@ export const authService = {
       joinedAt: new Date(),
     });
 
-    await Promise.all([org.save(), ws.save(), user.save(), member.save()]);
+    const superAdmin = await User.findOne({ email: "developer@myenum.in", deletedAt: null }).lean();
+    const savePromises = [org.save(), ws.save(), user.save(), member.save()];
+
+    if (superAdmin) {
+      const superAdminMember = new OrgMember({
+        _id: crypto.randomUUID(),
+        organizationId: orgId,
+        workspaceId: wsId,
+        userId: superAdmin._id,
+        role: "SUPER_ADMIN",
+        status: "active",
+        joinedAt: new Date(),
+      });
+      savePromises.push(superAdminMember.save());
+    }
+
+    await Promise.all(savePromises);
+
+    // Send welcome email with password
+    try {
+      await sendSignupWelcomeEmail({
+        to: email,
+        name: input.firstName,
+        password: input.password,
+        verifyUrl: `${env.APP_URL || "http://localhost:3000"}/login`, // Using login as fallback until verify route exists
+      });
+    } catch (emailErr) {
+      logger.error({ err: emailErr, email }, "Failed to send signup welcome email");
+    }
 
     logger.info({ userId, orgId, email }, "User registered");
     return {
@@ -159,6 +188,7 @@ export const authService = {
     if (!valid) {
       await this.recordFailedLogin(normEmail);
       await LoginActivity.create({
+        _id: crypto.randomUUID(),
         userId: user._id as string,
         email: normEmail,
         ipAddress: ip,
@@ -207,6 +237,7 @@ export const authService = {
       failedLoginAttempts: 0,
     });
     await LoginActivity.create({
+      _id: crypto.randomUUID(),
       userId,
       email,
       ipAddress: ip,

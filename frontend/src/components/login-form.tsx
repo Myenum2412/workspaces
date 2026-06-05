@@ -76,7 +76,7 @@ export function LoginForm({ className }: { className?: string }) {
       try {
         const me = await authApi.getMe();
         const user = (me as any).data?.user || me.user;
-        if (user?.role === "ORG_ADMIN") {
+        if (user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN") {
           router.push("/org-menu");
         } else if (user?.role === "staff") {
           router.push("/members/dashboard");
