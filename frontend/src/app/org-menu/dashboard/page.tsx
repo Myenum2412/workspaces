@@ -51,7 +51,7 @@ export default function DashboardPage() {
     queryKey: ["org-users", orgId],
     queryFn: async () => {
       try {
-        const res = await api.get<{ success: boolean; data: any[] }>(`/api/users?limit=1000`);
+        const res = await api.get<{ success: boolean; data: any[] }>(`/api/users?limit=500`);
         return res.data || [];
       } catch (err) { console.error("Error fetching users:", err); return []; }
     },
@@ -59,7 +59,7 @@ export default function DashboardPage() {
   });
 
   const data: UserRow[] = React.useMemo(
-    () => userList.map((user) => ({
+    () => (userList as any[]).map((user: any) => ({
       profile: { ...user, id: user._id || user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
       member: { role: user.role, status: user.status, joinedAt: user.createdAt } as any,
     })),
