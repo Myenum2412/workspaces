@@ -62,7 +62,7 @@ jobs:
       - name: Build
         working-directory: ./frontend
         env:
-          NEXT_PUBLIC_BACKEND_URL: https://workspaceapi.myenum.in
+          NEXT_PUBLIC_BACKEND_URL: https://workspaceapi.myenum.in/
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
